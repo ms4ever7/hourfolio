@@ -4,7 +4,7 @@
 People with many parallel pursuits (music, sport, coding, learning, collecting…) have no tool that shows momentum across all of them without punishing breadth the way streaks do. Hourfolio treats time as capital, counts rest as a positive activity, and is built first for its author and then for anyone with the same problem. Target device: iPhone; the author's wearable is a **Fitbit Air, which syncs to Google Health (not Apple Health)**. There's no backend in v1. The project is also a hands-on way to learn Claude and the wider AI tooling world (models, MCP, skills, subagents, hooks) by using each piece while building.
 
 ## Name: **Hourfolio** (renamed 2026-09-28)
-- The concept moved from an island world to a time portfolio, so the name changed from Questisle to Hourfolio. Bundle id: `com.roman.hourfolio`. Folder: `~/Documents/hourfolio/`.
+- The concept moved from an island world to a time portfolio, so the name changed from Questisle to Hourfolio. Bundle id: `com.ms4ever7.hourfolio`. Folder: `~/Documents/hourfolio/`.
 - hourfolio.com was unregistered and the App Store had no exact match on 2026-09-28. Still check hourfolio.app, the App Store Connect name reservation and a trademark search before release.
 
 ### Earlier name: Questisle (quest + isle), kept for history

@@ -1,4 +1,4 @@
-appId: com.roman.hourfolio
+appId: com.ms4ever7.hourfolio
 ---
 # Visits every main screen. Needs data first: Settings → Load sample data, or open
 # hourfolio://dev-demo once (iOS asks to confirm the link, which Maestro can't tap here).
