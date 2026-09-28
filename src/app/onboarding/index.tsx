@@ -1,0 +1,109 @@
+import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Path } from 'react-native-svg';
+import { AssetIcon, Glyph } from '@/components/icons';
+import { Box, Text } from '@/components/primitives';
+import { OptionButton, PrimaryButton, Screen } from '@/components/ui';
+import { formatHours } from '@/domain/format';
+import { APP_LANGUAGES, LANGUAGE_BADGE } from '@/i18n/resources';
+import { useSettingsStore } from '@/store/settings-store';
+import { useAppTheme } from '@/theme/theme';
+
+function HeroArt() {
+  const { t, i18n } = useTranslation();
+  const { colors } = useAppTheme();
+  const tiles = [
+    { icon: 'guitar', color: 'magenta', left: '8%', top: 120, rotate: '-6deg' },
+    { icon: 'dumbbell', color: 'vermilion', left: '34%', top: 70, rotate: '5deg' },
+    { icon: 'code', color: 'violet', left: '58%', top: 128, rotate: '-4deg' },
+    { icon: 'moon', color: 'sky', left: '76%', top: 30, rotate: '7deg' },
+  ] as const;
+  return (
+    <Box height={250} backgroundColor="card" overflow="hidden" style={{ borderRadius: 28 }} accessible={false}>
+      <Svg width="100%" height={250} viewBox="0 0 342 250" preserveAspectRatio="none" style={{ position: 'absolute' }}>
+        <Path d="M0,220 C60,210 90,190 130,170 C170,150 200,160 240,110 C270,75 300,60 342,40 L342,250 L0,250 Z" fill={colors.hours} fillOpacity={0.07} />
+        <Path d="M0,220 C60,210 90,190 130,170 C170,150 200,160 240,110 C270,75 300,60 342,40" fill="none" stroke={colors.hours} strokeWidth={2.5} />
+      </Svg>
+      {tiles.map((tile) => (
+        <Box key={tile.icon} position="absolute" style={{ left: tile.left, top: tile.top, transform: [{ rotate: tile.rotate }] }}>
+          <AssetIcon icon={tile.icon} color={tile.color} size={56} />
+        </Box>
+      ))}
+      <Box position="absolute" backgroundColor="inverse" borderRadius="pill" paddingHorizontal="sm" style={{ left: 24, top: 24, paddingVertical: 6 }}>
+        <Text variant="mono" color="onInverse" style={{ fontSize: 14 }}>
+          +{formatHours(6870, i18n.language)}
+          <Text variant="bodyStrong" color="hoursOnDark" style={{ fontSize: 12 }}>
+            {' '}
+            {t('units.h')}
+          </Text>
+        </Text>
+      </Box>
+    </Box>
+  );
+}
+
+export default function Welcome() {
+  const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const insets = useSafeAreaInsets();
+  const language = useSettingsStore((s) => s.language);
+  const setLanguage = useSettingsStore((s) => s.setLanguage);
+
+  return (
+    <Screen
+      footer={
+        <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 16 }}>
+          <PrimaryButton label={t('welcome.cta')} onPress={() => router.push('/onboarding/pick')} />
+        </Box>
+      }
+    >
+      <Box flexDirection="row" alignItems="center" gap="s">
+        <Box width={28} height={28} backgroundColor="hours" alignItems="center" justifyContent="center" style={{ borderRadius: 9 }}>
+          <Glyph d="M4 17l5-5 4 3 7-8" size={16} color={colors.onInverse} strokeWidth={2.4} />
+        </Box>
+        <Text variant="bodyStrong" style={{ fontFamily: 'Onest_700Bold' }}>
+          Hourfolio
+        </Text>
+      </Box>
+
+      <HeroArt />
+
+      <Box gap="sm">
+        <Text variant="title" style={{ fontSize: 30, lineHeight: 35 }} accessibilityRole="header">
+          {t('welcome.headline')}
+        </Text>
+        <Text variant="body" style={{ fontSize: 16, lineHeight: 24 }}>
+          {t('welcome.sub')}
+        </Text>
+      </Box>
+
+      <Box gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('welcome.language')}>
+        <Text variant="tiny" style={{ fontFamily: 'Onest_600SemiBold', letterSpacing: 0.4 }}>
+          LANGUAGE · МОВА · JĘZYK
+        </Text>
+        {APP_LANGUAGES.map((code) => {
+          const on = code === language;
+          return (
+            <OptionButton key={code} selected={on} onPress={() => setLanguage(code)}>
+              <Box flexDirection="row" alignItems="center" gap="sm">
+                <Text variant="monoSmall" style={{ width: 30 }}>
+                  {LANGUAGE_BADGE[code]}
+                </Text>
+                <Text variant="label" style={{ flex: 1, fontSize: 15 }}>
+                  {t(`languages.${code}`)}
+                </Text>
+                <Box
+                  width={20}
+                  height={20}
+                  borderRadius="pill"
+                  style={{ borderWidth: on ? 6 : 2, borderColor: on ? colors.hours : '#C9C5BD' }}
+                />
+              </Box>
+            </OptionButton>
+          );
+        })}
+      </Box>
+    </Screen>
+  );
+}

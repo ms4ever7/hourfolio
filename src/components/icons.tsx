@@ -1,0 +1,74 @@
+import Svg, { Path } from 'react-native-svg';
+import type { IconKey, PaletteKey } from '@/domain/types';
+import { assetPalette } from '@/theme/theme';
+import { Box } from './primitives';
+
+/** Stroke icons on a 24×24 grid, one path each. */
+export const ICON_PATHS: Record<IconKey, string> = {
+  guitar: 'M13 11l7-7M18.5 2.5l3 3M11 10.5c-1.5-1.5-4.5-1.2-6 .8-1 1.3-.6 2.7-1.5 3.8-1.2 1.4-.8 3.6.9 4.8 1.6 1.4 3.6 1.3 4.8.1 1.1-1 2.4-.5 3.8-1.5 2-1.5 2.3-4.5.8-6zM8.5 15.5h.01',
+  keys: 'M3 5h18v14H3zM7.5 14v5M12 14v5M16.5 14v5M6 5v9h3V5M10.5 5v9h3V5M15 5v9h3V5',
+  wave: 'M4 12h2M8 8v8M12 5v14M16 9v6M20 11v2',
+  mic: 'M12 3a3 3 0 0 0-3 3v5a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zM5 11a7 7 0 0 0 14 0M12 18v3M8 21h8',
+  headphones: 'M4 15v-3a8 8 0 0 1 16 0v3M4 15h3v5H5a1 1 0 0 1-1-1zM20 15h-3v5h2a1 1 0 0 0 1-1z',
+  pencil: 'M4 20l4-1 11-11-3-3L5 16zM14 6l3 3',
+  camera: 'M4 8h3l2-3h6l2 3h3v11H4zM12 10a3.5 3.5 0 1 0 .01 0',
+  vase: 'M9 3h6M10 3v3c-3 1-5 4-5 7 0 4 3 8 7 8s7-4 7-8c0-3-2-6-5-7V3M7 13h10',
+  dumbbell: 'M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12',
+  route: 'M6 16.5a1.5 1.5 0 1 0 .01 0M18 4.5a1.5 1.5 0 1 0 .01 0M7.5 18h6.5a3 3 0 0 0 0-6h-4a3 3 0 0 1 0-6h6.5',
+  leaf: 'M5 19c0-8 6-14 14-14 0 8-6 14-14 14zM5 19l7-7',
+  mountain: 'M3 20l6-10 4 6 3-4 5 8z',
+  ball: 'M12 3a9 9 0 1 0 .01 0M12 7l4 3-1.5 4.5h-5L8 10zM12 3v4M16 10l4.5-1.5M14.5 14.5l2.5 4M9.5 14.5l-2.5 4M8 10L3.5 8.5',
+  code: 'M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16',
+  ai: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z',
+  book: 'M4 19V5a2 2 0 0 1 2-2h13v14H6a2 2 0 0 0-2 2 2 2 0 0 0 2 2h13v-4',
+  speech: 'M4 5h16v11H9l-5 4zM8 9h8M8 12h5',
+  pawn: 'M8 20h8M9 20l1-5h4l1 5M10.5 15l-.5-4h4l-.5 4M12 5a3 3 0 1 0 .01 0',
+  candles: 'M7 4v4M7 16v4M5 8h4v8H5zM17 3v5M17 14v5M15 8h4v6h-4z',
+  cards: 'M9 3h10a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM8 6.5l-3.2 1a1 1 0 0 0-.6 1.3l3.6 11a1 1 0 0 0 1.3.6l4-1.4M14 7.5l1 2 2 .3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1-1.5-1.4 2-.3z',
+  tv: 'M4 7h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1zM8 3l4 4 4-4M10.5 10.5v5l4-2.5z',
+  gamepad: 'M7 8h10a4 4 0 0 1 4 4v1a3 3 0 0 1-5.4 1.8L14.5 14h-5l-1.1.8A3 3 0 0 1 3 13v-1a4 4 0 0 1 4-4zM7.5 10.5v3M6 12h3M15.5 11.5h.01M17.5 13h.01',
+  moon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+  pot: 'M4 10h16v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5zM2 10h20M9 6c0-1 1-1 1-2M14 6c0-1 1-1 1-2',
+  star: 'M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.5 6.6 19.5l1.2-6-4.5-4.2 6.1-.7z',
+};
+
+/** UI glyphs that are not asset icons. */
+export const UI_PATHS = {
+  back: 'M15 18l-6-6 6-6',
+  chevronDown: 'M6 9l6 6 6-6',
+  arrowRight: 'M5 12h14M13 6l6 6-6 6',
+  plus: 'M12 5v14M5 12h14',
+  check: 'M5 12l5 5 9-10',
+  globe: 'M12 3a9 9 0 1 0 .01 0M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18',
+  search: 'M11 4a7 7 0 1 0 .01 0M20 20l-4-4',
+  portfolio: 'M12 3a9 9 0 1 0 9 9h-9z',
+  analytics: 'M5 20v-8M12 20V5M19 20v-5',
+  settings: 'M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4',
+  target: 'M12 3a9 9 0 1 0 .01 0M12 7a5 5 0 1 0 .01 0M12 11a1 1 0 1 0 .01 0',
+  lock: 'M6 11h12v9H6zM8 11V8a4 4 0 0 1 8 0v3',
+  sparkle: 'M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8zM19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z',
+} as const;
+
+export function Glyph({ d, size = 20, color, strokeWidth = 1.8 }: { d: string; size?: number; color: string; strokeWidth?: number }) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d={d} stroke={color} strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" />
+    </Svg>
+  );
+}
+
+/** An asset's icon on its tinted tile. */
+export function AssetIcon({ icon, color, size = 40 }: { icon: IconKey; color: PaletteKey; size?: number }) {
+  const p = assetPalette[color];
+  return (
+    <Box
+      width={size}
+      height={size}
+      alignItems="center"
+      justifyContent="center"
+      style={{ backgroundColor: p.tint, borderRadius: size * 0.3 }}
+    >
+      <Glyph d={ICON_PATHS[icon]} size={size * 0.55} color={p.main} strokeWidth={size > 56 ? 1.6 : 1.8} />
+    </Box>
+  );
+}

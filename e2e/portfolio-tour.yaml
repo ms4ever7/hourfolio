@@ -1,0 +1,39 @@
+appId: com.roman.hourfolio
+---
+# Visits every main screen. Needs data first: Settings → Load sample data, or open
+# hourfolio://dev-demo once (iOS asks to confirm the link, which Maestro can't tap here).
+- launchApp
+# Start in English whatever the saved language is.
+- tapOn: '(Settings|Ustawienia|Налаштування)'
+- tapOn: '.*English.*'
+- tapOn: 'Portfolio'
+- assertVisible: 'Assets'
+- takeScreenshot: 06-portfolio-en
+- scroll
+- takeScreenshot: 07-portfolio-en-scrolled
+- tapOn: 'Guitar.*h.*'
+- assertVisible: 'Capital · all time'
+- takeScreenshot: 08-asset-en
+- scroll
+- takeScreenshot: 09-asset-en-scrolled
+- tapOn: 'Log a session'
+- assertVisible: 'Invest time'
+- takeScreenshot: 10-log-en
+- tapOn: 'Invest 1 h'
+- scrollUntilVisible:
+    element: 'Back'
+    direction: UP
+- tapOn: 'Back'
+- tapOn: 'Analytics'
+- assertVisible: 'Energy balance'
+- takeScreenshot: 11-analytics-en
+- scroll
+- takeScreenshot: 12-analytics-en-scrolled
+- tapOn: 'Settings'
+- tapOn: '.*Polski.*'
+- assertVisible: 'Ustawienia'
+- tapOn: 'Portfel'
+- takeScreenshot: 13-portfolio-pl
+- tapOn: 'Analityka'
+- assertVisible: 'Kalendarz inwestycji'
+- takeScreenshot: 14-analytics-pl

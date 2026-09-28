@@ -1,0 +1,4 @@
+[tools]
+node = "22"
+# Pin the exact bun version so local and EAS installs lay out node_modules the same way.
+bun = "1.3.14"
