@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><g transform="translate(512 512) scale(1) translate(-512 -512)"><circle cx="512" cy="512" r="300" fill="none" stroke="#6246EA" stroke-width="132"
+      stroke-dasharray="614.88 1884.96" stroke-dashoffset="-13.00"
+      transform="rotate(-90 512 512)"/>
+<circle cx="512" cy="512" r="300" fill="none" stroke="#C2388A" stroke-width="132"
+      stroke-dasharray="464.09 1884.96" stroke-dashoffset="-653.88"
+      transform="rotate(-90 512 512)"/>
+<circle cx="512" cy="512" r="300" fill="none" stroke="#E4572E" stroke-width="132"
+      stroke-dasharray="388.69 1884.96" stroke-dashoffset="-1143.97"
+      transform="rotate(-90 512 512)"/>
+<circle cx="512" cy="512" r="300" fill="none" stroke="#1E96C8" stroke-width="132"
+      stroke-dasharray="313.29 1884.96" stroke-dashoffset="-1558.66"
+      transform="rotate(-90 512 512)"/></g></svg>

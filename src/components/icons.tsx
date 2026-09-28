@@ -1,4 +1,4 @@
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Circle, Line, Path } from 'react-native-svg';
 import type { IconKey, PaletteKey } from '@/domain/types';
 import { assetPalette } from '@/theme/theme';
 import { Box } from './primitives';
@@ -70,5 +70,42 @@ export function AssetIcon({ icon, color, size = 40 }: { icon: IconKey; color: Pa
     >
       <Glyph d={ICON_PATHS[icon]} size={size * 0.55} color={p.main} strokeWidth={size > 56 ? 1.6 : 1.8} />
     </Box>
+  );
+}
+
+const MARK_SEGMENTS: [string, number][] = [
+  ['#6246EA', 0.34],
+  ['#C2388A', 0.26],
+  ['#E4572E', 0.22],
+  ['#1E96C8', 0.18],
+];
+
+/** The app icon's mark: a portfolio donut that is also a clock face. Same geometry as the icon. */
+export function BrandMark({ size = 28 }: { size?: number }) {
+  const r = 300;
+  const circ = 2 * Math.PI * r;
+  const gap = 26;
+  const starts = MARK_SEGMENTS.map((_, i) => MARK_SEGMENTS.slice(0, i).reduce((a, [, s]) => a + s * circ, 0));
+  return (
+    <Svg width={size} height={size} viewBox="0 0 1024 1024" accessibilityElementsHidden>
+      <Path d="M224 0h576a224 224 0 0 1 224 224v576a224 224 0 0 1-224 224H224A224 224 0 0 1 0 800V224A224 224 0 0 1 224 0z" fill="#15171A" />
+      {MARK_SEGMENTS.map(([color, share], i) => (
+        <Circle
+          key={color}
+          cx={512}
+          cy={512}
+          r={r}
+          fill="none"
+          stroke={color}
+          strokeWidth={132}
+          strokeDasharray={`${share * circ - gap} ${circ}`}
+          strokeDashoffset={-starts[i] - gap / 2}
+          rotation={-90}
+          origin="512, 512"
+        />
+      ))}
+      <Line x1={512} y1={512} x2={681.7} y2={414} stroke="#FFFFFF" strokeWidth={50} strokeLinecap="round" />
+      <Circle cx={512} cy={512} r={46} fill="#FFFFFF" />
+    </Svg>
   );
 }

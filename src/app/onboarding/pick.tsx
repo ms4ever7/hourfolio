@@ -14,9 +14,6 @@ import { assetPalette, useAppTheme } from '@/theme/theme';
 type Filter = 'all' | Exclude<EnergyType, 'recovery'>;
 const FILTERS: Filter[] = ['all', 'body', 'creative', 'mind'];
 
-/** Roman's hobbies are preselected on first run; anyone else just unticks them. */
-const DEFAULT_PICKS = ['guitar', 'crossfit', 'coding', 'aiLearning', 'djing', 'musicProduction', 'cryptoStrategies', 'cardCollecting', 'anime'];
-
 export default function Pick() {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
@@ -24,7 +21,7 @@ export default function Pick() {
   const drafts = useOnboardingStore((s) => s.drafts);
   const setDrafts = useOnboardingStore((s) => s.setDrafts);
   const [selected, setSelected] = useState<string[]>(() =>
-    drafts.length ? drafts.flatMap((d) => (d.catalogId ? [d.catalogId] : [])) : DEFAULT_PICKS,
+    drafts.flatMap((d) => (d.catalogId ? [d.catalogId] : [])),
   );
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');

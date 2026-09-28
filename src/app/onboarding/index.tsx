@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
-import { AssetIcon, Glyph } from '@/components/icons';
+import { AssetIcon, BrandMark } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { OptionButton, PrimaryButton, Screen } from '@/components/ui';
 import { formatHours } from '@/domain/format';
@@ -59,9 +59,7 @@ export default function Welcome() {
       }
     >
       <Box flexDirection="row" alignItems="center" gap="s">
-        <Box width={28} height={28} backgroundColor="hours" alignItems="center" justifyContent="center" style={{ borderRadius: 9 }}>
-          <Glyph d="M4 17l5-5 4 3 7-8" size={16} color={colors.onInverse} strokeWidth={2.4} />
-        </Box>
+        <BrandMark size={28} />
         <Text variant="bodyStrong" style={{ fontFamily: 'Onest_700Bold' }}>
           Hourfolio
         </Text>
