@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { Pressable, ScrollView, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { Pressable, ScrollView, Switch, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { durationParts, formatHours } from '@/domain/format';
@@ -7,6 +7,7 @@ import type { Trend } from '@/domain/growth';
 import { APP_LANGUAGES, LANGUAGE_BADGE } from '@/i18n/resources';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme, type ThemeColor } from '@/theme/theme';
+import { Backdrop } from './backdrop';
 import { Glyph, UI_PATHS } from './icons';
 import { Box, Text } from './primitives';
 
@@ -19,9 +20,12 @@ export function Screen({ children, footer, scroll = true }: { children: ReactNod
   );
   return (
     <Box flex={1} backgroundColor="ground">
+      <Backdrop />
       {scroll ? <ScrollView keyboardShouldPersistTaps="handled">{content}</ScrollView> : content}
-      {/* Keeps scrolled content from running under the status bar. */}
-      <Box position="absolute" backgroundColor="ground" style={{ top: 0, left: 0, right: 0, height: insets.top }} />
+      {/* Keeps scrolled content from running under the status bar; the backdrop shows through it unchanged. */}
+      <Box position="absolute" backgroundColor="ground" overflow="hidden" style={{ top: 0, left: 0, right: 0, height: insets.top }}>
+        <Backdrop />
+      </Box>
       {footer}
     </Box>
   );
@@ -154,7 +158,7 @@ export function PrimaryButton({ label, onPress, dark, disabled, icon }: { label:
       style={({ pressed }) => ({
         height: 56,
         borderRadius: 16,
-        backgroundColor: dark ? colors.inverse : colors.hours,
+        backgroundColor: dark ? colors.inverse : colors.accent,
         alignItems: 'center',
         justifyContent: 'center',
         flexDirection: 'row',
@@ -163,8 +167,8 @@ export function PrimaryButton({ label, onPress, dark, disabled, icon }: { label:
         opacity: disabled ? 0.4 : pressed ? 0.85 : 1,
       })}
     >
-      {icon ? <Glyph d={icon} size={20} color={colors.onInverse} strokeWidth={2.2} /> : null}
-      <Text variant="bodyStrong" color="onInverse" style={{ fontSize: 16 }}>
+      {icon ? <Glyph d={icon} size={20} color={dark ? colors.onInverse : colors.onAccent} strokeWidth={2.2} /> : null}
+      <Text variant="bodyStrong" color={dark ? 'onInverse' : 'onAccent'} style={{ fontSize: 16 }}>
         {label}
       </Text>
     </Pressable>
@@ -294,6 +298,88 @@ export function SectionHeader({ title, right }: { title: string; right?: ReactNo
         {title}
       </Text>
       {right}
+    </Box>
+  );
+}
+
+/** A row in a grouped list, like iOS Settings. */
+export function ListRow({
+  title,
+  sub,
+  value,
+  left,
+  onPress,
+  danger,
+  last,
+}: {
+  title: string;
+  sub?: string;
+  value?: string;
+  left?: ReactNode;
+  onPress: () => void;
+  danger?: boolean;
+  last?: boolean;
+}) {
+  const { colors } = useAppTheme();
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityHint={value}
+      onPress={onPress}
+      style={({ pressed }) => ({
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 12,
+        minHeight: 52,
+        paddingVertical: 10,
+        paddingHorizontal: 16,
+        borderBottomWidth: last ? 0 : 1,
+        borderColor: colors.line,
+        opacity: pressed ? 0.7 : 1,
+      })}
+    >
+      {left}
+      <Box flex={1} gap="xs">
+        <Text variant="bodyStrong" style={{ color: danger ? colors.danger : colors.ink }}>
+          {title}
+        </Text>
+        {sub ? <Text variant="small">{sub}</Text> : null}
+      </Box>
+      {value ? (
+        <Text variant="label" color="muted" numberOfLines={1}>
+          {value}
+        </Text>
+      ) : null}
+      <Glyph d={UI_PATHS.chevronRight} size={16} color={colors.faint} strokeWidth={2} />
+    </Pressable>
+  );
+}
+
+export function SwitchRow({ title, sub, value, onChange, disabled, last }: { title: string; sub?: string; value: boolean; onChange: (v: boolean) => void; disabled?: boolean; last?: boolean }) {
+  const { colors } = useAppTheme();
+  return (
+    <Box flexDirection="row" alignItems="center" gap="sm" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={last ? 0 : 1} borderColor="line" style={{ opacity: disabled ? 0.5 : 1 }}>
+      <Box flex={1} gap="xs">
+        <Text variant="bodyStrong">{title}</Text>
+        {sub ? <Text variant="small">{sub}</Text> : null}
+      </Box>
+      <Switch value={value} onValueChange={onChange} disabled={disabled} accessibilityLabel={title} trackColor={{ true: colors.accent, false: colors.track }} ios_backgroundColor={colors.track} />
+    </Box>
+  );
+}
+
+/** The white-card group that holds list rows. */
+export function Group({ title, children }: { title?: string; children: ReactNode }) {
+  return (
+    <Box gap="s">
+      {title ? (
+        <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold', letterSpacing: 0.3, marginLeft: 4 }} accessibilityRole="header">
+          {title.toLocaleUpperCase()}
+        </Text>
+      ) : null}
+      <Box backgroundColor="card" borderRadius="xl" overflow="hidden">
+        {children}
+      </Box>
     </Box>
   );
 }

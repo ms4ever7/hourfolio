@@ -5,6 +5,7 @@ import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
+import { withAlpha } from '@/domain/color';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
 
@@ -12,7 +13,7 @@ const TAB_ICONS: Record<string, string> = {
   index: UI_PATHS.portfolio,
   analytics: UI_PATHS.analytics,
   goals: UI_PATHS.target,
-  settings: UI_PATHS.settings,
+  profile: UI_PATHS.user,
 };
 
 function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
@@ -56,14 +57,14 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
             width: 56,
             height: 56,
             borderRadius: 28,
-            backgroundColor: colors.hours,
+            backgroundColor: colors.accent,
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 6px 16px rgba(39,71,214,0.3)',
+            boxShadow: `0 6px 16px ${withAlpha(colors.accent, 0.3)}`,
             transform: [{ scale: pressed ? 0.94 : 1 }],
           })}
         >
-          <Glyph d={UI_PATHS.plus} size={26} color={colors.onInverse} strokeWidth={2.2} />
+          <Glyph d={UI_PATHS.plus} size={26} color={colors.onAccent} strokeWidth={2.2} />
         </Pressable>
       </Box>
       {tab(2)}
@@ -81,7 +82,7 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: t('tabs.portfolio') }} />
       <Tabs.Screen name="analytics" options={{ title: t('tabs.analytics') }} />
       <Tabs.Screen name="goals" options={{ title: t('tabs.goals') }} />
-      <Tabs.Screen name="settings" options={{ title: t('tabs.settings') }} />
+      <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
     </Tabs>
   );
 }

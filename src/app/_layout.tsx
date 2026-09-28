@@ -6,7 +6,8 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { theme } from '@/theme/theme';
+import { useAppearance, useSeasonIconSync } from '@/lib/appearance';
+import { useWeekNudge } from '@/lib/notifications';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -19,6 +20,9 @@ export default function RootLayout() {
     JetBrainsMono_500Medium,
     JetBrainsMono_600SemiBold,
   });
+  const { theme, mode } = useAppearance();
+  useSeasonIconSync();
+  useWeekNudge();
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();
@@ -28,10 +32,15 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider theme={theme}>
-      <StatusBar style="dark" />
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.ground } }}>
         <Stack.Screen name="log" options={{ presentation: 'modal' }} />
         <Stack.Screen name="goals-edit" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="asset-edit" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="avatar" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="language" options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents', sheetGrabberVisible: true, contentStyle: { backgroundColor: theme.colors.ground } }} />
+        <Stack.Screen name="congrats" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+        <Stack.Screen name="share-week" options={{ presentation: 'modal' }} />
       </Stack>
     </ThemeProvider>
   );

@@ -10,13 +10,13 @@ import { useAssetName } from '@/lib/labels';
 import { useOnboardingStore } from '@/store/onboarding-store';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { useSettingsStore } from '@/store/settings-store';
-import { assetPalette, PALETTE_KEYS, useAppTheme } from '@/theme/theme';
+import { PALETTE_KEYS, useAppTheme } from '@/theme/theme';
 
 const CAPITAL_HOURS = [0, 50, 200, 500];
 
 export default function Setup() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const assetName = useAssetName();
   const step = Number(useLocalSearchParams<{ step: string }>().step ?? 0);
@@ -56,7 +56,7 @@ export default function Setup() {
           <Text variant="small">{t('setup.step', { current: step + 1, total: drafts.length })}</Text>
           <Box flexDirection="row" gap="xs">
             {drafts.map((d, i) => (
-              <Box key={i} width={Math.max(6, Math.min(14, 160 / drafts.length))} height={4} borderRadius="pill" style={{ backgroundColor: i <= step ? colors.hours : '#DAD6CE' }} />
+              <Box key={i} width={Math.max(6, Math.min(14, 160 / drafts.length))} height={4} borderRadius="pill" style={{ backgroundColor: i <= step ? colors.accent : colors.dashed }} />
             ))}
           </Box>
         </Box>
@@ -89,7 +89,7 @@ export default function Setup() {
                 onPress={() => updateDraft(step, { color: key })}
                 style={{ width: 40, height: 40, borderRadius: 20, borderWidth: on ? 2 : 1, borderColor: on ? colors.ink : colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card }}
               >
-                <Box width={28} height={28} borderRadius="pill" style={{ backgroundColor: assetPalette[key].main }} />
+                <Box width={28} height={28} borderRadius="pill" style={{ backgroundColor: palette[key].main }} />
               </Pressable>
             );
           })}
@@ -139,7 +139,7 @@ export default function Setup() {
                 <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold' }}>
                   {h === 0 ? t('setup.justStarting') : `${i === CAPITAL_HOURS.length - 1 ? `${h}+` : `~${h}`}`}
                   {h > 0 ? (
-                    <Text variant="small" style={{ color: on ? colors.hoursOnDark : colors.hours, fontFamily: 'Onest_600SemiBold' }}>
+                    <Text variant="small" style={{ color: on ? colors.hoursOnInverse : colors.hours, fontFamily: 'Onest_600SemiBold' }}>
                       {' '}
                       {t('units.h')}
                     </Text>

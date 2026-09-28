@@ -4,9 +4,9 @@ import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WeeklyBars } from '@/components/charts';
-import { AssetIcon, UI_PATHS } from '@/components/icons';
+import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { BackButton, Card, Duration, Hours, LanguageButton, PrimaryButton, Screen, SectionHeader } from '@/components/ui';
+import { BackButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, daysBetween, parseDay, startOfMonth, startOfWeek } from '@/domain/dates';
 import { formatHours, formatHoursDelta } from '@/domain/format';
 import { capitalMinutes, momentum, MOMENTUM_FLOOR, nextMilestone, trend, weeksTo } from '@/domain/growth';
@@ -14,14 +14,14 @@ import { sumMinutes, weeklyMinutes } from '@/domain/stats';
 import { capitalize, sessionDate, shortDate, useAssetName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
-import { assetPalette, useAppTheme } from '@/theme/theme';
+import { useAppTheme } from '@/theme/theme';
 
 const WEEKS = 12;
 
 export default function AssetScreen() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const assetName = useAssetName();
@@ -74,7 +74,7 @@ export default function AssetScreen() {
     );
   }
 
-  const p = assetPalette[asset.color];
+  const p = palette[asset.color];
   const name = assetName(asset);
   const monthDelta = data.month - data.prevMonth;
   const relDay = (day: string) => {
@@ -98,11 +98,16 @@ export default function AssetScreen() {
     >
       <Box flexDirection="row" alignItems="center" justifyContent="space-between">
         <BackButton onPress={() => router.back()} />
-        <LanguageButton />
+        <RoundButton accessibilityLabel={t('assetEdit.edit')} onPress={() => router.push({ pathname: '/asset-edit', params: { id: asset.id } })}>
+          <Glyph d={UI_PATHS.pencil} size={16} color={colors.ink} />
+          <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+            {t('assetEdit.edit')}
+          </Text>
+        </RoundButton>
       </Box>
 
       <Box flexDirection="row" alignItems="center" gap="sm">
-        <AssetIcon icon={asset.icon} color={asset.color} size={64} />
+        <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={64} />
         <Box flex={1} gap="xs">
           <Text variant="title" style={{ fontSize: 26 }} accessibilityRole="header">
             {name}

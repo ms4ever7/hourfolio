@@ -44,6 +44,13 @@ export type IconKey =
   | 'pot'
   | 'star';
 
+/**
+ * What stands for an asset instead of its line icon: an emoji, or a photo the
+ * user took (their guitar, their bike). Photos are file names in the app's
+ * document folder, not full paths, because iOS moves that folder on updates.
+ */
+export type AssetFace = { kind: 'emoji'; emoji: string } | { kind: 'photo'; file: string };
+
 /** Anything the user invests time in: a hobby, a skill, or recovery. */
 export interface Asset {
   id: string;
@@ -52,6 +59,8 @@ export interface Asset {
   /** Set for custom assets the user named themselves. */
   customName?: string;
   icon: IconKey;
+  /** Shown instead of `icon` when set. */
+  face?: AssetFace;
   color: PaletteKey;
   energy: EnergyType;
   rhythm: Rhythm;
