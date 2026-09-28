@@ -2,8 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { durationParts } from '@/domain/format';
-import { startOfWeek } from '@/domain/dates';
-import { weekNudge, type Nudge } from '@/domain/goals';
+import { weekNudge } from '@/domain/goals';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAssetName } from './labels';
 import { usePortfolio } from './usePortfolio';
@@ -23,15 +22,6 @@ export async function allowNotifications(): Promise<boolean> {
   return (await Notifications.requestPermissionsAsync()).granted;
 }
 
-type T = (key: string, options?: Record<string, unknown>) => string;
-
-function nudgeContent(nudge: Nudge, t: T, name: string) {
-  const remaining = durationParts(nudge.remaining)
-    .map((p) => `${p.value} ${t(`units.${p.unit}`)}`)
-    .join(' ');
-  return { title: t('nudge.title', { name }), body: t('nudge.body', { remaining }) };
-}
-
 /**
  * Keeps one reminder scheduled for Sunday evening when a weekly goal is nearly
  * met. It is recomputed whenever sessions change, so its text is always current,
@@ -49,9 +39,12 @@ export function useWeekNudge() {
       await Notifications.cancelScheduledNotificationAsync(NUDGE_ID).catch(() => undefined);
       const nudge = on ? weekNudge(assets, logs, new Date()) : null;
       if (!nudge || cancelled) return;
+      const remaining = durationParts(nudge.remaining)
+        .map((p) => `${p.value} ${t(`units.${p.unit}`)}`)
+        .join(' ');
       await Notifications.scheduleNotificationAsync({
         identifier: NUDGE_ID,
-        content: nudgeContent(nudge, t, assetName(nudge.asset)),
+        content: { title: t('nudge.title', { name: assetName(nudge.asset) }), body: t('nudge.body', { remaining }) },
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: nudge.at },
       });
     };
@@ -60,28 +53,4 @@ export function useWeekNudge() {
       cancelled = true;
     };
   }, [on, assets, logs, t, assetName]);
-}
-
-/**
- * Development only: sends this week's reminder in 10 seconds instead of on
- * Sunday, with the same text. When no weekly goal is nearly met it sends a
- * sample (25 minutes left) for one of the user's assets, so there is always
- * something to see. Resolves to whether the reminder was real or a sample.
- */
-export function useTestNudge() {
-  const { t } = useTranslation();
-  const assetName = useAssetName();
-  const { assets, logs } = usePortfolio();
-  return async (): Promise<'real' | 'sample' | null> => {
-    // Monday 00:00 of this week: same week, but before the Sunday cut-off.
-    const real = weekNudge(assets, logs, startOfWeek(new Date()));
-    const asset = assets.find((a) => a.weeklyGoalMinutes) ?? assets[0];
-    const nudge: Nudge | null = real ?? (asset ? { asset, remaining: 25, at: new Date() } : null);
-    if (!nudge) return null;
-    await Notifications.scheduleNotificationAsync({
-      content: nudgeContent(nudge, t, assetName(nudge.asset)),
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 10 },
-    });
-    return real ? 'real' : 'sample';
-  };
 }
