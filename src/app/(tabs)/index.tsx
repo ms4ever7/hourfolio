@@ -6,13 +6,16 @@ import Svg, { Path } from 'react-native-svg';
 import { CumulativeChart, Donut, Sparkline } from '@/components/charts';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Card, Hours, LanguageButton, Screen, SectionHeader, Segmented, TrendChip } from '@/components/ui';
+import { ProfileAvatar } from '@/components/avatar';
+import { Card, Hours, Screen, SectionHeader, Segmented, TrendChip } from '@/components/ui';
 import { addDays, daysBetween, daysInMonth, parseDay } from '@/domain/dates';
 import { formatHours, formatHoursDelta, percent } from '@/domain/format';
 import { allocation, cumulativeHours, periodRanges, sumMinutes, type Period } from '@/domain/stats';
 import { capitalize, longDate, monthGenitive, monthName, shortDate, useAssetName } from '@/lib/labels';
+import { useSeason } from '@/lib/appearance';
 import { useHoldings, usePortfolio, useToday, type Holding } from '@/lib/usePortfolio';
-import { assetPalette, useAppTheme } from '@/theme/theme';
+import { useSettingsStore } from '@/store/settings-store';
+import { useAppTheme } from '@/theme/theme';
 
 const PERIODS: Period[] = ['week', 'month', 'year', 'all'];
 
@@ -30,12 +33,15 @@ function periodLength(period: Period, today: Date, elapsed: number) {
 export default function Portfolio() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const { width } = useWindowDimensions();
   const assetName = useAssetName();
   const today = useToday();
   const { assets, logs } = usePortfolio();
   const [period, setPeriod] = useState<Period>('month');
+  const avatar = useSettingsStore((s) => s.avatar);
+  const name = useSettingsStore((s) => s.name.trim());
+  const season = useSeason();
 
   const { current, previous } = useMemo(() => periodRanges(period, today, logs), [period, today, logs]);
   const holdings = useHoldings(assets, logs, current, previous, today);
@@ -78,10 +84,13 @@ export default function Portfolio() {
         <Box flex={1} gap="xs">
           <Text variant="caption">{capitalize(longDate(locale, new Date()))}</Text>
           <Text variant="heading" style={{ fontSize: 20 }}>
-            {t(`greeting.${greetingKey(new Date().getHours())}`)}
+            {name ? t('greeting.named', { greeting: t(`greeting.${greetingKey(new Date().getHours())}`), name }) : t(`greeting.${greetingKey(new Date().getHours())}`)}
+            {season ? ` ${season.decor}` : ''}
           </Text>
         </Box>
-        <LanguageButton />
+        <Pressable accessibilityRole="button" accessibilityLabel={t('profile.title')} onPress={() => router.navigate('/(tabs)/profile')} hitSlop={6}>
+          <ProfileAvatar avatar={avatar} size={44} />
+        </Pressable>
       </Box>
 
       <Box gap="s">
@@ -117,9 +126,9 @@ export default function Portfolio() {
               <Text variant="small">{capitalize(periodLabel)}</Text>
             </Box>
             <Box flexDirection="row" alignItems="center" gap="s">
-              <Box width={16} style={{ borderTopWidth: 2, borderStyle: 'dashed', borderColor: '#A3A7AE' }} />
+              <Box width={16} style={{ borderTopWidth: 2, borderStyle: 'dashed', borderColor: colors.previous }} />
               <Text variant="small">
-                {capitalize(prevLabel)} · {formatHours(prevTotal, locale)} {t('units.h')}
+                {capitalize(period === 'month' ? monthName(locale, new Date(today.getFullYear(), today.getMonth() - 1, 1)) : prevLabel)} · {formatHours(prevTotal, locale)} {t('units.h')}
               </Text>
             </Box>
           </Box>
@@ -136,7 +145,7 @@ export default function Portfolio() {
           <SectionHeader title={t('portfolio.allocation')} right={<Text variant="small">{periodLabel}</Text>} />
           <Box flexDirection="row" alignItems="center" gap="ml">
             <Donut
-              slices={slices.map((s) => ({ share: s.share, color: s.assetId === 'other' ? '#A9AEB5' : assetPalette[byId.get(s.assetId)?.color ?? 'grey'].main }))}
+              slices={slices.map((s) => ({ share: s.share, color: s.assetId === 'other' ? colors.previous : palette[byId.get(s.assetId)?.color ?? 'grey'].main }))}
               centerTop={formatHours(total, locale)}
               centerBottom={t('units.h')}
               accessibilityLabel={slices.map((s) => `${s.assetId === 'other' ? t('portfolio.other') : assetName(byId.get(s.assetId)!)} ${percent(s.share)}`).join(', ')}
@@ -146,7 +155,7 @@ export default function Portfolio() {
                 const a = byId.get(s.assetId);
                 return (
                   <Box key={s.assetId} flexDirection="row" alignItems="center" gap="s">
-                    <Box width={8} height={8} style={{ borderRadius: 2, backgroundColor: a ? assetPalette[a.color].main : '#A9AEB5' }} />
+                    <Box width={8} height={8} style={{ borderRadius: 2, backgroundColor: a ? palette[a.color].main : colors.previous }} />
                     <Text variant="caption" color="ink" numberOfLines={1} style={{ flex: 1 }}>
                       {a ? assetName(a) : t('portfolio.other')}
                     </Text>
@@ -164,7 +173,7 @@ export default function Portfolio() {
           title={t('portfolio.assets')}
           right={
             <Pressable accessibilityRole="link" onPress={() => router.navigate('/(tabs)/analytics')} hitSlop={8}>
-              <Text variant="label" color="hoursInk">
+              <Text variant="label" color="accentInk">
                 {t('tabs.analytics')}
               </Text>
             </Pressable>
@@ -182,7 +191,7 @@ export default function Portfolio() {
 
 function HoldingRow({ h, last, name, today, showDelta }: { h: Holding; last: boolean; name: string; today: Date; showDelta: boolean }) {
   const { t, i18n } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const delta = h.minutes - h.prevMinutes;
   const meta =
     h.trend === 'paused' && h.lastDay
@@ -208,7 +217,7 @@ function HoldingRow({ h, last, name, today, showDelta }: { h: Holding; last: boo
         opacity: pressed ? 0.7 : 1,
       })}
     >
-      <AssetIcon icon={h.asset.icon} color={h.asset.color} size={40} />
+      <AssetIcon icon={h.asset.icon} color={h.asset.color} face={h.asset.face} size={40} />
       <Box flex={1} gap="xs">
         <Text variant="bodyStrong" numberOfLines={1}>
           {name}
@@ -220,7 +229,7 @@ function HoldingRow({ h, last, name, today, showDelta }: { h: Holding; last: boo
           </Text>
         </Box>
       </Box>
-      <Sparkline values={h.spark} color={assetPalette[h.asset.color].main} />
+      <Sparkline values={h.spark} color={palette[h.asset.color].main} />
       <Box alignItems="flex-end" gap="xs" style={{ width: 72 }}>
         <Hours minutes={h.minutes} />
         {showDelta ? (

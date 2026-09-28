@@ -1,31 +1,30 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
+import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Card, Duration, Hours, LanguageButton, PrimaryButton, Screen, SectionHeader, TextButton } from '@/components/ui';
+import { GoalScene } from '@/components/scenes';
+import { Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, TextButton } from '@/components/ui';
 import { addDays, dayKey, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { capitalMinutes, nextMilestone, weeksTo } from '@/domain/growth';
+import { SCENES, sceneArt } from '@/domain/goals';
 import { sumMinutes, weeklyMinutes } from '@/domain/stats';
 import { useAssetName } from '@/lib/labels';
+import { useSeason } from '@/lib/appearance';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
-import { assetPalette, useAppTheme } from '@/theme/theme';
-
-function Bar({ progress, color, tint }: { progress: number; color: string; tint: string }) {
-  const pct = Math.round(Math.min(1, progress) * 100);
-  return (
-    <Box height={8} borderRadius="pill" style={{ backgroundColor: tint }} accessibilityRole="progressbar" accessibilityValue={{ min: 0, max: 100, now: pct }}>
-      <Box height={8} borderRadius="pill" style={{ width: `${Math.max(pct, 2)}%`, backgroundColor: color }} />
-    </Box>
-  );
-}
+import { useSettingsStore } from '@/store/settings-store';
+import { useAppTheme } from '@/theme/theme';
 
 export default function Goals() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
   const today = useToday();
   const { assets, logs } = usePortfolio();
+  const scene = useSettingsStore((st) => st.goalScene);
+  const setScene = useSettingsStore((st) => st.setGoalScene);
+  const season = useSeason();
 
   const week = useMemo(() => {
     const from = startOfWeek(today);
@@ -56,7 +55,14 @@ export default function Goals() {
         <Text variant="title" style={{ flex: 1 }} accessibilityRole="header">
           {t('goals.title')}
         </Text>
-        <LanguageButton />
+        {logs.length > 0 ? (
+          <RoundButton accessibilityLabel={t('goals.shareWeek')} onPress={() => router.push('/share-week')}>
+            <Glyph d={UI_PATHS.share} size={16} color={colors.ink} />
+            <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+              {t('share.button')}
+            </Text>
+          </RoundButton>
+        ) : null}
       </Box>
       <Text variant="label" color="muted" style={{ marginTop: -12 }}>
         {t('goals.sub')}
@@ -72,12 +78,12 @@ export default function Goals() {
         ) : (
           <>
             {week.map(({ asset, done, goal }) => {
-              const p = assetPalette[asset.color];
+              const p = palette[asset.color];
               const met = done >= goal;
               return (
                 <Box key={asset.id} gap="s" paddingVertical="xs">
                   <Box flexDirection="row" alignItems="center" gap="sm">
-                    <AssetIcon icon={asset.icon} color={asset.color} size={36} />
+                    <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={36} />
                     <Box flex={1} gap="xs">
                       <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }} numberOfLines={1}>
                         {assetName(asset)}
@@ -97,10 +103,36 @@ export default function Goals() {
                       </Box>
                     ) : null}
                   </Box>
-                  <Bar progress={done / goal} color={met ? colors.days : p.main} tint={met ? colors.daysSoft : p.tint} />
+                  <GoalScene scene={scene} progress={done / goal} color={met ? colors.days : p.main} tint={met ? colors.daysSoft : p.tint} season={season?.id ?? null} accessibilityLabel={assetName(asset)} />
                 </Box>
               );
             })}
+            <Box gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('goals.scene')}>
+              <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                {t('goals.scene')}
+              </Text>
+              <Box flexDirection="row" flexWrap="wrap" gap="s">
+                {SCENES.map((id) => {
+                  const on = id === scene;
+                  const art = id === 'bar' ? null : sceneArt(id, season?.id ?? null);
+                  return (
+                    <Pressable
+                      key={id}
+                      accessibilityRole="radio"
+                      accessibilityState={{ checked: on }}
+                      accessibilityLabel={t(`scenes.${id}`)}
+                      onPress={() => setScene(id)}
+                      style={{ height: 36, paddingHorizontal: 12, borderRadius: 18, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: on ? colors.inverse : colors.ground, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
+                    >
+                      {art ? <Text style={{ fontSize: 16, lineHeight: 20 }}>{art.stages ? art.stages.at(-1) : art.runner}</Text> : null}
+                      <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+                        {t(`scenes.${id}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </Box>
+            </Box>
             <TextButton label={t('goals.edit')} onPress={() => router.push('/goals-edit')} />
           </>
         )}
@@ -110,11 +142,11 @@ export default function Goals() {
         <SectionHeader title={t('goals.milestones')} />
         <Box backgroundColor="card" borderRadius="xl" paddingVertical="xs">
           {milestones.map((m, i) => {
-            const p = assetPalette[m.asset.color];
+            const p = palette[m.asset.color];
             return (
               <Box key={m.asset.id} gap="s" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={i === milestones.length - 1 ? 0 : 1} borderColor="line">
                 <Box flexDirection="row" alignItems="center" gap="sm">
-                  <AssetIcon icon={m.asset.icon} color={m.asset.color} size={36} />
+                  <AssetIcon icon={m.asset.icon} color={m.asset.color} face={m.asset.face} size={36} />
                   <Box flex={1} gap="xs">
                     <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }} numberOfLines={1}>
                       {assetName(m.asset)}
@@ -123,7 +155,7 @@ export default function Goals() {
                   </Box>
                   <Hours minutes={m.next * 60} variant="bodyStrong" />
                 </Box>
-                <Bar progress={m.progress} color={p.main} tint={p.tint} />
+                <GoalScene scene="bar" progress={m.progress} color={p.main} tint={p.tint} season={null} />
               </Box>
             );
           })}

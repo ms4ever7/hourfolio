@@ -6,10 +6,11 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "hourfolio",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/hourfolio.icon",
       "bundleIdentifier": "com.ms4ever7.hourfolio",
+      "appleTeamId": "2RMJ37733D",
       "supportsTablet": false
     },
     "android": {
@@ -37,7 +38,36 @@
         }
       ],
       "expo-localization",
-      "./plugins/with-scene-lifecycle"
+      "./plugins/with-scene-lifecycle",
+      "expo-sharing",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Hourfolio uses your photos only for the pictures you pick for your profile and assets. They stay on this device."
+        }
+      ],
+      [
+        "expo-alternate-app-icons",
+        [
+          {
+            "name": "Pumpkin",
+            "ios": "./assets/images/app-icons/pumpkin.png",
+            "android": {
+              "foregroundImage": "./assets/images/app-icons/pumpkin-android-foreground.png",
+              "backgroundColor": "#1B0F2E"
+            }
+          },
+          {
+            "name": "Winter",
+            "ios": "./assets/images/app-icons/winter.png",
+            "android": {
+              "foregroundImage": "./assets/images/app-icons/winter-android-foreground.png",
+              "backgroundColor": "#10243A"
+            }
+          }
+        ]
+      ],
+      "./plugins/without-push-entitlement"
     ],
     "experiments": {
       "typedRoutes": false,

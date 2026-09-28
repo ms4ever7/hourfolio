@@ -33,7 +33,7 @@ export default function GoalsEdit() {
             const goal = a.weeklyGoalMinutes ?? 0;
             return (
               <Box key={a.id} flexDirection="row" alignItems="center" gap="sm" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={i === assets.length - 1 ? 0 : 1} borderColor="line">
-                <AssetIcon icon={a.icon} color={a.color} size={36} />
+                <AssetIcon icon={a.icon} color={a.color} face={a.face} size={36} />
                 <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Onest_600SemiBold' }}>
                   {assetName(a)}
                 </Text>

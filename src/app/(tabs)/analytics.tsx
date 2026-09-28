@@ -10,14 +10,14 @@ import { energyBalance, monthHeatmap, sumMinutes } from '@/domain/stats';
 import { ENERGY_TYPES, RECOVERY_ID } from '@/domain/types';
 import { capitalize, monthYear, useAssetName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
-import { assetPalette, energyColor, heatSteps, useAppTheme } from '@/theme/theme';
+import { energyColor, useAppTheme } from '@/theme/theme';
 
 const ENERGY_ICON = { mind: 'code', creative: 'guitar', body: 'dumbbell', recovery: 'moon' } as const;
 
 export default function Analytics() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
-  const { colors } = useAppTheme();
+  const { colors, palette, heatSteps } = useAppTheme();
   const assetName = useAssetName();
   const today = useToday();
   const { assets, logs } = usePortfolio();
@@ -69,7 +69,7 @@ export default function Analytics() {
           <Text variant="caption">{t('analytics.empty')}</Text>
         ) : (
           <StackedBar
-            parts={order.map((e) => ({ share: d.balance[e] / d.total, color: assetPalette[energyColor[e]].main }))}
+            parts={order.map((e) => ({ share: d.balance[e] / d.total, color: palette[energyColor[e]].main }))}
             accessibilityLabel={ENERGY_TYPES.map((e) => `${t(`energy.${e}`)} ${percent(d.balance[e] / d.total)}`).join(', ')}
           />
         )}
@@ -118,8 +118,8 @@ export default function Analytics() {
 
       <Box backgroundColor="inverse" borderRadius="xl" padding="ml" gap="s">
         <Box flexDirection="row" alignItems="center" gap="s">
-          <Glyph d={ICON_PATHS.moon} size={16} color={colors.daysOnDark} strokeWidth={2} />
-          <Text variant="small" color="daysOnDark" style={{ fontFamily: 'Onest_600SemiBold' }}>
+          <Glyph d={ICON_PATHS.moon} size={16} color={colors.daysOnInverse} strokeWidth={2} />
+          <Text variant="small" color="daysOnInverse" style={{ fontFamily: 'Onest_600SemiBold' }}>
             {t('analytics.insight')}
           </Text>
         </Box>

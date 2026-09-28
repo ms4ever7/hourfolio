@@ -1,7 +1,7 @@
 import Svg, { Circle, G, Line, Path, Polyline, Rect, Text as SvgText } from 'react-native-svg';
 import type { HeatDay } from '@/domain/stats';
 import { heatLevel } from '@/domain/stats';
-import { heatSteps, useAppTheme } from '@/theme/theme';
+import { useAppTheme } from '@/theme/theme';
 import { Box, Text } from './primitives';
 
 const MONO = 'JetBrainsMono_500Medium';
@@ -55,9 +55,9 @@ export function CumulativeChart({
           </SvgText>
         </G>
       ))}
-      <Line x1={0} y1={plotH} x2={width} y2={plotH} stroke="#CFCAC0" strokeWidth={1} />
+      <Line x1={0} y1={plotH} x2={width} y2={plotH} stroke={colors.axis} strokeWidth={1} />
       {previous && previous.length > 1 ? (
-        <Polyline points={pts(previous, previous.length)} fill="none" stroke="#A3A7AE" strokeWidth={1.5} strokeDasharray="4 4" />
+        <Polyline points={pts(previous, previous.length)} fill="none" stroke={colors.previous} strokeWidth={1.5} strokeDasharray="4 4" />
       ) : null}
       {current.length > 1 ? (
         <>
@@ -231,7 +231,7 @@ export function StackedBar({ parts, accessibilityLabel }: { parts: { share: numb
 }
 
 export function Heatmap({ cells, weekdays }: { cells: (HeatDay | null)[]; weekdays: string[] }) {
-  const { colors } = useAppTheme();
+  const { colors, heatSteps } = useAppTheme();
   const max = Math.max(0, ...cells.map((c) => c?.minutes ?? 0));
   const rows: (HeatDay | null)[][] = [];
   for (let i = 0; i < cells.length; i += 7) rows.push(cells.slice(i, i + 7));
@@ -250,7 +250,7 @@ export function Heatmap({ cells, weekdays }: { cells: (HeatDay | null)[]; weekda
             if (!c) return <Box key={i} style={{ flex: 1, height: 38 }} />;
             const level = heatLevel(c.minutes, max);
             const bg = c.future ? 'transparent' : c.restOnly ? colors.daysSoft : level === 0 ? colors.track : heatSteps[level - 1];
-            const fg = c.restOnly ? '#0F4D43' : level >= 3 ? colors.onInverse : c.future ? colors.faint : colors.ink;
+            const fg = c.restOnly ? colors.daysInk : level >= 3 ? colors.card : c.future ? colors.faint : colors.ink;
             return (
               <Box
                 key={i}

@@ -33,7 +33,7 @@ function HeroArt() {
       <Box position="absolute" backgroundColor="inverse" borderRadius="pill" paddingHorizontal="sm" style={{ left: 24, top: 24, paddingVertical: 6 }}>
         <Text variant="mono" color="onInverse" style={{ fontSize: 14 }}>
           +{formatHours(6870, i18n.language)}
-          <Text variant="bodyStrong" color="hoursOnDark" style={{ fontSize: 12 }}>
+          <Text variant="bodyStrong" color="hoursOnInverse" style={{ fontSize: 12 }}>
             {' '}
             {t('units.h')}
           </Text>
@@ -95,7 +95,7 @@ export default function Welcome() {
                   width={20}
                   height={20}
                   borderRadius="pill"
-                  style={{ borderWidth: on ? 6 : 2, borderColor: on ? colors.hours : '#C9C5BD' }}
+                  style={{ borderWidth: on ? 6 : 2, borderColor: on ? colors.accent : colors.dashed }}
                 />
               </Box>
             </OptionButton>

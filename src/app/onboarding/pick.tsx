@@ -9,14 +9,14 @@ import { BackButton, LanguageButton, PrimaryButton, Screen } from '@/components/
 import { CATALOG, type CatalogItem } from '@/domain/catalog';
 import type { EnergyType } from '@/domain/types';
 import { useOnboardingStore } from '@/store/onboarding-store';
-import { assetPalette, useAppTheme } from '@/theme/theme';
+import { useAppTheme } from '@/theme/theme';
 
 type Filter = 'all' | Exclude<EnergyType, 'recovery'>;
 const FILTERS: Filter[] = ['all', 'body', 'creative', 'mind'];
 
 export default function Pick() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const drafts = useOnboardingStore((s) => s.drafts);
   const setDrafts = useOnboardingStore((s) => s.setDrafts);
@@ -77,8 +77,8 @@ export default function Pick() {
         <Box alignItems="center" gap="xs">
           <Text variant="small">{t('pick.step')}</Text>
           <Box flexDirection="row" gap="xs">
-            <Box width={40} height={4} borderRadius="pill" backgroundColor="hours" />
-            <Box width={40} height={4} borderRadius="pill" style={{ backgroundColor: '#DAD6CE' }} />
+            <Box width={40} height={4} borderRadius="pill" backgroundColor="accent" />
+            <Box width={40} height={4} borderRadius="pill" backgroundColor="dashed" />
           </Box>
         </Box>
         <LanguageButton />
@@ -130,15 +130,15 @@ export default function Pick() {
         })}
       </Box>
 
-      <Box flexDirection="row" alignItems="center" gap="sm" padding="sm" borderRadius="l" style={{ backgroundColor: assetPalette.sky.tint }}>
+      <Box flexDirection="row" alignItems="center" gap="sm" padding="sm" borderRadius="l" style={{ backgroundColor: palette.sky.tint }}>
         <Box backgroundColor="card" style={{ borderRadius: 12 }}>
           <AssetIcon icon="moon" color="sky" size={40} />
         </Box>
         <Box flex={1} gap="xs">
-          <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', color: '#0E4A63' }}>
+          <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', color: colors.restInk }}>
             {t('pick.recoveryTitle')}
           </Text>
-          <Text variant="small" style={{ color: '#245F78' }}>
+          <Text variant="small" style={{ color: colors.restSub }}>
             {t('pick.recoverySub')}
           </Text>
         </Box>
@@ -147,7 +147,7 @@ export default function Pick() {
       <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }}>
         {items.map((c) => {
           const on = selected.includes(c.id);
-          const p = assetPalette[c.color];
+          const p = palette[c.color];
           return (
             <Pressable
               key={c.id}
@@ -174,7 +174,7 @@ export default function Pick() {
               </Text>
               {on ? (
                 <Box position="absolute" width={20} height={20} borderRadius="pill" alignItems="center" justifyContent="center" style={{ top: 6, right: 6, backgroundColor: p.main }}>
-                  <Glyph d={UI_PATHS.check} size={12} color="#FFFFFF" strokeWidth={3.2} />
+                  <Glyph d={UI_PATHS.check} size={12} color={colors.card} strokeWidth={3.2} />
                 </Box>
               ) : null}
             </Pressable>
@@ -183,7 +183,7 @@ export default function Pick() {
         {drafts
           .filter((d) => d.customName)
           .map((d) => (
-            <Box key={d.customName} width="31.4%" height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ borderRadius: 16, borderWidth: 2, borderColor: assetPalette[d.color].main }}>
+            <Box key={d.customName} width="31.4%" height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
               <AssetIcon icon={d.icon} color={d.color} size={44} />
               <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Onest_600SemiBold' }}>
                 {d.customName}
@@ -193,9 +193,9 @@ export default function Pick() {
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push({ pathname: '/onboarding/custom', params: { name: query } })}
-          style={{ width: '31.4%', height: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: '#BDB8AE', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          style={{ width: '31.4%', height: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
-          <Box width={44} height={44} alignItems="center" justifyContent="center" style={{ borderRadius: 14, backgroundColor: '#ECEAE4' }}>
+          <Box width={44} height={44} alignItems="center" justifyContent="center" style={{ borderRadius: 14, backgroundColor: colors.track }}>
             <Glyph d={UI_PATHS.plus} size={22} color={colors.ink} strokeWidth={2} />
           </Box>
           <Text variant="small" color="ink" textAlign="center" style={{ fontFamily: 'Onest_600SemiBold' }}>

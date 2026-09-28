@@ -39,7 +39,7 @@ People with many parallel pursuits (music, sport, coding, learning, collecting�
 - Gentle copy engine: plain rules like "3 creative sessions this week 🎸" or "Low sleep, rest was the right call." No guilt language.
 
 ## Phases
-> **Status 2026-09-28:** the island concept was dropped as too gamified. The app is now a time portfolio (mockup: https://claude.ai/artifact/8uH2ApkHj2GWH68YArfqh5). Phase 1 is built: onboarding (EN/UK/PL), portfolio, asset detail, analytics, goals, log, settings. Phase 2 below describes the old 3D island and is kept for history; its charts part is done with react-native-svg.
+> **Status 2026-09-28:** the island concept was dropped as too gamified. The app is now a time portfolio (mockup: https://claude.ai/artifact/8uH2ApkHj2GWH68YArfqh5). Phase 1 is built: onboarding (EN/UK/PL), portfolio, asset detail, analytics, goals, log, settings. Phase 2 below describes the old 3D island and is kept for history; its charts part is done with react-native-svg. Next up: MVP 2 (see below).
 
 **Phase 0: Decide the look (about 1–2 days)**
 - Build 3 clickable HTML mockups of the home screen, all using Roman's real hobbies, published as one private Artifact with a switcher between them:
@@ -76,7 +76,82 @@ People with many parallel pursuits (music, sport, coding, learning, collecting�
 - TestFlight for friends.
 - Optional weekly "reflection" summary written by an LLM (Claude Haiku is cheap, or on-device Apple Foundation Models). This is the first point where a small backend or proxy might be needed, to keep API keys off the device.
 
+## MVP 2: make it personal and shareable (planned 2026-09-28)
+
+> **Status 2026-09-28 (built, PR #1 `mvp2-personal-and-shareable`):** 2.1–2.5 are built and running on a real iPhone 14 Pro. What was built:
+> - Profile tab: preset emoji-character or photo avatar, name, and language as a sheet.
+> - Appearance: system, light or dark; any accent (native color picker); any page color, where text and cards adapt; 8 accent-colored patterns.
+> - Asset faces: icon, emoji or photo, plus a rename.
+> - Goal scenes: dog, tree, rocket, cat or bar.
+> - A congrats screen with confetti and share cards (goal and week).
+> - The Sunday nearly-there reminder, confirmed arriving on the device.
+> - Halloween and winter themes with the Pumpkin and Winter (wreath) icons.
+>
+> Still to check on the device: switching the app icon, and picking photos. Session notes:
+> - The winter icon is a wreath rather than a tree, to keep the ring-clock brand mark. Redraw it if a tree is wanted.
+> - Device builds are signed with the free personal team (`ios.appleTeamId` 2RMJ37733D), so an install lasts 7 days. `plugins/without-push-entitlement.js` strips `aps-environment`, which expo-notifications adds by itself.
+> - The photo permission text in `app.json` is English only.
+> - A 10-second test reminder button was used to verify notifications, then removed from the PR on purpose.
+
+### Where MVP 1 left off
+- Tabs: Portfolio · Analytics · (+ Log) · Goals · Settings. Onboarding, asset detail and the goals editor are separate screens.
+- Settings is a whole tab, and most of it is the language picker (EN/UK/PL), plus custom asset, demo data and reset.
+- Assets show one of 25 built-in line icons (`IconKey`) in one of 8 palette colors (`PaletteKey`).
+- Weekly goals on the Goals tab are plain progress bars with a small "met" badge. No celebration, nothing to share.
+- Light theme only. The accent is fixed to the `hours` blue.
+
+### 2.1 Profile tab (replaces Settings)
+- Rename the Settings tab to **Profile**. At the top: avatar, name and a short summary (total capital, number of assets, weeks active).
+- **Avatar:** pick a ready-made picture from a grid, like choosing a profile on Netflix or PlayStation: animals, a few original characters, maybe themed sets (music, sport, space). Or use your own photo.
+  - The art must be ours or CC0/licensed. We can't use characters from real TV shows or films (copyright). Images ship in the app bundle, so it stays offline.
+- **Appearance**, like Telegram's chat settings: a live preview at the top, then
+  - accent color from a set of presets, or **any color from the full gamut** (the native iOS color picker: grid, spectrum, sliders). It replaces the `hours` blue in buttons, the tab bar and highlights. A picked color is adjusted for contrast, so text on it and in it stays readable.
+  - light / dark / system
+  - **page backgrounds** (added 2026-09-28): plain, glow, sunrise, dots, grid, waves, clocks, bubbles. All drawn faintly in the accent color behind every screen, so the whole app changes, not just the buttons.
+- **Language** becomes one row ("Language · Українська ›") that opens a small sheet, not a whole page.
+- The rest stays as rows: add custom asset, demo data, reset.
+- Tech: `settings-store` gains `profile { name, avatar }` and `appearance { accent, mode }`. The Restyle theme becomes a function of those, with a dark variant of every token. Photo avatars use `expo-image-picker` and are copied into the app's document directory (check the SDK 57 docs for `expo-file-system`).
+- Decided: the unit colors (hours blue, minutes amber, days teal) stay fixed when the accent changes. The accent only colors the UI chrome.
+
+### 2.2 A face for every asset: photo or emoji
+- In the asset editor, choose one of: built-in icon (as now), **emoji** (the iOS emoji keyboard or a picker), or **your own photo** (your guitar, your bike).
+- Photos are cropped to a circle or rounded square, stored locally and shown everywhere `AssetIcon` is used today, with the palette color as a ring or tint.
+- Tech: `Asset.icon` becomes a union: `{ kind: 'icon', key } | { kind: 'emoji', char } | { kind: 'photo', uri }`, plus an MMKV migration for existing portfolios. `AssetIcon` renders all three.
+- Related backlog idea: photos per session ("memories"). Keep that separate, but reuse the same image storage.
+
+### 2.3 Weekly goals come alive, with a congrats and a share card
+- Replace the flat bars on the Goals tab with a small scene that fills up as the week's goal gets closer, for example:
+  - a dog running toward a bone
+  - a tree growing from a seed to full leaf
+  - a cup filling up, a mountain climber near the top
+  - the user picks a scene per asset or for all of them
+- It only moves forward. If you log less, the scene stays where it is and resets calmly on Monday: no wilting and nothing sad (the no-guilt rule).
+- **Congrats** when a weekly goal is met: a full-screen moment with the finished scene, a haptic and some confetti, shown once per goal per week. There's a softer one when *all* weekly goals are met.
+- **Share:** a nicely designed card (the scene, the asset, hours this week, the Hourfolio mark) rendered to an image and shared through the iOS share sheet to Telegram, Threads, Instagram Stories and so on. Also a "My week" card from Analytics.
+- Tech: scenes in `react-native-svg` or Skia plus reanimated, driven by one `progress` 0..1 value. Share via `react-native-view-shot` (or Skia's snapshot) plus `expo-sharing`. Instagram Stories has its own URL scheme for a sticker background, so treat that as a follow-up. Congrats state ("shown for goal X in week Y") lives in the store.
+
+### 2.4 Nearly-there reminder (added 2026-09-28)
+- One local notification on Sunday at 17:00 when a weekly goal is nearly met: at most 30% and at most 2 h left. For example "Guitar is almost there: 25 min more and this week's goal is met. Only if it feels right."
+- Off by default, switched on in Profile → Notifications. Never about goals that are far from done or missed (the no-guilt rule).
+- Tech: `expo-notifications`, local only. The reminder is rescheduled whenever sessions change, so its text is current. The expo-notifications config plugin is left out on purpose: it adds the push entitlement, which the free Apple team can't sign and local notifications don't need. Real push from a server would need a backend and a paid developer account.
+
+### 2.5 Seasonal themes and app icons
+- For holidays and occasions (Halloween, Christmas and New Year, Easter, maybe Ukrainian and Polish holidays), offer a **seasonal theme**: accent colors, a small decoration on the Portfolio header, seasonal scenes for 2.3 (a pumpkin instead of a bone).
+- **Alternate app icons:** a pumpkin icon, a Christmas tree icon and so on, chosen in Profile → Appearance.
+  - iOS doesn't let an app change its icon silently: every change shows a system alert. So the app *suggests* the seasonal icon ("It's October, try the pumpkin icon?") and the user taps to switch, rather than switching on its own.
+- Tech: the icons are set at build time through a config plugin (check what fits SDK 57; don't edit `ios/` by hand). Seasonal dates live in a small local calendar in `src/domain/`, so it works offline.
+
+### Order and scope
+1. 2.1 Profile + language row + accent and dark mode. This is the base for everything visual.
+2. 2.2 Emoji and photo for assets.
+3. 2.3 Goal scenes, congrats, share card.
+4. 2.4 Nearly-there reminder.
+5. 2.5 Seasonal themes and icons (time the first one for Halloween or Christmas 2026).
+- Money invested was moved to the backlog on 2026-09-28 (not in MVP 2).
+- Each step: i18n in EN/UK/PL (no gendered forms), unit tests for new domain logic, a Maestro flow for the new screen, typecheck + lint + test.
+
 ## Ideas backlog (not scheduled, decide later)
+- **Money invested** (taken out of MVP 2 on 2026-09-28): log money put into an asset (gear, lessons, subscriptions) next to hours; show total and cost per hour; maybe a saving goal. Needs a `MoneyEntry` type, a currency setting and stats helpers.
 - **Live session timer:** start a session ("playing guitar now"), stop it and the duration is logged. It could also show up as a Live Activity on the lock screen.
 - **Photo and note memories:** attach a photo to a session and build a gallery per asset, so the numbers have moments next to them.
 - **Health auto-logging:** already Phase 3. The competitor below shows people value it.

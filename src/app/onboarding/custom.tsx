@@ -17,7 +17,7 @@ import { useAppTheme } from '@/theme/theme';
  */
 export default function Custom() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const params = useLocalSearchParams<{ name?: string; mode?: string }>();
   const [name, setName] = useState(params.name ?? '');
   const addDraft = useOnboardingStore((s) => s.addDraft);
@@ -50,7 +50,7 @@ export default function Custom() {
     <Screen>
       <Box flexDirection="row" alignItems="center" justifyContent="space-between">
         <BackButton onPress={() => router.back()} />
-        <LanguageButton />
+        {params.mode === 'add' ? null : <LanguageButton />}
       </Box>
 
       <Text variant="title" accessibilityRole="header">
@@ -75,8 +75,8 @@ export default function Custom() {
       {trimmed ? (
         <Card>
           <Box flexDirection="row" alignItems="center" gap="s">
-            <Glyph d={UI_PATHS.sparkle} size={16} color="#4B33C9" strokeWidth={2} />
-            <Text variant="caption" style={{ fontFamily: 'Onest_600SemiBold', color: '#4B33C9' }}>
+            <Glyph d={UI_PATHS.sparkle} size={16} color={palette.violet.main} strokeWidth={2} />
+            <Text variant="caption" style={{ fontFamily: 'Onest_600SemiBold', color: palette.violet.main }}>
               {t('custom.suggested')}
             </Text>
           </Box>

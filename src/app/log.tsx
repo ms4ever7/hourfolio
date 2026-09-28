@@ -7,18 +7,20 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { PrimaryButton, RoundButton, Segmented } from '@/components/ui';
-import { addDays, dayKey } from '@/domain/dates';
+import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
+import { celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
 import { RECOVERY_ID } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
 import { usePortfolioStore } from '@/store/portfolio-store';
-import { assetPalette, useAppTheme } from '@/theme/theme';
+import { useSettingsStore } from '@/store/settings-store';
+import { useAppTheme } from '@/theme/theme';
 
 const QUICK = [15, 30, 45, 60, 90, 120];
 
 export default function LogSheet() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const assetName = useAssetName();
   const params = useLocalSearchParams<{ assetId?: string }>();
@@ -36,7 +38,20 @@ export default function LogSheet() {
     .join(' ');
 
   const save = () => {
-    logTime({ assetId, minutes, day: dayKey(when === 'today' ? new Date() : addDays(new Date(), -1)), note: note.trim() || undefined });
+    const entry = { assetId, minutes, day: dayKey(when === 'today' ? new Date() : addDays(new Date(), -1)), note: note.trim() || undefined };
+    const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
+    logTime(entry);
+    if (met) {
+      const week = weekRange(parseDay(entry.day)).from;
+      const key = celebrationKey(met.id, week);
+      const { celebrated, markCelebrated } = useSettingsStore.getState();
+      if (!celebrated.includes(key)) {
+        markCelebrated(key);
+        // The congrats screen has its own success haptic.
+        router.replace({ pathname: '/congrats', params: { assetId: met.id, week } });
+        return;
+      }
+    }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     router.back();
   };
@@ -58,21 +73,21 @@ export default function LogSheet() {
             gap: 14,
             padding: 14,
             borderRadius: 18,
-            backgroundColor: restOn ? assetPalette.sky.main : assetPalette.sky.tint,
+            backgroundColor: restOn ? palette.sky.main : palette.sky.tint,
           }}
         >
           <Box backgroundColor="card" style={{ borderRadius: 14 }}>
             <AssetIcon icon="moon" color="sky" size={48} />
           </Box>
           <Box flex={1}>
-            <Text variant="heading" style={{ color: restOn ? '#FFFFFF' : '#0E4A63' }}>
+            <Text variant="heading" style={{ color: restOn ? colors.card : colors.restInk }}>
               {t('log.rest')}
             </Text>
-            <Text variant="small" style={{ color: restOn ? '#E6F5FB' : '#245F78' }}>
+            <Text variant="small" style={{ color: restOn ? colors.card : colors.restSub, opacity: restOn ? 0.85 : 1 }}>
               {t('log.restSub')}
             </Text>
           </Box>
-          {restOn ? <Glyph d={UI_PATHS.check} size={22} color="#FFFFFF" strokeWidth={2.6} /> : null}
+          {restOn ? <Glyph d={UI_PATHS.check} size={22} color={colors.card} strokeWidth={2.6} /> : null}
         </Pressable>
 
         <Box gap="s">
@@ -87,9 +102,9 @@ export default function LogSheet() {
                   accessibilityState={{ checked: on }}
                   accessibilityLabel={assetName(a)}
                   onPress={() => setAssetId(a.id)}
-                  style={{ width: '22.7%', alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.card, borderWidth: on ? 2 : 1, borderColor: on ? assetPalette[a.color].main : colors.track }}
+                  style={{ width: '22.7%', alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.card, borderWidth: on ? 2 : 1, borderColor: on ? palette[a.color].main : colors.track }}
                 >
-                  <AssetIcon icon={a.icon} color={a.color} size={40} />
+                  <AssetIcon icon={a.icon} color={a.color} face={a.face} size={40} />
                   <Text variant="tiny" color="ink" numberOfLines={1} style={{ maxWidth: '90%' }}>
                     {assetName(a)}
                   </Text>
@@ -117,7 +132,7 @@ export default function LogSheet() {
                       <Text key={p.unit} style={{ fontFamily: 'JetBrainsMono_600SemiBold', color: on ? colors.onInverse : colors.ink }}>
                         {i > 0 ? ' ' : ''}
                         {p.value}
-                        <Text style={{ fontFamily: 'Onest_600SemiBold', fontSize: 12, color: p.unit === 'h' ? (on ? colors.hoursOnDark : colors.hours) : on ? colors.minutesOnDark : colors.minutes }}>
+                        <Text style={{ fontFamily: 'Onest_600SemiBold', fontSize: 12, color: p.unit === 'h' ? (on ? colors.hoursOnInverse : colors.hours) : on ? colors.minutesOnInverse : colors.minutes }}>
                           {t(`units.${p.unit}`)}
                         </Text>
                       </Text>
