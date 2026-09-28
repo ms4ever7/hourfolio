@@ -119,7 +119,10 @@ export default function Profile() {
                 return;
               }
               const sent = await testNudge();
-              Alert.alert(sent ? 'Reminder scheduled in 10 s' : 'No weekly goal is nearly met (30% or less and at most 2 h left), so there is nothing to remind about.');
+              Alert.alert(
+                sent === 'real' ? 'Reminder in 10 s' : sent === 'sample' ? 'Sample reminder in 10 s' : 'Add an asset first',
+                sent === 'sample' ? 'No weekly goal is nearly met right now, so this is a sample with 25 min left. Lock the phone to see it.' : sent ? 'Lock the phone to see it.' : undefined,
+              );
             }}
             last
           />

@@ -64,21 +64,24 @@ export function useWeekNudge() {
 
 /**
  * Development only: sends this week's reminder in 10 seconds instead of on
- * Sunday, with the same rules and text. Resolves to false when no weekly goal
- * is nearly met, so there is nothing to remind about.
+ * Sunday, with the same text. When no weekly goal is nearly met it sends a
+ * sample (25 minutes left) for one of the user's assets, so there is always
+ * something to see. Resolves to whether the reminder was real or a sample.
  */
 export function useTestNudge() {
   const { t } = useTranslation();
   const assetName = useAssetName();
   const { assets, logs } = usePortfolio();
-  return async (): Promise<boolean> => {
+  return async (): Promise<'real' | 'sample' | null> => {
     // Monday 00:00 of this week: same week, but before the Sunday cut-off.
-    const nudge = weekNudge(assets, logs, startOfWeek(new Date()));
-    if (!nudge) return false;
+    const real = weekNudge(assets, logs, startOfWeek(new Date()));
+    const asset = assets.find((a) => a.weeklyGoalMinutes) ?? assets[0];
+    const nudge: Nudge | null = real ?? (asset ? { asset, remaining: 25, at: new Date() } : null);
+    if (!nudge) return null;
     await Notifications.scheduleNotificationAsync({
       content: nudgeContent(nudge, t, assetName(nudge.asset)),
       trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds: 10 },
     });
-    return true;
+    return real ? 'real' : 'sample';
   };
 }
