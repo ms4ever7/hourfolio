@@ -8,7 +8,7 @@ import { Group, ListRow, Screen, SwitchRow } from '@/components/ui';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
 import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
-import { allowNotifications } from '@/lib/notifications';
+import { allowNotifications, useTestNudge } from '@/lib/notifications';
 import { usePortfolio } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { useSettingsStore } from '@/store/settings-store';
@@ -23,6 +23,7 @@ export default function Profile() {
   const reset = usePortfolioStore((st) => st.reset);
   const season = useSeason();
   const [icon, setIcon] = useAppIcon();
+  const testNudge = useTestNudge();
 
   const capital = assets.reduce((sum, a) => sum + capitalMinutes(a, logs), 0);
   const modeLabel = t(`appearance.${s.themeMode}`);
@@ -105,8 +106,24 @@ export default function Profile() {
             }
             s.setNudges(on);
           }}
-          last
+          last={!__DEV__}
         />
+        {__DEV__ ? (
+          // Development builds only, so the reminder can be checked without waiting for Sunday.
+          <ListRow
+            title="Send the reminder in 10 s"
+            sub="Dev only. Uses this week's data; lock the phone to see the banner."
+            onPress={async () => {
+              if (!(await allowNotifications())) {
+                Alert.alert(t('profile.nudgesDenied'));
+                return;
+              }
+              const sent = await testNudge();
+              Alert.alert(sent ? 'Reminder scheduled in 10 s' : 'No weekly goal is nearly met (30% or less and at most 2 h left), so there is nothing to remind about.');
+            }}
+            last
+          />
+        ) : null}
       </Group>
 
       <Group title={t('profile.portfolio')}>
