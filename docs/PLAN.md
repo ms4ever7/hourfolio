@@ -78,6 +78,21 @@ People with many parallel pursuits (music, sport, coding, learning, collecting�
 
 ## MVP 2: make it personal and shareable (planned 2026-09-28)
 
+> **Status 2026-09-28 (built, PR #1 `mvp2-personal-and-shareable`):** 2.1–2.5 are built and running on a real iPhone 14 Pro. What was built:
+> - Profile tab: preset emoji-character or photo avatar, name, and language as a sheet.
+> - Appearance: system, light or dark; any accent (native color picker); any page color, where text and cards adapt; 8 accent-colored patterns.
+> - Asset faces: icon, emoji or photo, plus a rename.
+> - Goal scenes: dog, tree, rocket, cat or bar.
+> - A congrats screen with confetti and share cards (goal and week).
+> - The Sunday nearly-there reminder, confirmed arriving on the device.
+> - Halloween and winter themes with the Pumpkin and Winter (wreath) icons.
+>
+> Still to check on the device: switching the app icon, and picking photos. Session notes:
+> - The winter icon is a wreath rather than a tree, to keep the ring-clock brand mark. Redraw it if a tree is wanted.
+> - Device builds are signed with the free personal team (`ios.appleTeamId` 2RMJ37733D), so an install lasts 7 days. `plugins/without-push-entitlement.js` strips `aps-environment`, which expo-notifications adds by itself.
+> - The photo permission text in `app.json` is English only.
+> - A 10-second test reminder button was used to verify notifications, then removed from the PR on purpose.
+
 ### Where MVP 1 left off
 - Tabs: Portfolio · Analytics · (+ Log) · Goals · Settings. Onboarding, asset detail and the goals editor are separate screens.
 - Settings is a whole tab, and most of it is the language picker (EN/UK/PL), plus custom asset, demo data and reset.
