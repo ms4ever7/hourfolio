@@ -2,7 +2,7 @@ import '@/i18n';
 import { JetBrainsMono_500Medium, JetBrainsMono_600SemiBold } from '@expo-google-fonts/jetbrains-mono';
 import { Onest_400Regular, Onest_500Medium, Onest_600SemiBold, Onest_700Bold, useFonts } from '@expo-google-fonts/onest';
 import { ThemeProvider } from '@shopify/restyle';
-import { Stack } from 'expo-router';
+import { Stack, useRootNavigationState } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -24,7 +24,9 @@ export default function RootLayout() {
   useSeasonIconSync();
   useWeekNudge();
   useEveningCheckIn();
-  useNotificationTaps();
+  // Routing from a notification needs the navigator itself, not only the first render.
+  const navReady = Boolean(useRootNavigationState()?.key);
+  useNotificationTaps(fontsLoaded && navReady);
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();

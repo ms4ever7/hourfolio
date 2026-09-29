@@ -100,18 +100,27 @@ export function useEveningCheckIn() {
   }, [on, bed, assets, logs, t, assetName]);
 }
 
-/** Tapping a reminder opens the screen it is about: the log sheet or the goals. */
-export function useNotificationTaps() {
+/**
+ * Tapping a reminder opens the screen it is about: the log sheet or the goals.
+ * Waits for `ready` (the root stack is mounted) so a tap that launched the app
+ * from a cold start isn't lost, and ignores taps before onboarding is done.
+ */
+export function useNotificationTaps(ready: boolean) {
   useEffect(() => {
+    if (!ready) return;
     const open = (response: Notifications.NotificationResponse | null) => {
       const url = response?.notification.request.content.data?.url;
-      if (typeof url !== 'string') return;
-      // Handled once: without this, the same tap would reopen the screen on the next launch.
-      Notifications.clearLastNotificationResponse();
-      router.push(url as never);
+      if (typeof url !== 'string' || !useSettingsStore.getState().onboarded) return;
+      try {
+        router.push(url as never);
+        // Handled once: without this, the same tap would reopen the screen on the next launch.
+        Notifications.clearLastNotificationResponse();
+      } catch {
+        // Not navigable yet; the response stays for the next launch.
+      }
     };
     void Notifications.getLastNotificationResponseAsync().then(open);
     const sub = Notifications.addNotificationResponseReceivedListener(open);
     return () => sub.remove();
-  }, []);
+  }, [ready]);
 }
