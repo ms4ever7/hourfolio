@@ -33,6 +33,20 @@ describe('evening check-in', () => {
   it('handles a bedtime after midnight', () => {
     expect(checkInTimes(morning, 30, [])[0]).toEqual(new Date(2026, 8, 29, 23, 30));
   });
+
+  it('puts a check-in after midnight on the next calendar day', () => {
+    expect(checkInTimes(morning, 90, [])[0]).toEqual(new Date(2026, 8, 30, 0, 30));
+  });
+
+  it('skips tonight after a log today, even when the check-in is after midnight', () => {
+    expect(checkInTimes(morning, 90, [log('g', '2026-09-29')])[0]).toEqual(new Date(2026, 9, 1, 0, 30));
+  });
+
+  it('counts the hours after midnight as the evening before', () => {
+    const lateNight = new Date(2026, 8, 30, 0, 15);
+    expect(checkInTimes(lateNight, 90, [log('g', '2026-09-29')])[0]).toEqual(new Date(2026, 9, 1, 0, 30));
+    expect(checkInTimes(lateNight, 90, [])[0]).toEqual(new Date(2026, 8, 30, 0, 30));
+  });
 });
 
 describe('resting asset', () => {

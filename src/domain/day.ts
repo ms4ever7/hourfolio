@@ -18,18 +18,25 @@ export function atMinutes(day: Date, minutes: number): Date {
 }
 
 /**
- * Evenings for the check-in: from today, one hour before bed, for a week.
- * Today is skipped once something is logged today, or when its time has passed.
- * A bedtime after midnight (say 00:30) belongs to the evening before.
+ * Evenings for the check-in: from tonight, one hour before bed, for a week.
+ * Tonight is skipped once something is logged today, or when its time has passed.
+ * A check-in after midnight (bed at 01:30 means 00:30) still belongs to the
+ * evening before, so it lands on the next calendar day; and between midnight and
+ * that time, "today" for logging is still yesterday.
  */
 export function checkInTimes(now: Date, bed: number, logs: LogEntry[]): Date[] {
   const at = (bed - CHECK_IN_BEFORE_BED + 24 * 60) % (24 * 60);
+  const afterMidnight = at < 12 * 60;
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const loggedToday = logs.some((l) => l.day === dayKey(today));
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  // The evening we are in: yesterday's, if it is past midnight but before its check-in.
+  const tonight = afterMidnight && nowMinutes < at ? addDays(today, -1) : today;
+  const loggedTonight = logs.some((l) => l.day === dayKey(tonight));
   const out: Date[] = [];
   for (let i = 0; i < CHECK_IN_DAYS; i++) {
-    const when = atMinutes(addDays(today, i), at);
-    if (i === 0 && (loggedToday || when <= now)) continue;
+    const evening = addDays(tonight, i);
+    const when = atMinutes(afterMidnight ? addDays(evening, 1) : evening, at);
+    if (i === 0 && (loggedTonight || when <= now)) continue;
     out.push(when);
   }
   return out;
