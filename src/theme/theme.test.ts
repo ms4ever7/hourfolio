@@ -18,3 +18,8 @@ describe('page color', () => {
     expect(contrast(colors.accentInk, colors.card)).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+it('keeps selected segments visible on a black page', () => {
+  const { colors } = buildTheme({ mode: 'dark', accent: DEFAULT_ACCENT, page: '#000000' });
+  expect(contrast(colors.track, colors.card)).toBeGreaterThan(1.2);
+});

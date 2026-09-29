@@ -134,7 +134,8 @@ function aroundPage(base: Colors, page: string, mode: Mode): Colors {
     faint: readable(base.faint, 4.5),
     line: mix(card, ink, 0.06),
     border: mix(card, ink, 0.14),
-    track: mix(page, ink, 0.08),
+    // In dark themes the track must stay lighter than cards, or selected segments disappear.
+    track: mode === 'light' ? mix(page, ink, 0.08) : mix(card, ink, 0.1),
     dashed: mix(page, ink, 0.22),
     axis: mix(page, ink, 0.18),
     previous: readable(base.previous, 2.5),

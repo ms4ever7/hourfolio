@@ -5,6 +5,7 @@ import { ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Group, ListRow, Screen, SwitchRow } from '@/components/ui';
+import { formatClock } from '@/domain/day';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
 import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
@@ -94,6 +95,7 @@ export default function Profile() {
       </Group>
 
       <Group title={t('profile.notifications')}>
+        <ListRow title={t('day.row')} sub={t('day.checkIn')} value={t('day.rowValue', { wake: formatClock(s.wakeTime, i18n.language), bed: formatClock(s.bedTime, i18n.language) })} onPress={() => router.push('/day')} />
         <SwitchRow
           title={t('profile.nudges')}
           sub={t('profile.nudgesSub')}

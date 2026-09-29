@@ -7,7 +7,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useAppearance, useSeasonIconSync } from '@/lib/appearance';
-import { useWeekNudge } from '@/lib/notifications';
+import { useEveningCheckIn, useNotificationTaps, useWeekNudge } from '@/lib/notifications';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -23,6 +23,8 @@ export default function RootLayout() {
   const { theme, mode } = useAppearance();
   useSeasonIconSync();
   useWeekNudge();
+  useEveningCheckIn();
+  useNotificationTaps();
 
   useEffect(() => {
     if (fontsLoaded) void SplashScreen.hideAsync();
@@ -38,6 +40,7 @@ export default function RootLayout() {
         <Stack.Screen name="goals-edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="asset-edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="avatar" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="emoji" options={{ presentation: 'modal' }} />
         <Stack.Screen name="language" options={{ presentation: 'formSheet', sheetAllowedDetents: 'fitToContents', sheetGrabberVisible: true, contentStyle: { backgroundColor: theme.colors.ground } }} />
         <Stack.Screen name="congrats" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
         <Stack.Screen name="share-week" options={{ presentation: 'modal' }} />
