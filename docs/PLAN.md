@@ -141,6 +141,13 @@ People with many parallel pursuits (music, sport, coding, learning, collectingâ€
   - iOS doesn't let an app change its icon silently: every change shows a system alert. So the app *suggests* the seasonal icon ("It's October, try the pumpkin icon?") and the user taps to switch, rather than switching on its own.
 - Tech: the icons are set at build time through a config plugin (check what fits SDK 57; don't edit `ios/` by hand). Seasonal dates live in a small local calendar in `src/domain/`, so it works offline.
 
+### 2.6 Finishing MVP 2 (added 2026-09-29)
+- **Emoji picker** (done): the whole iOS-style emoji set in keyboard groups, recent picks, and search in the app language or English. Data comes from emojibase-data (MIT) via `scripts/build-emoji.mjs`, limited to Emoji 15.1 so nothing renders as an empty box.
+- **Your day + evening check-in** (done): onboarding ends with wake and bed times (defaults 07:00 and 23:00). An opt-in note comes an hour before bed, only on days with nothing logged yet: "Anything to add for today? Rest counts too." Every other evening it names the asset that has rested longest. It never says "you didn't log". Tapping it opens the log sheet. The wake time is kept for the morning suggestion later.
+- **New home** (choosing): research on Oura, Whoop, Headspace, Toggl, Duolingo, Rise, Finch and 100hours. Three directions are in https://claude.ai/artifact/GoBZpBxtyJZuaiyP9EKiAf, and B (week first) is the recommendation. The charts, % deltas and donut move to Analytics.
+- **README with screenshots**: after the new home, so the pictures show it.
+- **Later (MVP 3):** a morning suggestion from Apple Health / Google Health readiness, falling back to the asset that has rested longest; product analytics (PostHog or Aptabase, opt-in, no hobby names or notes).
+
 ### Order and scope
 1. 2.1 Profile + language row + accent and dark mode. This is the base for everything visual.
 2. 2.2 Emoji and photo for assets.
