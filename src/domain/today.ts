@@ -26,3 +26,10 @@ export function todaysSessions(logs: LogEntry[], today: Date): LogEntry[] {
   const key = dayKey(today);
   return logs.filter((l) => l.day === key).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
+
+/** Today's minutes per asset, the most recently logged asset first. */
+export function minutesByAsset(sessions: LogEntry[]): { assetId: string; minutes: number }[] {
+  const out = new Map<string, number>();
+  for (const l of sessions) out.set(l.assetId, (out.get(l.assetId) ?? 0) + l.minutes);
+  return [...out].map(([assetId, minutes]) => ({ assetId, minutes }));
+}

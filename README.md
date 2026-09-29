@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/today.png" width="240" alt="Today: hours invested today, one-tap log chips, this week's goals as growing trees">
+  <img src="docs/screenshots/today.png" width="240" alt="Today: hours invested today by asset, one-tap log tiles, this week's goals as growing trees">
   <img src="docs/screenshots/goal-met.gif" width="240" alt="Logging a session completes a weekly goal: the congrats screen with confetti and a share card">
   <img src="docs/screenshots/today-dark.png" width="240" alt="The same screen in dark mode with a violet accent and a wave pattern">
 </p>
@@ -40,7 +40,7 @@ Hourfolio does the opposite. It shows how your time is spread across everything 
 ## A tour
 
 ### Today and this week
-The first screen shows today and this week, not a chart. It has what you did today, one-tap chips for what you usually do, this week's goals, and every asset with its capital. On an empty morning it asks "What are you investing in today?" instead of showing a zero.
+The first screen shows today and this week, not a chart. It has what you did today, a row of one-tap tiles for what you usually do, this week's goals, and every asset with its capital. On an empty morning it asks "What are you investing in today?" instead of showing a zero.
 
 <p align="center">
   <img src="docs/screenshots/today.png" width="200" alt="Today screen">
@@ -149,7 +149,7 @@ This app is also a hands-on way to learn AI-assisted development with Claude Cod
 | Piece | Where | What it does here |
 |---|---|---|
 | Project memory | [`CLAUDE.md`](CLAUDE.md) | Commands, layout and product rules such as "no guilt" and "tokens, never hex" |
-| Skills | [`.claude/skills/`](.claude/skills) | `new-screen` (how a screen is built in this app) and `on-device` (build and run on a real iPhone) |
+| Skills | [`.claude/skills/`](.claude/skills) | `new-screen` (how a screen is built in this app), `on-device` (build and run on a real iPhone) and `create-pr` (checks and PR description) |
 | Hooks | [`.claude/settings.json`](.claude/settings.json) | Lint and typecheck after every edit, so mistakes come back straight away |
 | MCP | [`.mcp.json`](.mcp.json) | Maestro, so Claude can drive the simulator, check screens and take these screenshots |
 | Subagents | in the session | Research on how other apps design their first screen, run in the background |

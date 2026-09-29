@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView } from 'react-native';
+import { Pressable } from 'react-native';
 import { ProfileAvatar } from '@/components/avatar';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
@@ -12,7 +12,7 @@ import { restingAsset } from '@/domain/day';
 import { weekRange, type SceneId } from '@/domain/goals';
 import { capitalMinutes, lastLogDay, trend } from '@/domain/growth';
 import { sumMinutes } from '@/domain/stats';
-import { quickAssets, todaysSessions } from '@/domain/today';
+import { minutesByAsset, quickAssets, todaysSessions } from '@/domain/today';
 import type { SeasonId } from '@/domain/seasons';
 import type { Asset } from '@/domain/types';
 import { RECOVERY_ID } from '@/domain/types';
@@ -26,34 +26,19 @@ function greetingKey(hour: number) {
   return hour < 12 ? 'morning' : hour < 18 ? 'afternoon' : 'evening';
 }
 
-const logFor = (asset?: Asset) => router.push(asset ? { pathname: '/log', params: { assetId: asset.id } } : '/log');
+const logFor = (asset: Asset) => router.push({ pathname: '/log', params: { assetId: asset.id } });
 
-/** A one-tap chip that opens the log sheet, preset to its asset. */
-function LogChip({ asset, label, accent }: { asset?: Asset; label: string; accent?: boolean }) {
-  const { colors, palette } = useAppTheme();
-  const rest = asset?.id === RECOVERY_ID;
+/** A one-tap tile that opens the log sheet with its asset already chosen. */
+function LogTile({ asset, label }: { asset: Asset; label: string }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      hitSlop={4}
       onPress={() => logFor(asset)}
-      style={({ pressed }) => ({
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 6,
-        height: 38,
-        paddingLeft: asset ? 5 : 14,
-        paddingRight: 12,
-        borderRadius: 19,
-        backgroundColor: accent ? colors.accent : rest ? palette.sky.tint : colors.ground,
-        borderWidth: accent || rest ? 0 : 1,
-        borderColor: colors.border,
-        opacity: pressed ? 0.8 : 1,
-      })}
+      style={({ pressed }) => ({ flex: 1, alignItems: 'center', gap: 6, paddingVertical: 4, opacity: pressed ? 0.7 : 1 })}
     >
-      {asset ? <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={28} /> : null}
-      <Text variant="label" numberOfLines={1} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13, color: accent ? colors.onAccent : colors.ink, maxWidth: 120 }}>
+      <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={48} />
+      <Text variant="tiny" color="ink" numberOfLines={1} style={{ maxWidth: '100%' }}>
         {label}
       </Text>
     </Pressable>
@@ -81,6 +66,7 @@ export default function Today() {
     return {
       sessions,
       todayMinutes: sessions.reduce((s, l) => s + l.minutes, 0),
+      byAsset: minutesByAsset(sessions),
       quick: quickAssets(assets, logs, today, 3),
       goals: assets.filter((a) => a.weeklyGoalMinutes).map((a) => ({ asset: a, done: sumMinutes(logs, week, a.id), goal: a.weeklyGoalMinutes! })),
       // Only a gentle word about an asset that is actually paused, never about one that is just a bit quiet.
@@ -118,7 +104,7 @@ export default function Today() {
         <Text variant="label" color="muted">
           {t('today.label')}
         </Text>
-        {d.sessions.length === 0 ? (
+        {d.byAsset.length === 0 ? (
           <Box gap="xs">
             <Text variant="heading" style={{ fontSize: 19 }}>
               {t('today.empty')}
@@ -126,30 +112,38 @@ export default function Today() {
             <Text variant="caption">{t('today.emptySub')}</Text>
           </Box>
         ) : (
-          <Box gap="sm">
+          <Box gap="s">
             <Duration minutes={d.todayMinutes} size={32} />
-            <Box flexDirection="row" flexWrap="wrap" gap="s">
-              {d.sessions.map((l) => {
-                const a = byId.get(l.assetId);
+            <Box>
+              {d.byAsset.slice(0, 3).map(({ assetId, minutes }) => {
+                const a = byId.get(assetId);
                 if (!a) return null;
                 return (
-                  <Box key={l.id} flexDirection="row" alignItems="center" gap="xs" backgroundColor="ground" borderRadius="pill" style={{ paddingLeft: 4, paddingRight: 10, height: 32 }}>
-                    <AssetIcon icon={a.icon} color={a.color} face={a.face} size={24} />
-                    <Duration minutes={l.minutes} size={13} prefix="+" />
+                  <Box key={assetId} flexDirection="row" alignItems="center" gap="sm" paddingVertical="xs">
+                    <AssetIcon icon={a.icon} color={a.color} face={a.face} size={28} />
+                    <Text variant="label" numberOfLines={1} style={{ flex: 1 }}>
+                      {assetName(a)}
+                    </Text>
+                    <Duration minutes={minutes} size={13} prefix="+" />
                   </Box>
                 );
               })}
+              {d.byAsset.length > 3 ? <Text variant="small">{t('today.more', { count: d.byAsset.length - 3 })}</Text> : null}
             </Box>
           </Box>
         )}
-        {/* One row that scrolls sideways, bleeding to the card edges, so the card stays short. */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginHorizontal: -20 }} contentContainerStyle={{ gap: 8, paddingHorizontal: 20 }}>
-          <LogChip accent label={`+ ${t('today.log')}`} />
-          {d.quick.map((a) => (
-            <LogChip key={a.id} asset={a} label={assetName(a)} />
-          ))}
-          {recovery ? <LogChip asset={recovery} label={t('log.rest')} /> : null}
-        </ScrollView>
+        <Box height={1} backgroundColor="line" />
+        <Box gap="s">
+          <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
+            {t('today.quick')}
+          </Text>
+          <Box flexDirection="row" gap="s">
+            {d.quick.map((a) => (
+              <LogTile key={a.id} asset={a} label={assetName(a)} />
+            ))}
+            {recovery ? <LogTile asset={recovery} label={t('log.rest')} /> : null}
+          </Box>
+        </Box>
       </Card>
 
       <Box gap="sm">
