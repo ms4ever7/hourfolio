@@ -346,5 +346,15 @@ export const uk: Translations = {
     restingTitle: '{{name}} відпочиває',
     restingBody: 'Може, {{minutes}} хвилин перед сном? Або залогуй сьогоднішній відпочинок, він теж рахується.',
   },
-  tabs: { goals: 'Цілі', portfolio: 'Портфель', analytics: 'Аналітика', profile: 'Профіль', invest: 'Інвестувати час' },
+  today: {
+    label: 'Сьогодні',
+    empty: 'У що інвестуєш сьогодні?',
+    emptySub: 'Навіть 15 хвилин рахуються.',
+    log: 'Записати',
+    goals: 'Цілі тижня',
+    resting: '{{name}} відпочиває',
+    restingSub: 'Може, 20 хвилин цього тижня?',
+    capital: 'за весь час',
+  },
+  tabs: { goals: 'Цілі', today: 'Сьогодні', analytics: 'Аналітика', profile: 'Профіль', invest: 'Інвестувати час' },
 };

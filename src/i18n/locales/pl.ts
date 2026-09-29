@@ -346,5 +346,15 @@ export const pl: Translations = {
     restingTitle: '{{name}} odpoczywa',
     restingBody: 'Może {{minutes}} minut przed snem? Albo zapisz dzisiejszy odpoczynek, też się liczy.',
   },
-  tabs: { goals: 'Cele', portfolio: 'Portfel', analytics: 'Analityka', profile: 'Profil', invest: 'Zainwestuj czas' },
+  today: {
+    label: 'Dziś',
+    empty: 'W co dziś inwestujesz?',
+    emptySub: 'Nawet 15 minut się liczy.',
+    log: 'Zapisz',
+    goals: 'Cele tygodnia',
+    resting: '{{name}} odpoczywa',
+    restingSub: 'Może 20 minut w tym tygodniu?',
+    capital: 'od początku',
+  },
+  tabs: { goals: 'Cele', today: 'Dziś', analytics: 'Analityka', profile: 'Profil', invest: 'Zainwestuj czas' },
 };

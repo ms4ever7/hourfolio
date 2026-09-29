@@ -3,7 +3,8 @@ import { useTranslation } from 'react-i18next';
 import { Heatmap, StackedBar } from '@/components/charts';
 import { AssetIcon, Glyph, ICON_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Card, Hours, LanguageButton, Screen, SectionHeader } from '@/components/ui';
+import { PeriodReport } from '@/components/period-report';
+import { Card, Hours, Screen, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, startOfMonth, startOfWeek } from '@/domain/dates';
 import { formatHours, formatHoursDelta, percent } from '@/domain/format';
 import { energyBalance, monthHeatmap, sumMinutes } from '@/domain/stats';
@@ -50,15 +51,13 @@ export default function Analytics() {
 
   return (
     <Screen>
-      <Box flexDirection="row" alignItems="center" gap="s">
-        <Text variant="title" style={{ flex: 1 }} accessibilityRole="header">
-          {t('analytics.title')}
-        </Text>
-        <LanguageButton />
-      </Box>
-      <Text variant="label" color="muted" style={{ marginTop: -12 }}>
-        {capitalize(monthYear(locale, today))}
+      <Text variant="title" accessibilityRole="header">
+        {t('analytics.title')}
       </Text>
+
+      <PeriodReport />
+
+      <SectionHeader title={capitalize(monthYear(locale, today))} />
 
       <Card>
         <Box gap="xs">

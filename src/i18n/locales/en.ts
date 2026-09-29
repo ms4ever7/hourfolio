@@ -326,7 +326,17 @@ export const en = {
     restingTitle: '{{name}} has been resting',
     restingBody: 'Fancy {{minutes}} minutes before bed? Or log today’s rest, it counts too.',
   },
-  tabs: { goals: 'Goals', portfolio: 'Portfolio', analytics: 'Analytics', profile: 'Profile', invest: 'Invest time' },
+  today: {
+    label: 'Today',
+    empty: 'What are you investing in today?',
+    emptySub: 'Even 15 minutes counts.',
+    log: 'Log',
+    goals: 'This week’s goals',
+    resting: '{{name}} is resting',
+    restingSub: 'Fancy 20 minutes this week?',
+    capital: 'all time',
+  },
+  tabs: { goals: 'Goals', today: 'Today', analytics: 'Analytics', profile: 'Profile', invest: 'Invest time' },
 };
 
 // Other locales must have every English key. Extra keys are allowed for plural

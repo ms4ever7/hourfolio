@@ -79,7 +79,7 @@ export default function TabsLayout() {
   if (!onboarded) return <Redirect href="/onboarding" />;
   return (
     <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
-      <Tabs.Screen name="index" options={{ title: t('tabs.portfolio') }} />
+      <Tabs.Screen name="index" options={{ title: t('tabs.today') }} />
       <Tabs.Screen name="analytics" options={{ title: t('tabs.analytics') }} />
       <Tabs.Screen name="goals" options={{ title: t('tabs.goals') }} />
       <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />
