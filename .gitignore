@@ -49,3 +49,6 @@ example
 # Local secrets (EXPO_TOKEN etc.), never committed
 mise.local.toml
 .env*.local
+
+# Maestro screenshots (curated ones for the README live in docs/screenshots)
+e2e/screenshots/

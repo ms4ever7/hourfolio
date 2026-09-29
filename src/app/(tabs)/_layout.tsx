@@ -30,6 +30,7 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
         key={route.key}
         accessibilityRole="tab"
         accessibilityState={{ selected: focused }}
+        testID={`tab-${route.name}`}
         onPress={() => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
@@ -52,6 +53,7 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('tabs.invest')}
+          testID="tab-invest"
           onPress={() => router.push('/log')}
           style={({ pressed }) => ({
             width: 56,

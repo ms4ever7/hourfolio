@@ -88,8 +88,9 @@ The theme is built at runtime from the user's mode, accent, page color and holid
 ## 7. Check it
 
 1. `mise exec -- bun run typecheck`, `lint` and `test`. The edit hook already runs eslint and tsc after every change.
-2. Look at the screen on the iOS 27 simulator with Maestro (`iPhone 18 Pro`, `2DA51517-2AFE-43B1-AF08-034651A388CA`):
+2. Look at the screen on the iOS 27 simulator with Maestro (`iPhone 18 Pro`, `2DA51517-2AFE-43B1-AF08-034651A388CA`). Flows live in `e2e/`. Start each one with `- runFlow: connect.yaml`, which connects the dev client to Metro. Give controls that flows must find a `testID` (for example `tab-profile` or `profile-name`) rather than tapping by coordinates. If the screen shows up in the README, update `e2e/tour.yaml` and refresh `docs/screenshots/`.
    - Start the right app with `xcrun simctl launch <sim> com.ms4ever7.hourfolio`, then connect to `http://127.0.0.1:8081`. The old `com.roman.hourfolio` build grabs deep links.
-   - The dev-tools gear floats top right and swallows taps there. Tap by `point:` next to it, or dismiss the dev menu by swiping down.
+   - The dev-tools gear floats top right and swallows taps there. Hide it on the simulator with `xcrun simctl spawn <sim> defaults write com.ms4ever7.hourfolio EXDevMenuShowFloatingActionButton -bool NO`, then relaunch the app.
+   - Tab screens keep their scroll position. Scroll up to a marker at the top of the screen before a screenshot.
    - Check light, dark and one page color, and switch the language to Ukrainian once: longer words overflow first.
 3. Put it on the user's phone with the `on-device` skill.

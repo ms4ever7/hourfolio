@@ -3,10 +3,13 @@ import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, UI_PATHS } from '@/components/icons';
+import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Box, Text } from '@/components/primitives';
 import { BackButton, Card, LanguageButton, OptionButton, PrimaryButton, RoundButton, Screen, Segmented, TextButton } from '@/components/ui';
 import { ENERGY_TYPES, RHYTHMS } from '@/domain/types';
+import { useSeason } from '@/lib/appearance';
 import { useAssetName } from '@/lib/labels';
+import { useSettingsStore } from '@/store/settings-store';
 import { useOnboardingStore } from '@/store/onboarding-store';
 import { PALETTE_KEYS, useAppTheme } from '@/theme/theme';
 
@@ -21,6 +24,8 @@ export default function Setup() {
   const drafts = useOnboardingStore((s) => s.drafts);
   const updateDraft = useOnboardingStore((s) => s.updateDraft);
   const draft = drafts[step];
+  const scene = useSettingsStore((s) => s.goalScene);
+  const season = useSeason();
 
   const finish = () => router.push('/onboarding/day');
 
@@ -171,6 +176,17 @@ export default function Setup() {
           <Text variant="heading">+</Text>
         </RoundButton>
       </Box>
+
+      {goalHours > 0 ? (
+        <Card gap="sm">
+          <Box gap="xs">
+            <Text variant="bodyStrong">{t('setup.sceneTitle')}</Text>
+            <Text variant="small">{t('setup.sceneSub')}</Text>
+          </Box>
+          <GoalScene scene={scene} progress={0.6} color={palette[draft.color].main} tint={palette[draft.color].tint} season={season?.id ?? null} height={48} />
+          <ScenePicker />
+        </Card>
+      ) : null}
     </Screen>
   );
 }

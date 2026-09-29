@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { type LayoutChangeEvent } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { Pressable, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withRepeat, withSequence, withSpring, withTiming, useReducedMotion } from 'react-native-reanimated';
-import { sceneArt, stageIndex, type SceneId } from '@/domain/goals';
+import { SCENES, sceneArt, stageIndex, type SceneId } from '@/domain/goals';
 import type { SeasonId } from '@/domain/seasons';
+import { useSeason } from '@/lib/appearance';
+import { useSettingsStore } from '@/store/settings-store';
+import { useAppTheme } from '@/theme/theme';
 import { Box, Text } from './primitives';
 
 const SPRING = { damping: 18, stiffness: 120 };
@@ -121,6 +125,39 @@ function GrowScene({ stages, goal, progress, color, tint, height, a11y }: { stag
           {goal}
         </Text>
       ) : null}
+    </Box>
+  );
+}
+
+/** Chips to choose how weekly goal progress is drawn. Saves the choice right away. */
+export function ScenePicker() {
+  const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const scene = useSettingsStore((s) => s.goalScene);
+  const setScene = useSettingsStore((s) => s.setGoalScene);
+  const season = useSeason();
+  return (
+    <Box flexDirection="row" flexWrap="wrap" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('goals.scene')}>
+      {SCENES.map((id) => {
+        const on = id === scene;
+        const art = id === 'bar' ? null : sceneArt(id, season?.id ?? null);
+        return (
+          <Pressable
+            key={id}
+            accessibilityRole="radio"
+            accessibilityState={{ checked: on }}
+            accessibilityLabel={t(`scenes.${id}`)}
+            onPress={() => setScene(id)}
+            hitSlop={4}
+            style={{ height: 36, paddingHorizontal: 12, borderRadius: 18, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: on ? colors.inverse : colors.ground, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
+          >
+            {art ? <Text style={{ fontSize: 16, lineHeight: 20 }}>{art.stages ? art.stages.at(-1) : art.runner}</Text> : null}
+            <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+              {t(`scenes.${id}`)}
+            </Text>
+          </Pressable>
+        );
+      })}
     </Box>
   );
 }

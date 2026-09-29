@@ -93,6 +93,8 @@ export const en = {
     capitalQ: 'How many hours have you already put in?',
     justStarting: 'Just starting',
     capitalNote: 'Years before the app count too. Capital never goes down.',
+    sceneTitle: 'How progress looks',
+    sceneSub: 'Something grows as you get closer to the goal. It never shrinks.',
     goal: 'Weekly goal',
     goalOptional: 'Optional, no pressure',
     goalOff: 'Off',
@@ -335,6 +337,14 @@ export const en = {
     resting: '{{name}} is resting',
     restingSub: 'Fancy 20 minutes this week?',
     capital: 'all time',
+  },
+  you: {
+    title: 'Make it yours',
+    sub: 'Optional. You can change all of it later in Profile.',
+    name: 'What should we call you?',
+    avatar: 'Picture',
+    accent: 'Color',
+    skip: 'Skip for now',
   },
   tabs: { goals: 'Goals', today: 'Today', analytics: 'Analytics', profile: 'Profile', invest: 'Invest time' },
 };

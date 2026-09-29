@@ -62,6 +62,8 @@ interface SettingsState {
   setGoalScene: (scene: SceneId) => void;
   addRecentEmoji: (emoji: string) => void;
   markCelebrated: (key: string) => void;
+  /** A new portfolio (sample data or starting over) has had no congrats yet. */
+  clearCelebrated: () => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -81,7 +83,7 @@ export const useSettingsStore = create<SettingsState>()(
       eveningCheckIn: false,
       seasonal: true,
       autoSeasonIcon: false,
-      goalScene: 'dog',
+      goalScene: 'tree',
       recentEmoji: [],
       celebrated: [],
       setLanguage: (language) => set({ language }),
@@ -99,6 +101,7 @@ export const useSettingsStore = create<SettingsState>()(
       setAutoSeasonIcon: (autoSeasonIcon) => set({ autoSeasonIcon }),
       setGoalScene: (goalScene) => set({ goalScene }),
       addRecentEmoji: (emoji) => set((s) => ({ recentEmoji: [emoji, ...s.recentEmoji.filter((e) => e !== emoji)].slice(0, MAX_RECENT_EMOJI) })),
+      clearCelebrated: () => set({ celebrated: [] }),
       markCelebrated: (key) => set((s) => ({ celebrated: [...s.celebrated.filter((k) => k !== key), key].slice(-MAX_CELEBRATED) })),
     }),
     { name: 'hourfolio.settings', storage: mmkvZustandStorage },

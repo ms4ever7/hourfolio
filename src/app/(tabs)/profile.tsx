@@ -54,6 +54,7 @@ export default function Profile() {
           placeholder={t('profile.namePlaceholder')}
           placeholderTextColor={colors.faint}
           accessibilityLabel={t('profile.nameLabel')}
+          testID="profile-name"
           textAlign="center"
           returnKeyType="done"
           maxLength={40}
@@ -113,7 +114,13 @@ export default function Profile() {
 
       <Group title={t('profile.portfolio')}>
         <ListRow title={t('pick.custom')} sub={t('custom.label')} onPress={() => router.push({ pathname: '/onboarding/custom', params: { mode: 'add' } })} />
-        <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() => confirm(loadDemo)} />
+        <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() =>
+            confirm(() => {
+              loadDemo();
+              s.clearCelebrated();
+            })
+          }
+        />
         <ListRow
           danger
           last
@@ -122,6 +129,7 @@ export default function Profile() {
           onPress={() =>
             confirm(() => {
               reset();
+              s.clearCelebrated();
               s.setOnboarded(false);
               router.replace('/onboarding');
             })

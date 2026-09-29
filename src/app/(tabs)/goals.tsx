@@ -1,14 +1,12 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { GoalScene } from '@/components/scenes';
+import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, TextButton } from '@/components/ui';
 import { addDays, dayKey, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { capitalMinutes, nextMilestone, weeksTo } from '@/domain/growth';
-import { SCENES, sceneArt } from '@/domain/goals';
 import { sumMinutes, weeklyMinutes } from '@/domain/stats';
 import { useAssetName } from '@/lib/labels';
 import { useSeason } from '@/lib/appearance';
@@ -23,7 +21,6 @@ export default function Goals() {
   const today = useToday();
   const { assets, logs } = usePortfolio();
   const scene = useSettingsStore((st) => st.goalScene);
-  const setScene = useSettingsStore((st) => st.setGoalScene);
   const season = useSeason();
 
   const week = useMemo(() => {
@@ -107,31 +104,11 @@ export default function Goals() {
                 </Box>
               );
             })}
-            <Box gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('goals.scene')}>
+            <Box gap="s">
               <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
                 {t('goals.scene')}
               </Text>
-              <Box flexDirection="row" flexWrap="wrap" gap="s">
-                {SCENES.map((id) => {
-                  const on = id === scene;
-                  const art = id === 'bar' ? null : sceneArt(id, season?.id ?? null);
-                  return (
-                    <Pressable
-                      key={id}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: on }}
-                      accessibilityLabel={t(`scenes.${id}`)}
-                      onPress={() => setScene(id)}
-                      style={{ height: 36, paddingHorizontal: 12, borderRadius: 18, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: on ? colors.inverse : colors.ground, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
-                    >
-                      {art ? <Text style={{ fontSize: 16, lineHeight: 20 }}>{art.stages ? art.stages.at(-1) : art.runner}</Text> : null}
-                      <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
-                        {t(`scenes.${id}`)}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </Box>
+              <ScenePicker />
             </Box>
             <TextButton label={t('goals.edit')} onPress={() => router.push('/goals-edit')} />
           </>

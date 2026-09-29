@@ -97,6 +97,8 @@ export const pl: Translations = {
     capitalQ: 'Ile godzin masz już za sobą?',
     justStarting: 'Dopiero zaczynam',
     capitalNote: 'Lata przed aplikacją też się liczą. Kapitał nigdy nie maleje.',
+    sceneTitle: 'Jak wygląda postęp',
+    sceneSub: 'Coś rośnie, gdy zbliżasz się do celu. I nigdy się nie zmniejsza.',
     goal: 'Cel tygodniowy',
     goalOptional: 'Opcjonalnie, bez presji',
     goalOff: 'Bez celu',
@@ -355,6 +357,14 @@ export const pl: Translations = {
     resting: '{{name}} odpoczywa',
     restingSub: 'Może 20 minut w tym tygodniu?',
     capital: 'od początku',
+  },
+  you: {
+    title: 'Zrób po swojemu',
+    sub: 'Opcjonalnie. Wszystko to zmienisz później w Profilu.',
+    name: 'Jak mamy się do ciebie zwracać?',
+    avatar: 'Obrazek',
+    accent: 'Kolor',
+    skip: 'Na razie pomiń',
   },
   tabs: { goals: 'Cele', today: 'Dziś', analytics: 'Analityka', profile: 'Profil', invest: 'Zainwestuj czas' },
 };
