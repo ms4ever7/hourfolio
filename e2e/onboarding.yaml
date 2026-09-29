@@ -1,0 +1,43 @@
+appId: com.ms4ever7.hourfolio
+---
+# Onboarding in English from the welcome screen: pick assets, set a goal and its scene,
+# the day step, then "Make it yours". Start from a fresh install or Profile → Start over.
+# No launchApp: a dev build would stop at the dev-client launcher. Picks are kept in memory,
+# so restart the app before a second run.
+- runFlow: connect.yaml
+- tapOn: '.*English.*'
+- assertVisible: 'Every hour you spend on yourself is an investment.'
+- takeScreenshot: e2e/screenshots/01-welcome
+- tapOn: 'Get started'
+- tapOn: 'Guitar'
+- tapOn: 'Piano'
+- tapOn: 'DJing'
+- takeScreenshot: e2e/screenshots/02-pick
+- tapOn: 'Continue'
+- assertVisible: 'Step 2 of 2 · asset 1 of 3'
+- tapOn: '.*A few times a week.*'
+- scrollUntilVisible:
+    element: 'More'
+    direction: DOWN
+- tapOn: 'More'
+- tapOn: 'More'
+- tapOn: 'More'
+- scrollUntilVisible:
+    element: 'Tree'
+    direction: DOWN
+- tapOn: 'Tree'
+- waitForAnimationToEnd
+- takeScreenshot: e2e/screenshots/03-setup-goal
+- tapOn: 'Set up the rest later'
+- assertVisible: 'Your day'
+- takeScreenshot: e2e/screenshots/04-day
+- tapOn: 'Continue'
+- assertVisible: 'Make it yours'
+- tapOn: 'Your name'
+- inputText: 'Roman'
+- tapOn: '🦊'
+- hideKeyboard
+- takeScreenshot: e2e/screenshots/05-you
+- tapOn: 'Open my portfolio'
+- assertVisible: 'What are you investing in today\?'
+- takeScreenshot: e2e/screenshots/06-today-empty

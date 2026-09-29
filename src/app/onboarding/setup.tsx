@@ -3,13 +3,14 @@ import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, UI_PATHS } from '@/components/icons';
+import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Box, Text } from '@/components/primitives';
 import { BackButton, Card, LanguageButton, OptionButton, PrimaryButton, RoundButton, Screen, Segmented, TextButton } from '@/components/ui';
 import { ENERGY_TYPES, RHYTHMS } from '@/domain/types';
+import { useSeason } from '@/lib/appearance';
 import { useAssetName } from '@/lib/labels';
-import { useOnboardingStore } from '@/store/onboarding-store';
-import { usePortfolioStore } from '@/store/portfolio-store';
 import { useSettingsStore } from '@/store/settings-store';
+import { useOnboardingStore } from '@/store/onboarding-store';
 import { PALETTE_KEYS, useAppTheme } from '@/theme/theme';
 
 const CAPITAL_HOURS = [0, 50, 200, 500];
@@ -22,15 +23,11 @@ export default function Setup() {
   const step = Number(useLocalSearchParams<{ step: string }>().step ?? 0);
   const drafts = useOnboardingStore((s) => s.drafts);
   const updateDraft = useOnboardingStore((s) => s.updateDraft);
-  const setUpPortfolio = usePortfolioStore((s) => s.setUpPortfolio);
-  const setOnboarded = useSettingsStore((s) => s.setOnboarded);
   const draft = drafts[step];
+  const scene = useSettingsStore((s) => s.goalScene);
+  const season = useSeason();
 
-  const finish = () => {
-    setUpPortfolio(drafts);
-    setOnboarded(true);
-    router.replace('/(tabs)');
-  };
+  const finish = () => router.push('/onboarding/day');
 
   if (!draft) return null;
   const isLast = step >= drafts.length - 1;
@@ -42,7 +39,7 @@ export default function Setup() {
       footer={
         <Box paddingHorizontal="l" gap="xs" style={{ paddingBottom: insets.bottom + 8 }}>
           <PrimaryButton
-            label={isLast ? t('setup.finish') : t('setup.next', { name: assetName(drafts[step + 1]) })}
+            label={isLast ? t('common.continue') : t('setup.next', { name: assetName(drafts[step + 1]) })}
             icon={UI_PATHS.arrowRight}
             onPress={() => (isLast ? finish() : router.push({ pathname: '/onboarding/setup', params: { step: String(step + 1) } }))}
           />
@@ -179,6 +176,17 @@ export default function Setup() {
           <Text variant="heading">+</Text>
         </RoundButton>
       </Box>
+
+      {goalHours > 0 ? (
+        <Card gap="sm">
+          <Box gap="xs">
+            <Text variant="bodyStrong">{t('setup.sceneTitle')}</Text>
+            <Text variant="small">{t('setup.sceneSub')}</Text>
+          </Box>
+          <GoalScene scene={scene} progress={0.6} color={palette[draft.color].main} tint={palette[draft.color].tint} season={season?.id ?? null} height={48} />
+          <ScenePicker />
+        </Card>
+      ) : null}
     </Screen>
   );
 }

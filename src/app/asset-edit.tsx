@@ -10,23 +10,10 @@ import type { AssetFace, IconKey } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
 import { deletePhoto, pickSquarePhoto } from '@/lib/photos';
 import { usePortfolioStore } from '@/store/portfolio-store';
+import { useSettingsStore } from '@/store/settings-store';
 import { PALETTE_KEYS, useAppTheme } from '@/theme/theme';
 
 type FaceKind = 'icon' | 'emoji' | 'photo';
-
-/** Emoji that fit common hobbies, offered before the keyboard. */
-const EMOJI = [
-  '🎸', '🎹', '🥁', '🎤', '🎧', '🎨', '✏️', '📷', '📚', '✍️',
-  '🏋️', '🏃', '🚴', '🏊', '🧘', '🧗', '⚽', '🏀', '🎾', '🥊',
-  '💻', '🤖', '♟️', '🎲', '🃏', '🎮', '📺', '🍳', '🌱', '🪴',
-  '🧶', '🪡', '🏺', '🎬', '🎻', '🎺', '🛹', '⛷️', '🐕', '💰',
-];
-
-/** A single key press on the emoji keyboard arrives as one whole emoji, skin tone and all. */
-function asEmoji(text: string): string | null {
-  const e = text.trim();
-  return e && e.length <= 16 && /\p{Extended_Pictographic}|\p{Regional_Indicator}/u.test(e) ? e : null;
-}
 
 /** Name, picture and color of an asset. Changes save as they are made. */
 export default function AssetEdit() {
@@ -37,6 +24,7 @@ export default function AssetEdit() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === id));
   const updateAsset = usePortfolioStore((s) => s.updateAsset);
+  const recent = useSettingsStore((s) => s.recentEmoji);
   const [kind, setKind] = useState<FaceKind>(asset?.face?.kind ?? 'icon');
   const [name, setName] = useState(asset ? assetName(asset) : '');
 
@@ -129,37 +117,33 @@ export default function AssetEdit() {
 
           {kind === 'emoji' ? (
             <Box gap="sm">
-              <TextInput
-                value=""
-                onChangeText={(text) => {
-                  const e = asEmoji(text);
-                  if (e) setFace({ kind: 'emoji', emoji: e });
-                }}
-                placeholder={t('assetEdit.emojiInput')}
-                placeholderTextColor={colors.faint}
-                accessibilityLabel={t('assetEdit.emojiInput')}
-                style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Onest_400Regular', fontSize: 17, color: colors.ink }}
-              />
-              <Text variant="small">{t('assetEdit.emojiHint')}</Text>
-              <Box flexDirection="row" flexWrap="wrap" style={{ gap: 8 }} accessibilityRole="radiogroup" accessibilityLabel={t('assetEdit.emoji')}>
-                {EMOJI.map((e) => {
-                  const on = emoji === e;
-                  return (
-                    <Pressable
-                      key={e}
-                      accessibilityRole="radio"
-                      accessibilityState={{ checked: on }}
-                      accessibilityLabel={e}
-                      onPress={() => setFace({ kind: 'emoji', emoji: e })}
-                      style={{ width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? palette[asset.color].tint : colors.card, borderWidth: on ? 2 : 1, borderColor: on ? palette[asset.color].main : colors.track }}
-                    >
-                      <Text style={{ fontSize: 26, lineHeight: 32 }} allowFontScaling={false}>
-                        {e}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </Box>
+              <RoundButton onPress={() => router.push({ pathname: '/emoji', params: { assetId: asset.id } })} style={{ alignSelf: 'flex-start' }}>
+                <Text style={{ fontSize: 18, lineHeight: 22 }}>{emoji ?? '😀'}</Text>
+                <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                  {t('assetEdit.chooseEmoji')}
+                </Text>
+              </RoundButton>
+              {recent.length ? (
+                <Box flexDirection="row" flexWrap="wrap" style={{ gap: 8 }} accessibilityRole="radiogroup" accessibilityLabel={t('emoji.recent')}>
+                  {recent.slice(0, 12).map((e) => {
+                    const on = emoji === e;
+                    return (
+                      <Pressable
+                        key={e}
+                        accessibilityRole="radio"
+                        accessibilityState={{ checked: on }}
+                        accessibilityLabel={e}
+                        onPress={() => setFace({ kind: 'emoji', emoji: e })}
+                        style={{ width: 48, height: 48, borderRadius: 14, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? palette[asset.color].tint : colors.card, borderWidth: on ? 2 : 1, borderColor: on ? palette[asset.color].main : colors.track }}
+                      >
+                        <Text style={{ fontSize: 24, lineHeight: 30 }} allowFontScaling={false}>
+                          {e}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </Box>
+              ) : null}
             </Box>
           ) : null}
 

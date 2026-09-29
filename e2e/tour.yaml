@@ -1,0 +1,94 @@
+appId: com.ms4ever7.hourfolio
+---
+# Visits the main screens with sample data and saves the README screenshots.
+# Needs an onboarded app in English (run onboarding.yaml first). Replaces the data with samples.
+- runFlow: connect.yaml
+- tapOn:
+    id: tab-profile
+# Default look for the light screenshots; the dark ones are set further down.
+- tapOn: 'Appearance.*'
+- tapOn: 'System'
+- tapOn: '#2747D6'
+- scrollUntilVisible:
+    element: 'Plain'
+    direction: DOWN
+    centerElement: true
+- tapOn: 'Plain'
+- scrollUntilVisible:
+    element: 'Back'
+    direction: UP
+- tapOn: 'Back'
+- tapOn:
+    id: profile-name
+- eraseText
+- inputText: 'Roman'
+- hideKeyboard
+- scrollUntilVisible:
+    element: 'Load sample data.*'
+    direction: DOWN
+    centerElement: true
+- tapOn: 'Load sample data.*'
+- tapOn: 'Continue'
+- tapOn:
+    id: tab-index
+- scrollUntilVisible:
+    element: 'Good (morning|afternoon|evening).*'
+    direction: UP
+- takeScreenshot: e2e/screenshots/10-today
+- tapOn:
+    id: tab-goals
+- assertVisible: 'Milestones'
+- takeScreenshot: e2e/screenshots/11-goals
+- tapOn:
+    id: tab-analytics
+- assertVisible: 'Time allocation'
+- takeScreenshot: e2e/screenshots/12-analytics
+- tapOn:
+    id: tab-index
+- scrollUntilVisible:
+    element: 'Guitar, all time'
+    direction: DOWN
+    centerElement: true
+- tapOn: 'Guitar, all time'
+- assertVisible: 'Capital · all time'
+- takeScreenshot: e2e/screenshots/13-asset
+- tapOn: 'Back'
+- tapOn:
+    id: tab-invest
+- assertVisible: 'Invest time'
+- takeScreenshot: e2e/screenshots/14-log
+- swipe:
+    start: '50%,15%'
+    end: '50%,95%'
+    duration: 300
+- tapOn:
+    id: tab-profile
+- scrollUntilVisible:
+    element: 'Change profile picture'
+    direction: UP
+- takeScreenshot: e2e/screenshots/15-profile
+- tapOn: 'Appearance.*'
+- tapOn: 'Dark'
+- tapOn: '#6246EA'
+- scrollUntilVisible:
+    element: 'Waves'
+    direction: DOWN
+    centerElement: true
+- tapOn: 'Waves'
+- scrollUntilVisible:
+    element: 'Appearance'
+    direction: UP
+- takeScreenshot: e2e/screenshots/16-appearance-dark
+- tapOn: 'Back'
+- tapOn:
+    id: tab-index
+- scrollUntilVisible:
+    element: 'Good (morning|afternoon|evening).*'
+    direction: UP
+- takeScreenshot: e2e/screenshots/17-today-dark
+- tapOn:
+    id: tab-goals
+- tapOn: 'Share my week'
+- assertVisible: 'Share my week'
+- takeScreenshot: e2e/screenshots/18-share-week
+- tapOn: 'Cancel'

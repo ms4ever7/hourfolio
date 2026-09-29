@@ -30,6 +30,7 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
         key={route.key}
         accessibilityRole="tab"
         accessibilityState={{ selected: focused }}
+        testID={`tab-${route.name}`}
         onPress={() => {
           const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
           if (!focused && !event.defaultPrevented) navigation.navigate(route.name);
@@ -52,6 +53,7 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('tabs.invest')}
+          testID="tab-invest"
           onPress={() => router.push('/log')}
           style={({ pressed }) => ({
             width: 56,
@@ -79,7 +81,7 @@ export default function TabsLayout() {
   if (!onboarded) return <Redirect href="/onboarding" />;
   return (
     <Tabs screenOptions={{ headerShown: false }} tabBar={(props) => <TabBar {...props} />}>
-      <Tabs.Screen name="index" options={{ title: t('tabs.portfolio') }} />
+      <Tabs.Screen name="index" options={{ title: t('tabs.today') }} />
       <Tabs.Screen name="analytics" options={{ title: t('tabs.analytics') }} />
       <Tabs.Screen name="goals" options={{ title: t('tabs.goals') }} />
       <Tabs.Screen name="profile" options={{ title: t('tabs.profile') }} />

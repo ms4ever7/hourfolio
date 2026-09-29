@@ -12,6 +12,11 @@ Run through mise so Node 22 and bun 1.3.14 are used:
 - Real iPhone: `mise exec -- bunx expo run:ios --device <udid>` (UDID from `xcrun devicectl list devices`), then launch it pointed at Metro. Signed with the free personal team, so installs expire after 7 days.
 - Add Expo packages with `mise exec -- bunx expo install <pkg>`
 
+## Project skills
+- `.claude/skills/new-screen`: how to add or rebuild a screen (routes, building blocks, tokens, copy, checks).
+- `.claude/skills/on-device`: build, install and launch on the real iPhone with Metro.
+- `.claude/skills/create-pr`: checks, commit style and PR description for a PR to main.
+
 ## Layout
 - `src/domain/`: pure logic, fully unit-tested. `growth.ts` (capital never decreases; momentum decays toward a floor of 20, half-life set by the asset's rhythm), `stats.ts` (periods, allocation, energy balance, heatmap), `catalog.ts` (onboarding presets).
 - `src/store/`: zustand persisted to MMKV (`portfolio-store`, `settings-store`); `onboarding-store` is in-memory.

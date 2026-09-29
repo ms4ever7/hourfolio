@@ -5,6 +5,7 @@ import { ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Group, ListRow, Screen, SwitchRow } from '@/components/ui';
+import { formatClock } from '@/domain/day';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
 import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
@@ -53,6 +54,7 @@ export default function Profile() {
           placeholder={t('profile.namePlaceholder')}
           placeholderTextColor={colors.faint}
           accessibilityLabel={t('profile.nameLabel')}
+          testID="profile-name"
           textAlign="center"
           returnKeyType="done"
           maxLength={40}
@@ -94,6 +96,7 @@ export default function Profile() {
       </Group>
 
       <Group title={t('profile.notifications')}>
+        <ListRow title={t('day.row')} sub={t('day.checkIn')} value={t('day.rowValue', { wake: formatClock(s.wakeTime, i18n.language), bed: formatClock(s.bedTime, i18n.language) })} onPress={() => router.push('/day')} />
         <SwitchRow
           title={t('profile.nudges')}
           sub={t('profile.nudgesSub')}
@@ -111,7 +114,13 @@ export default function Profile() {
 
       <Group title={t('profile.portfolio')}>
         <ListRow title={t('pick.custom')} sub={t('custom.label')} onPress={() => router.push({ pathname: '/onboarding/custom', params: { mode: 'add' } })} />
-        <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() => confirm(loadDemo)} />
+        <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() =>
+            confirm(() => {
+              loadDemo();
+              s.clearCelebrated();
+            })
+          }
+        />
         <ListRow
           danger
           last
@@ -120,6 +129,7 @@ export default function Profile() {
           onPress={() =>
             confirm(() => {
               reset();
+              s.clearCelebrated();
               s.setOnboarded(false);
               router.replace('/onboarding');
             })

@@ -1,0 +1,35 @@
+appId: com.ms4ever7.hourfolio
+---
+# Dev builds open on the dev-client launcher. Connect it to Metro on this Mac and close
+# the dev menu that pops up on the first launch. Safe to run when already connected.
+- runFlow:
+    when:
+      visible: 'http://.*8081'
+    commands:
+      - tapOn: 'http://.*8081'
+- runFlow:
+    when:
+      visible: 'Enter URL manually'
+    commands:
+      - tapOn: 'Enter URL manually'
+      - tapOn: 'http://'
+      - inputText: '127.0.0.1:8081'
+      - tapOn: 'Connect'
+- extendedWaitUntil:
+    notVisible: 'DEVELOPMENT SERVERS'
+    timeout: 60000
+- waitForAnimationToEnd:
+    timeout: 8000
+- runFlow:
+    when:
+      visible: 'This is the developer menu.*'
+    commands:
+      - tapOn: 'Continue'
+- runFlow:
+    when:
+      visible: 'Runtime version.*'
+    commands:
+      - swipe:
+          start: '50%,47%'
+          end: '50%,95%'
+          duration: 300
