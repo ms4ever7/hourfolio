@@ -12,6 +12,7 @@ import { useAppTheme } from '@/theme/theme';
 
 const COLUMNS = 8;
 const PAD = 16;
+const HEADER = 34;
 
 function rows(list: string[]): string[][] {
   const out: string[][] = [];
@@ -42,6 +43,23 @@ export default function EmojiPicker() {
     [recent, t],
   );
   const results = useMemo(() => searchEmoji(query, i18n.language), [query, i18n.language]);
+
+  // Every header and row has a known height, so a tab can jump to a section that isn't
+  // rendered yet. SectionList counts a header and a footer slot around each section's rows.
+  const layout = useMemo(() => {
+    const out: { length: number; offset: number }[] = [];
+    let offset = 0;
+    for (const section of sections) {
+      out.push({ length: HEADER, offset });
+      offset += HEADER;
+      for (let i = 0; i < section.data.length; i++) {
+        out.push({ length: cell, offset });
+        offset += cell;
+      }
+      out.push({ length: 0, offset });
+    }
+    return out;
+  }, [sections, cell]);
 
   const pick = (emoji: string) => {
     if (asset) {
@@ -74,7 +92,8 @@ export default function EmojiPicker() {
   const jumpTo = (key: string, index: number) => {
     setActiveGroup(index);
     const sectionIndex = sections.findIndex((s) => s.key === key);
-    if (sectionIndex >= 0) listRef.current?.scrollToLocation({ sectionIndex, itemIndex: 0, viewOffset: 0, animated: false });
+    if (sectionIndex < 0) return;
+    listRef.current?.scrollToLocation({ sectionIndex, itemIndex: 0, viewOffset: 0, animated: false });
   };
 
   return (
@@ -119,7 +138,7 @@ export default function EmojiPicker() {
             keyExtractor={(_, i) => String(i)}
             renderItem={({ item }) => renderRow(item)}
             renderSectionHeader={({ section }) => (
-              <Box backgroundColor="ground" style={{ paddingHorizontal: PAD, paddingTop: 12, paddingBottom: 4 }}>
+              <Box backgroundColor="ground" justifyContent="flex-end" style={{ height: HEADER, paddingHorizontal: PAD, paddingBottom: 4 }}>
                 <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
                   {section.title.toLocaleUpperCase()}
                 </Text>
@@ -130,7 +149,7 @@ export default function EmojiPicker() {
               const i = EMOJI_GROUPS.findIndex((g) => g.key === key);
               if (i >= 0) setActiveGroup(i);
             }}
-            onScrollToIndexFailed={() => undefined}
+            getItemLayout={(_, index) => ({ ...layout[index], index })}
             initialNumToRender={12}
             stickySectionHeadersEnabled
             keyboardShouldPersistTaps="handled"
