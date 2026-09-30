@@ -60,7 +60,7 @@ export default function Thing() {
 The theme is built at runtime from the user's mode, accent, page color and holiday, so a literal color breaks some combination of them.
 - Get colors with `const { colors, palette } = useAppTheme()`, or use a Restyle prop such as `backgroundColor="card"`.
 - UI chrome uses `accent`, `onAccent` (text on accent), `accentInk` (accent-colored text) and `accentSoft`.
-- `hours`, `minutes` and `days` are only for those units.
+- `hours*` tokens equal the accent; `days` is for rest and met goals. Show time with `Duration`/`Hours`, passing `highlight={palette[asset.color].main}` where a row belongs to an asset.
 - Asset colors come from `palette[asset.color]` (`main`, `tint`, `soft`). For text or icons on `palette.x.main`, use `colors.card`.
 - Neutrals: `ground`, `card`, `ink`, `body`, `muted`, `faint`, `line`, `border`, `track`, `dashed`, `inverse`/`onInverse`.
 - If a token is missing, add it to both `LIGHT` and `DARK` in `src/theme/theme.ts` (and to `aroundPage` if it depends on the page color). Don't use a literal.
