@@ -14,7 +14,7 @@ import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
 import { useSettingsStore, type ThemeMode } from '@/store/settings-store';
 import { DEFAULT_ACCENT, pageMode, useAppTheme } from '@/theme/theme';
 
-const PRESETS = [DEFAULT_ACCENT, '#6246EA', '#C2388A', '#E4572E', '#E8741C', '#C99A06', '#1F8A5B', '#0F7A63', '#1E96C8', '#4A4F57'];
+const PRESETS = [DEFAULT_ACCENT, '#2747D6', '#C2388A', '#E4572E', '#E8741C', '#C99A06', '#1F8A5B', '#0F7A63', '#1E96C8', '#4A4F57'];
 const MODES: ThemeMode[] = ['system', 'light', 'dark'];
 /** Page colors from soft pastels to deep darks; any other one comes from the picker. */
 const PAGES = ['#FFFFFF', '#FFF8E7', '#FFEFE5', '#FDEBF3', '#F1ECFF', '#EAF2FF', '#E8F6EF', '#F2F5DC', '#1B2233', '#231B33', '#10231C', '#000000'];

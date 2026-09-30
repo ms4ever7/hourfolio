@@ -139,9 +139,6 @@ function aroundPage(base: Colors, page: string, mode: Mode): Colors {
     dashed: mix(page, ink, 0.22),
     axis: mix(page, ink, 0.18),
     previous: readable(base.previous, 2.5),
-    hours: readable(base.hours, 3),
-    hoursInk: ensureContrast(base.hoursInk, card, 4.5, ink),
-    hoursSoft: mix(card, base.hours, mode === 'light' ? 0.14 : 0.22),
     minutes: readable(base.minutes, 3),
     days: readable(base.days, 3),
     daysSoft: mix(card, base.days, mode === 'light' ? 0.2 : 0.25),
@@ -163,11 +160,12 @@ export function buildTheme({ mode: picked, accent, page }: ThemeOptions) {
   // A page color the user picked is used exactly as picked.
   const ground = page ? base.ground : mix(base.ground, tokens.accent, mode === 'dark' ? 0.05 : 0.035);
   // Hours are the main currency, so their color is the accent: charts, deltas and the heatmap follow the user's pick.
+  // The accent alone is only checked against the card, so hours text is re-checked against the page and the inverse surface.
   const hours = {
-    hours: tokens.accent,
+    hours: ensureContrast(tokens.accent, ground, 3, base.ink),
     hoursInk: tokens.accentInk,
     hoursSoft: tokens.accentSoft,
-    hoursOnInverse: mode === 'dark' ? mix(tokens.accent, '#000000', 0.25) : mix(tokens.accent, '#FFFFFF', 0.5),
+    hoursOnInverse: ensureContrast(mode === 'dark' ? mix(tokens.accent, '#000000', 0.25) : mix(tokens.accent, '#FFFFFF', 0.5), base.inverse, 3, base.onInverse),
   };
   const heat = [0.22, 0.45, 0.72, 1].map((a) => mix(base.card, tokens.accent, a));
   return createTheme({

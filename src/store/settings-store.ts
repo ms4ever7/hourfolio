@@ -8,6 +8,7 @@ import type { SceneId } from '@/domain/goals';
 import { isAppLanguage, type AppLanguage } from '@/i18n/resources';
 import { DEFAULT_ACCENT } from '@/theme/theme';
 import { mmkvZustandStorage } from './mmkv-storage';
+import { migrateSettings, SETTINGS_VERSION } from './settings-migrate';
 
 function deviceLanguage(): AppLanguage {
   const code = getLocales()[0]?.languageCode ?? 'en';
@@ -104,6 +105,6 @@ export const useSettingsStore = create<SettingsState>()(
       clearCelebrated: () => set({ celebrated: [] }),
       markCelebrated: (key) => set((s) => ({ celebrated: [...s.celebrated.filter((k) => k !== key), key].slice(-MAX_CELEBRATED) })),
     }),
-    { name: 'hourfolio.settings', storage: mmkvZustandStorage },
+    { name: 'hourfolio.settings', storage: mmkvZustandStorage, version: SETTINGS_VERSION, migrate: (persisted, version) => migrateSettings(persisted, version) as SettingsState },
   ),
 );

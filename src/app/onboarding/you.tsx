@@ -14,7 +14,7 @@ import { DEFAULT_ACCENT, useAppTheme } from '@/theme/theme';
 
 /** A few of each, so the step stays one screen; the full sets are in Profile. */
 const AVATARS = AVATAR_PRESETS.filter((p) => ['fox', 'dog', 'cat', 'panda', 'owl', 'unicorn', 'alien', 'astronaut', 'robot', 'dragon', 'sun', 'wave'].includes(p.id));
-const ACCENTS = [DEFAULT_ACCENT, '#6246EA', '#C2388A', '#E4572E', '#1F8A5B', '#1E96C8'];
+const ACCENTS = [DEFAULT_ACCENT, '#2747D6', '#C2388A', '#E4572E', '#1F8A5B', '#1E96C8'];
 
 /** Optional last onboarding step: a name, a picture and a color. Skipping keeps the defaults. */
 export default function YouStep() {
