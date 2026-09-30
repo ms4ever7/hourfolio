@@ -118,7 +118,7 @@ export default function Analytics() {
       <Box backgroundColor="inverse" borderRadius="xl" padding="ml" gap="s">
         <Box flexDirection="row" alignItems="center" gap="s">
           <Glyph d={ICON_PATHS.moon} size={16} color={colors.daysOnInverse} strokeWidth={2} />
-          <Text variant="small" color="daysOnInverse" style={{ fontFamily: 'Onest_600SemiBold' }}>
+          <Text variant="small" color="daysOnInverse" style={{ fontFamily: 'Inter_600SemiBold' }}>
             {t('analytics.insight')}
           </Text>
         </Box>

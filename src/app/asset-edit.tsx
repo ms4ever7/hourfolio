@@ -79,7 +79,7 @@ export default function AssetEdit() {
             returnKeyType="done"
             maxLength={40}
             accessibilityLabel={t('assetEdit.name')}
-            style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Onest_400Regular', fontSize: 17, color: colors.ink }}
+            style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Inter_400Regular', fontSize: 17, color: colors.ink }}
           />
         </Box>
 
@@ -119,7 +119,7 @@ export default function AssetEdit() {
             <Box gap="sm">
               <RoundButton onPress={() => router.push({ pathname: '/emoji', params: { assetId: asset.id } })} style={{ alignSelf: 'flex-start' }}>
                 <Text style={{ fontSize: 18, lineHeight: 22 }}>{emoji ?? '😀'}</Text>
-                <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }}>
                   {t('assetEdit.chooseEmoji')}
                 </Text>
               </RoundButton>
@@ -150,7 +150,7 @@ export default function AssetEdit() {
           {kind === 'photo' ? (
             <RoundButton onPress={() => void pickPhoto()} style={{ alignSelf: 'flex-start' }}>
               <Glyph d={UI_PATHS.image} size={18} color={colors.ink} />
-              <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }}>
+              <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {asset.face?.kind === 'photo' ? t('assetEdit.changePhoto') : t('assetEdit.pickPhoto')}
               </Text>
             </RoundButton>

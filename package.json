@@ -3,8 +3,7 @@
   "main": "expo-router/entry",
   "version": "1.0.0",
   "dependencies": {
-    "@expo-google-fonts/jetbrains-mono": "^0.4.1",
-    "@expo-google-fonts/onest": "^0.4.2",
+    "@expo-google-fonts/inter": "^0.4.2",
     "@expo/ui": "~57.0.20",
     "@shopify/restyle": "^2.4.5",
     "expo": "~57.0.25",

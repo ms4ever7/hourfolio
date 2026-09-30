@@ -6,9 +6,9 @@ appId: com.ms4ever7.hourfolio
 - tapOn:
     id: tab-profile
 # Default look for the light screenshots; the dark ones are set further down.
-- tapOn: 'Appearance.*'
+- tapOn: '.*Appearance.*'
 - tapOn: 'System'
-- tapOn: '#2747D6'
+- tapOn: '#6558F5'
 - scrollUntilVisible:
     element: 'Plain'
     direction: DOWN
@@ -67,9 +67,9 @@ appId: com.ms4ever7.hourfolio
     element: 'Change profile picture'
     direction: UP
 - takeScreenshot: e2e/screenshots/15-profile
-- tapOn: 'Appearance.*'
+- tapOn: '.*Appearance.*'
 - tapOn: 'Dark'
-- tapOn: '#6246EA'
+- tapOn: '#6558F5'
 - scrollUntilVisible:
     element: 'Waves'
     direction: DOWN

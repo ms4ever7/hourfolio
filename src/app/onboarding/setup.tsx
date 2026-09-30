@@ -133,10 +133,10 @@ export default function Setup() {
                 onPress={() => updateDraft(step, { startingMinutes: h * 60 })}
                 style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, justifyContent: 'center', backgroundColor: on ? colors.inverse : colors.card, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
               >
-                <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold' }}>
+                <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
                   {h === 0 ? t('setup.justStarting') : `${i === CAPITAL_HOURS.length - 1 ? `${h}+` : `~${h}`}`}
                   {h > 0 ? (
-                    <Text variant="small" style={{ color: on ? colors.hoursOnInverse : colors.hours, fontFamily: 'Onest_600SemiBold' }}>
+                    <Text variant="small" style={{ color: on ? colors.hoursOnInverse : colors.hours, fontFamily: 'Inter_600SemiBold' }}>
                       {' '}
                       {t('units.h')}
                     </Text>
@@ -165,7 +165,7 @@ export default function Setup() {
           ) : (
             <Text variant="mono" style={{ fontSize: 18 }}>
               {goalHours}
-              <Text variant="small" color="hours" style={{ fontFamily: 'Onest_600SemiBold' }}>
+              <Text variant="small" color="hours" style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {' '}
                 {t('units.h')}
               </Text>

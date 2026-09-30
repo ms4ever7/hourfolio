@@ -49,7 +49,7 @@ function LogTile({ asset, label }: { asset: Asset; label: string }) {
 export default function Today() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
   const today = useToday();
   const { assets, logs } = usePortfolio();
@@ -96,7 +96,7 @@ export default function Today() {
           </Text>
         </Box>
         <Pressable accessibilityRole="button" accessibilityLabel={t('profile.title')} onPress={() => router.navigate('/(tabs)/profile')} hitSlop={6}>
-          <ProfileAvatar avatar={avatar} size={44} />
+          <ProfileAvatar avatar={avatar} size={40} />
         </Pressable>
       </Box>
 
@@ -124,7 +124,7 @@ export default function Today() {
                     <Text variant="label" numberOfLines={1} style={{ flex: 1 }}>
                       {assetName(a)}
                     </Text>
-                    <Duration minutes={minutes} size={13} prefix="+" />
+                    <Duration minutes={minutes} size={14} prefix="+" highlight={palette[a.color].main} />
                   </Box>
                 );
               })}
@@ -134,7 +134,7 @@ export default function Today() {
         )}
         <Box height={1} backgroundColor="line" />
         <Box gap="s">
-          <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
+          <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold' }}>
             {t('today.quick')}
           </Text>
           <Box flexDirection="row" gap="s">
@@ -161,13 +161,13 @@ export default function Today() {
                 return (
                   <Box key={asset.id} gap="xs">
                     <Box flexDirection="row" alignItems="center" gap="s">
-                      <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Onest_600SemiBold' }}>
+                      <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
                         {assetName(asset)}
                       </Text>
                       <Box flexDirection="row" alignItems="baseline" gap="xs">
-                        <Duration minutes={done} size={13} />
+                        <Duration minutes={done} size={13} highlight={palette[asset.color].main} />
                         <Text variant="small">/</Text>
-                        <Duration minutes={goal} size={13} />
+                        <Duration minutes={goal} size={13} quiet />
                       </Box>
                     </Box>
                     <GoalSceneRow scene={scene} progress={done / goal} met={met} color={asset.color} season={season?.id ?? null} label={assetName(asset)} />

@@ -4,7 +4,7 @@ import { Alert, Pressable, TextInput } from 'react-native';
 import { ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Group, ListRow, Screen, SwitchRow } from '@/components/ui';
+import { Group, ListRow, RowIcon, Screen, SwitchRow } from '@/components/ui';
 import { formatClock } from '@/domain/day';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
@@ -43,7 +43,7 @@ export default function Profile() {
 
       <Box alignItems="center" gap="sm">
         <Pressable accessibilityRole="button" accessibilityLabel={t('profile.changeAvatar')} onPress={() => router.push('/avatar')} style={({ pressed }) => ({ opacity: pressed ? 0.8 : 1 })}>
-          <ProfileAvatar avatar={s.avatar} size={104} />
+          <ProfileAvatar avatar={s.avatar} size={92} />
           <Box position="absolute" width={34} height={34} borderRadius="pill" backgroundColor="accent" alignItems="center" justifyContent="center" style={{ right: -6, bottom: -6, borderWidth: 3, borderColor: colors.ground }}>
             <Glyph d={UI_PATHS.pencil} size={15} color={colors.onAccent} strokeWidth={2.2} />
           </Box>
@@ -58,7 +58,7 @@ export default function Profile() {
           textAlign="center"
           returnKeyType="done"
           maxLength={40}
-          style={{ minWidth: 200, fontFamily: 'Onest_700Bold', fontSize: 24, color: colors.ink, paddingVertical: 4 }}
+          style={{ minWidth: 200, fontFamily: 'Inter_700Bold', fontSize: 24, color: colors.ink, paddingVertical: 4 }}
         />
         <Text variant="caption">{t('profile.summary', { hours: formatHours(capital, i18n.language), count: assets.length })}</Text>
       </Box>
@@ -70,7 +70,7 @@ export default function Profile() {
             <Text variant="bodyStrong">{t('profile.seasonOn', { season: t(`seasons.${season.id}`) })}</Text>
             {offerIcon ? (
               <Pressable accessibilityRole="button" onPress={() => void setIcon(season.icon)} hitSlop={8}>
-                <Text variant="label" color="accentInk" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                <Text variant="label" color="accentInk" style={{ fontFamily: 'Inter_600SemiBold' }}>
                   {t('profile.seasonIcon')}
                 </Text>
               </Pressable>
@@ -83,13 +83,13 @@ export default function Profile() {
         <ListRow
           title={t('profile.appearance')}
           value={modeLabel}
-          left={<Box width={22} height={22} borderRadius="pill" backgroundColor="accent" style={{ borderWidth: 2, borderColor: colors.accentSoft }} />}
+          left={<RowIcon emoji="🎨" />}
           onPress={() => router.push('/appearance')}
         />
         <ListRow
           title={t('profile.language')}
           value={t(`languages.${s.language}`)}
-          left={<Glyph d={UI_PATHS.globe} size={22} color={colors.ink} />}
+          left={<RowIcon emoji="🌐" />}
           onPress={() => router.push('/language')}
           last
         />
@@ -113,7 +113,7 @@ export default function Profile() {
       </Group>
 
       <Group title={t('profile.portfolio')}>
-        <ListRow title={t('pick.custom')} sub={t('custom.label')} onPress={() => router.push({ pathname: '/onboarding/custom', params: { mode: 'add' } })} />
+        <ListRow left={<RowIcon emoji="➕" />} title={t('pick.custom')} sub={t('custom.label')} onPress={() => router.push({ pathname: '/onboarding/custom', params: { mode: 'add' } })} />
         <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() =>
             confirm(() => {
               loadDemo();

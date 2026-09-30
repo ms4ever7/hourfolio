@@ -37,8 +37,8 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
         }}
         style={{ flex: 1, minHeight: 48, alignItems: 'center', justifyContent: 'center', gap: 4 }}
       >
-        <Glyph d={TAB_ICONS[route.name]} size={24} color={focused ? colors.ink : colors.muted} />
-        <Text variant="tiny" color={focused ? 'ink' : 'muted'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ fontFamily: focused ? 'Onest_600SemiBold' : 'Onest_500Medium' }}>
+        <Glyph d={TAB_ICONS[route.name]} size={24} color={focused ? colors.accentInk : colors.faint} />
+        <Text variant="tiny" color={focused ? 'accentInk' : 'faint'} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={{ fontFamily: focused ? 'Inter_600SemiBold' : 'Inter_500Medium' }}>
           {label}
         </Text>
       </Pressable>
@@ -46,23 +46,23 @@ function TabBar({ state, navigation, descriptors }: BottomTabBarProps) {
   };
 
   return (
-    <Box flexDirection="row" alignItems="center" backgroundColor="card" borderTopWidth={1} borderColor="track" paddingHorizontal="s" style={{ paddingTop: 8, paddingBottom: Math.max(insets.bottom, 12) }}>
+    <Box flexDirection="row" alignItems="center" backgroundColor="card" borderTopWidth={1} borderColor="line" paddingHorizontal="s" style={{ paddingTop: 10, paddingBottom: Math.max(insets.bottom, 12) }}>
       {tab(0)}
       {tab(1)}
-      <Box flex={1} alignItems="center">
+      <Box flex={1} alignItems="center" style={{ marginTop: -36 }}>
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={t('tabs.invest')}
           testID="tab-invest"
           onPress={() => router.push('/log')}
           style={({ pressed }) => ({
-            width: 56,
-            height: 56,
-            borderRadius: 28,
+            width: 54,
+            height: 54,
+            borderRadius: 27,
             backgroundColor: colors.accent,
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: `0 6px 16px ${withAlpha(colors.accent, 0.3)}`,
+            boxShadow: `0 8px 20px ${withAlpha(colors.accent, 0.38)}`,
             transform: [{ scale: pressed ? 0.94 : 1 }],
           })}
         >

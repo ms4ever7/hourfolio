@@ -34,7 +34,7 @@ export default function GoalsEdit() {
             return (
               <Box key={a.id} flexDirection="row" alignItems="center" gap="sm" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={i === assets.length - 1 ? 0 : 1} borderColor="line">
                 <AssetIcon icon={a.icon} color={a.color} face={a.face} size={36} />
-                <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Onest_600SemiBold' }}>
+                <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
                   {assetName(a)}
                 </Text>
                 <RoundButton accessibilityLabel={`${t('common.less')}: ${assetName(a)}`} onPress={() => set(a.id, Math.max(0, goal - STEP))} style={{ paddingHorizontal: 0 }}>
