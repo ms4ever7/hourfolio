@@ -60,7 +60,7 @@ export default function Welcome() {
     >
       <Box flexDirection="row" alignItems="center" gap="s">
         <BrandMark size={28} />
-        <Text variant="bodyStrong" style={{ fontFamily: 'Onest_700Bold' }}>
+        <Text variant="bodyStrong" style={{ fontFamily: 'Inter_700Bold' }}>
           Hourfolio
         </Text>
       </Box>
@@ -77,7 +77,7 @@ export default function Welcome() {
       </Box>
 
       <Box gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('welcome.language')}>
-        <Text variant="tiny" style={{ fontFamily: 'Onest_600SemiBold', letterSpacing: 0.4 }}>
+        <Text variant="tiny" style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 }}>
           LANGUAGE · МОВА · JĘZYK
         </Text>
         {APP_LANGUAGES.map((code) => {

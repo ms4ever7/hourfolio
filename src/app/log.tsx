@@ -127,12 +127,12 @@ export default function LogSheet() {
                   onPress={() => setMinutes(m)}
                   style={{ height: 44, minWidth: 64, paddingHorizontal: 12, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.inverse : colors.card, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
                 >
-                  <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'JetBrainsMono_600SemiBold' }}>
+                  <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
                     {durationParts(m).map((p, i) => (
-                      <Text key={p.unit} style={{ fontFamily: 'JetBrainsMono_600SemiBold', color: on ? colors.onInverse : colors.ink }}>
+                      <Text key={p.unit} style={{ fontFamily: 'Inter_600SemiBold', color: on ? colors.onInverse : colors.ink }}>
                         {i > 0 ? ' ' : ''}
                         {p.value}
-                        <Text style={{ fontFamily: 'Onest_600SemiBold', fontSize: 12, color: p.unit === 'h' ? (on ? colors.hoursOnInverse : colors.hours) : on ? colors.minutesOnInverse : colors.minutes }}>
+                        <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 12, color: p.unit === 'h' ? (on ? colors.hoursOnInverse : colors.hours) : on ? colors.minutesOnInverse : colors.minutes }}>
                           {t(`units.${p.unit}`)}
                         </Text>
                       </Text>
@@ -176,7 +176,7 @@ export default function LogSheet() {
             placeholder={t('log.notePlaceholder')}
             placeholderTextColor={colors.faint}
             accessibilityLabel={t('log.note')}
-            style={{ minHeight: 48, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Onest_400Regular', fontSize: 15, color: colors.ink }}
+            style={{ minHeight: 48, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.ink }}
           />
         </Box>
       </ScrollView>

@@ -4,8 +4,8 @@ import { heatLevel } from '@/domain/stats';
 import { useAppTheme } from '@/theme/theme';
 import { Box, Text } from './primitives';
 
-const MONO = 'JetBrainsMono_500Medium';
-const SANS = 'Onest_400Regular';
+const MONO = 'Inter_500Medium';
+const SANS = 'Inter_400Regular';
 
 function niceStep(max: number): number {
   const raw = max / 3;
@@ -119,10 +119,10 @@ export function Donut({
           );
         })}
       </G>
-      <SvgText x={size / 2} y={size / 2 + 2} textAnchor="middle" fontSize={20} fontFamily="Onest_600SemiBold" fill={colors.ink}>
+      <SvgText x={size / 2} y={size / 2 + 2} textAnchor="middle" fontSize={20} fontFamily="Inter_600SemiBold" fill={colors.ink}>
         {centerTop}
       </SvgText>
-      <SvgText x={size / 2} y={size / 2 + 20} textAnchor="middle" fontSize={12} fontFamily="Onest_600SemiBold" fill={colors.hours}>
+      <SvgText x={size / 2} y={size / 2 + 20} textAnchor="middle" fontSize={12} fontFamily="Inter_600SemiBold" fill={colors.hours}>
         {centerBottom}
       </SvgText>
     </Svg>

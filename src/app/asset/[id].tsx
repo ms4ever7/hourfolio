@@ -100,7 +100,7 @@ export default function AssetScreen() {
         <BackButton onPress={() => router.back()} />
         <RoundButton accessibilityLabel={t('assetEdit.edit')} onPress={() => router.push({ pathname: '/asset-edit', params: { id: asset.id } })}>
           <Glyph d={UI_PATHS.pencil} size={16} color={colors.ink} />
-          <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+          <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
             {t('assetEdit.edit')}
           </Text>
         </RoundButton>
@@ -137,7 +137,7 @@ export default function AssetScreen() {
         <Card gap="s" style={{ flex: 1, padding: 16 }}>
           <Box flexDirection="row" justifyContent="space-between">
             <Text variant="small">{t('asset.momentum')}</Text>
-            <Text variant="small" color={data.trend === 'growing' ? 'hoursInk' : 'muted'} style={{ fontFamily: 'Onest_600SemiBold' }}>
+            <Text variant="small" color={data.trend === 'growing' ? 'hoursInk' : 'muted'} style={{ fontFamily: 'Inter_600SemiBold' }}>
               {t(`trend.${data.trend}`)}
             </Text>
           </Box>

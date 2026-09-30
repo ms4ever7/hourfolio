@@ -66,7 +66,7 @@ export default function YouStep() {
             accessibilityLabel={t('you.name')}
             maxLength={40}
             returnKeyType="done"
-            style={{ height: 48, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Onest_600SemiBold', fontSize: 17, color: colors.ink }}
+            style={{ height: 48, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Inter_600SemiBold', fontSize: 17, color: colors.ink }}
           />
         </Box>
       </Box>

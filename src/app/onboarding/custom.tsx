@@ -58,7 +58,7 @@ export default function Custom() {
       </Text>
 
       <Box gap="s">
-        <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }}>
+        <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }}>
           {t('custom.label')}
         </Text>
         <TextInput
@@ -68,7 +68,7 @@ export default function Custom() {
           placeholderTextColor={colors.faint}
           accessibilityLabel={t('custom.label')}
           autoFocus
-          style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card, fontFamily: 'Onest_400Regular', fontSize: 17, color: colors.ink }}
+          style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card, fontFamily: 'Inter_400Regular', fontSize: 17, color: colors.ink }}
         />
       </Box>
 
@@ -76,7 +76,7 @@ export default function Custom() {
         <Card>
           <Box flexDirection="row" alignItems="center" gap="s">
             <Glyph d={UI_PATHS.sparkle} size={16} color={palette.violet.main} strokeWidth={2} />
-            <Text variant="caption" style={{ fontFamily: 'Onest_600SemiBold', color: palette.violet.main }}>
+            <Text variant="caption" style={{ fontFamily: 'Inter_600SemiBold', color: palette.violet.main }}>
               {t('custom.suggested')}
             </Text>
           </Box>
@@ -95,7 +95,7 @@ export default function Custom() {
                 <Text variant="label" color="muted">
                   {k}
                 </Text>
-                <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }}>
                   {v}
                 </Text>
               </Box>

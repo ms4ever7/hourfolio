@@ -97,7 +97,7 @@ export default function Appearance() {
             onPress={() => s.setPageColor(null)}
             style={{ height: 44, paddingHorizontal: 14, borderRadius: 22, justifyContent: 'center', backgroundColor: !s.pageColor ? colors.inverse : colors.card, borderWidth: 1, borderColor: !s.pageColor ? colors.inverse : colors.border }}
           >
-            <Text variant="label" color={!s.pageColor ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+            <Text variant="label" color={!s.pageColor ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
               {t('appearance.pageDefault')}
             </Text>
           </Pressable>
@@ -210,7 +210,7 @@ export default function Appearance() {
                     style={{ flex: 1, alignItems: 'center', gap: 8, paddingVertical: 12, borderRadius: 16, backgroundColor: colors.card, borderWidth: on ? 2 : 1, borderColor: on ? colors.ink : colors.border }}
                   >
                     <Image source={i.image} style={{ width: 60, height: 60, borderRadius: 14 }} accessibilityIgnoresInvertColors />
-                    <Text variant="small" color="ink" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                    <Text variant="small" color="ink" style={{ fontFamily: 'Inter_600SemiBold' }}>
                       {t(`appIcons.${i.key}`)}
                     </Text>
                   </Pressable>
