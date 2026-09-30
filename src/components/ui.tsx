@@ -75,7 +75,7 @@ export function Duration({ minutes, size = 15, prefix = '', highlight = 'accentI
   const { t } = useTranslation();
   const { colors } = useAppTheme();
   const big = size >= 24;
-  const text = { fontFamily: 'Inter_600SemiBold', fontSize: size, letterSpacing: big ? -1 : 0 };
+  const text = { fontFamily: 'Inter_600SemiBold', fontSize: size, lineHeight: Math.round(size * 1.25), letterSpacing: big ? -1 : 0 };
   const unit = { fontFamily: 'Inter_600SemiBold', fontSize: big ? size * 0.6 : size };
   return (
     <Text variant="bodyStrong" style={{ ...text, color: quiet ? colors.muted : colors.ink }}>
