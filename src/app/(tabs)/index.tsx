@@ -5,6 +5,7 @@ import { Pressable } from 'react-native';
 import { ProfileAvatar } from '@/components/avatar';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
+import { TodayPlan } from '@/components/plan-card';
 import { GoalScene } from '@/components/scenes';
 import { Card, Duration, Hours, Screen, SectionHeader, TextButton, TrendChip } from '@/components/ui';
 import { daysBetween, parseDay, weekdayMonFirst } from '@/domain/dates';
@@ -145,6 +146,8 @@ export default function Today() {
           </Box>
         </Box>
       </Card>
+
+      <TodayPlan />
 
       <Box gap="sm">
         <SectionHeader title={t('today.goals')} right={d.goals.length ? <Text variant="small">{t('goals.daysLeft', { count: daysLeft })}</Text> : undefined} />

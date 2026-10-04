@@ -41,3 +41,7 @@ export function monthYear(locale: string, date: Date): string {
 export function capitalize(s: string): string {
   return s.charAt(0).toLocaleUpperCase() + s.slice(1);
 }
+
+export function weekdayName(locale: string, date: Date): string {
+  return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(date);
+}

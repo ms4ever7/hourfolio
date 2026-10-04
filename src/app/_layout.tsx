@@ -6,7 +6,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useAppearance, useSeasonIconSync } from '@/lib/appearance';
-import { useEveningCheckIn, useNotificationTaps, useWeekNudge } from '@/lib/notifications';
+import { useEveningCheckIn, useNotificationTaps, usePlanReminders, useWeekNudge } from '@/lib/notifications';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -21,6 +21,7 @@ export default function RootLayout() {
   useSeasonIconSync();
   useWeekNudge();
   useEveningCheckIn();
+  usePlanReminders();
   // Routing from a notification needs the navigator itself, not only the first render.
   const navReady = Boolean(useRootNavigationState()?.key);
   useNotificationTaps(fontsLoaded && navReady);
@@ -36,6 +37,7 @@ export default function RootLayout() {
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.ground } }}>
         <Stack.Screen name="log" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="plan-week" options={{ presentation: 'modal' }} />
         <Stack.Screen name="goals-edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="asset-edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="avatar" options={{ presentation: 'modal' }} />

@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
+import { WeekPlanCard } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, TextButton } from '@/components/ui';
@@ -114,6 +115,8 @@ export default function Goals() {
           </>
         )}
       </Card>
+
+      {week.length > 0 ? <WeekPlanCard /> : null}
 
       <Box gap="sm">
         <SectionHeader title={t('goals.milestones')} />

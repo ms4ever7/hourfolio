@@ -4,10 +4,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { AssetIcon, BrandMark } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { OptionButton, PrimaryButton, Screen } from '@/components/ui';
+import { PrimaryButton, Screen } from '@/components/ui';
 import { formatHours } from '@/domain/format';
-import { APP_LANGUAGES, LANGUAGE_BADGE } from '@/i18n/resources';
-import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
 
 function HeroArt() {
@@ -45,10 +43,7 @@ function HeroArt() {
 
 export default function Welcome() {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
-  const language = useSettingsStore((s) => s.language);
-  const setLanguage = useSettingsStore((s) => s.setLanguage);
 
   return (
     <Screen
@@ -74,33 +69,6 @@ export default function Welcome() {
         <Text variant="body" style={{ fontSize: 16, lineHeight: 24 }}>
           {t('welcome.sub')}
         </Text>
-      </Box>
-
-      <Box gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('welcome.language')}>
-        <Text variant="tiny" style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 0.4 }}>
-          LANGUAGE · МОВА · JĘZYK
-        </Text>
-        {APP_LANGUAGES.map((code) => {
-          const on = code === language;
-          return (
-            <OptionButton key={code} selected={on} onPress={() => setLanguage(code)}>
-              <Box flexDirection="row" alignItems="center" gap="sm">
-                <Text variant="monoSmall" style={{ width: 30 }}>
-                  {LANGUAGE_BADGE[code]}
-                </Text>
-                <Text variant="label" style={{ flex: 1, fontSize: 15 }}>
-                  {t(`languages.${code}`)}
-                </Text>
-                <Box
-                  width={20}
-                  height={20}
-                  borderRadius="pill"
-                  style={{ borderWidth: on ? 6 : 2, borderColor: on ? colors.accent : colors.dashed }}
-                />
-              </Box>
-            </OptionButton>
-          );
-        })}
       </Box>
     </Screen>
   );

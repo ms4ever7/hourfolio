@@ -3,8 +3,10 @@ import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { checkInTimes, restingAsset } from '@/domain/day';
+import { planReminders } from '@/domain/plan';
 import { durationParts } from '@/domain/format';
 import { weekNudge } from '@/domain/goals';
+import { usePortfolioStore } from '@/store/portfolio-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAssetName } from './labels';
 import { usePortfolio } from './usePortfolio';
@@ -98,6 +100,44 @@ export function useEveningCheckIn() {
       cancelled = true;
     };
   }, [on, bed, assets, logs, t, assetName]);
+}
+
+const PLAN_PREFIX = 'plan-';
+
+/**
+ * A note in the afternoon listing the sessions the plan has for today and
+ * tomorrow that are not done yet. Recomputed whenever the plan or the logs
+ * change, so logging a session takes it off the list (and the note, once empty).
+ */
+export function usePlanReminders() {
+  const { t } = useTranslation();
+  const assetName = useAssetName();
+  const on = useSettingsStore((s) => s.planReminders);
+  const wake = useSettingsStore((s) => s.wakeTime);
+  const bed = useSettingsStore((s) => s.bedTime);
+  const plans = usePortfolioStore((s) => s.plans);
+  const { assets, logs } = usePortfolio();
+
+  useEffect(() => {
+    let cancelled = false;
+    const sync = async () => {
+      const scheduled = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);
+      await Promise.all(scheduled.filter((n) => n.identifier.startsWith(PLAN_PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)));
+      if (!on || cancelled) return;
+      for (const r of planReminders(plans, logs, new Date(), wake, bed)) {
+        const names = [...new Set(r.sessions.map((s) => assets.find((a) => a.id === s.assetId)).filter((a) => a !== undefined).map(assetName))];
+        await Notifications.scheduleNotificationAsync({
+          identifier: `${PLAN_PREFIX}${r.day}`,
+          content: { title: t('plan.reminderTitle'), body: names.join(', '), data: { url: '/log' } },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at },
+        });
+      }
+    };
+    void sync();
+    return () => {
+      cancelled = true;
+    };
+  }, [on, wake, bed, plans, assets, logs, t, assetName]);
 }
 
 /**

@@ -38,6 +38,8 @@ interface SettingsState {
   bedTime: number;
   /** A note an hour before bed on days with nothing logged yet. */
   eveningCheckIn: boolean;
+  /** A note in the afternoon about the sessions planned for today and tomorrow. */
+  planReminders: boolean;
   /** Dress the app up for holidays (accent, header decoration, scene props). */
   seasonal: boolean;
   /** Switch the app icon to the holiday one and back by itself. */
@@ -58,6 +60,7 @@ interface SettingsState {
   setNudges: (on: boolean) => void;
   setDay: (day: { wakeTime?: number; bedTime?: number }) => void;
   setEveningCheckIn: (on: boolean) => void;
+  setPlanReminders: (on: boolean) => void;
   setSeasonal: (on: boolean) => void;
   setAutoSeasonIcon: (on: boolean) => void;
   setGoalScene: (scene: SceneId) => void;
@@ -82,6 +85,7 @@ export const useSettingsStore = create<SettingsState>()(
       wakeTime: DEFAULT_WAKE,
       bedTime: DEFAULT_BED,
       eveningCheckIn: false,
+      planReminders: false,
       seasonal: true,
       autoSeasonIcon: false,
       goalScene: 'tree',
@@ -98,6 +102,7 @@ export const useSettingsStore = create<SettingsState>()(
       setNudges: (nudges) => set({ nudges }),
       setDay: (day) => set(day),
       setEveningCheckIn: (eveningCheckIn) => set({ eveningCheckIn }),
+      setPlanReminders: (planReminders) => set({ planReminders }),
       setSeasonal: (seasonal) => set({ seasonal }),
       setAutoSeasonIcon: (autoSeasonIcon) => set({ autoSeasonIcon }),
       setGoalScene: (goalScene) => set({ goalScene }),

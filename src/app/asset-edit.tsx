@@ -6,6 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, Glyph, ICON_PATHS, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { PrimaryButton, RoundButton, Segmented } from '@/components/ui';
+import { addDays, startOfWeek } from '@/domain/dates';
+import { ALL_DAYS } from '@/domain/plan';
 import type { AssetFace, IconKey } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
 import { deletePhoto, pickSquarePhoto } from '@/lib/photos';
@@ -17,7 +19,7 @@ type FaceKind = 'icon' | 'emoji' | 'photo';
 
 /** Name, picture and color of an asset. Changes save as they are made. */
 export default function AssetEdit() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors, palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const assetName = useAssetName();
@@ -55,6 +57,15 @@ export default function AssetEdit() {
   const selectKind = (k: FaceKind) => {
     setKind(k);
     if (k === 'icon') setFace(undefined);
+  };
+
+  const planDays = asset.planDays ?? ALL_DAYS;
+  const monday = startOfWeek(new Date());
+  const toggleDay = (d: number) => {
+    const next = planDays.includes(d) ? planDays.filter((x) => x !== d) : [...planDays, d].sort();
+    // At least one day stays on; all seven is the default and is stored as unset.
+    if (next.length === 0) return;
+    updateAsset(asset.id, { planDays: next.length === 7 ? undefined : next });
   };
 
   const emoji = asset.face?.kind === 'emoji' ? asset.face.emoji : null;
@@ -172,6 +183,31 @@ export default function AssetEdit() {
                   style={{ width: 40, height: 40, borderRadius: 20, borderWidth: on ? 2 : 1, borderColor: on ? colors.ink : colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.card }}
                 >
                   <Box width={28} height={28} borderRadius="pill" style={{ backgroundColor: palette[key].main }} />
+                </Pressable>
+              );
+            })}
+          </Box>
+        </Box>
+
+        <Box gap="s">
+          <Text variant="bodyStrong">{t('assetEdit.planDays')}</Text>
+          <Text variant="small">{t('assetEdit.planDaysSub')}</Text>
+          <Box flexDirection="row" gap="xs" accessibilityLabel={t('assetEdit.planDays')}>
+            {ALL_DAYS.map((d) => {
+              const on = planDays.includes(d);
+              const name = new Intl.DateTimeFormat(i18n.language, { weekday: 'long' }).format(addDays(monday, d));
+              return (
+                <Pressable
+                  key={d}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: on }}
+                  accessibilityLabel={name}
+                  onPress={() => toggleDay(d)}
+                  style={{ flex: 1, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.accentSoft : colors.card, borderWidth: on ? 2 : 1, borderColor: on ? colors.accent : colors.border }}
+                >
+                  <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
+                    {new Intl.DateTimeFormat(i18n.language, { weekday: 'narrow' }).format(addDays(monday, d))}
+                  </Text>
                 </Pressable>
               );
             })}
