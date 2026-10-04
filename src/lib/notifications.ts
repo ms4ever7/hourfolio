@@ -13,6 +13,16 @@ import { usePortfolio } from './usePortfolio';
 
 const NUDGE_ID = 'week-nudge';
 
+/**
+ * Reminder syncs run one after another. A sync that started for older data
+ * stops scheduling as soon as it is cancelled, and the next one starts only
+ * after it has finished, so a stale reminder can't land after a newer sync cleared it.
+ */
+let syncing: Promise<unknown> = Promise.resolve();
+const enqueue = (job: () => Promise<void>) => {
+  syncing = syncing.then(job, job);
+};
+
 // Show the reminder as a banner even if the app happens to be open.
 Notifications.setNotificationHandler({
   handleNotification: async () => ({ shouldShowBanner: true, shouldShowList: true, shouldPlaySound: false, shouldSetBadge: false }),
@@ -40,6 +50,7 @@ export function useWeekNudge() {
   useEffect(() => {
     let cancelled = false;
     const sync = async () => {
+      if (cancelled) return;
       await Notifications.cancelScheduledNotificationAsync(NUDGE_ID).catch(() => undefined);
       const nudge = on ? weekNudge(assets, logs, new Date()) : null;
       if (!nudge || cancelled) return;
@@ -52,7 +63,7 @@ export function useWeekNudge() {
         trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: nudge.at },
       });
     };
-    void sync();
+    enqueue(sync);
     return () => {
       cancelled = true;
     };
@@ -77,12 +88,14 @@ export function useEveningCheckIn() {
   useEffect(() => {
     let cancelled = false;
     const sync = async () => {
+      if (cancelled) return;
       const scheduled = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);
       await Promise.all(scheduled.filter((n) => n.identifier.startsWith(CHECK_IN_PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)));
       if (!on || cancelled) return;
       const now = new Date();
       const resting = restingAsset(assets, logs, now);
       for (const [i, when] of checkInTimes(now, bed, logs).entries()) {
+        if (cancelled) return;
         const suggest = resting !== null && i % 2 === 1;
         await Notifications.scheduleNotificationAsync({
           identifier: `${CHECK_IN_PREFIX}${i}`,
@@ -95,7 +108,7 @@ export function useEveningCheckIn() {
         });
       }
     };
-    void sync();
+    enqueue(sync);
     return () => {
       cancelled = true;
     };
@@ -121,10 +134,12 @@ export function usePlanReminders() {
   useEffect(() => {
     let cancelled = false;
     const sync = async () => {
+      if (cancelled) return;
       const scheduled = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);
       await Promise.all(scheduled.filter((n) => n.identifier.startsWith(PLAN_PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)));
       if (!on || cancelled) return;
       for (const r of planReminders(plans, logs, new Date(), wake, bed)) {
+        if (cancelled) return;
         const names = [...new Set(r.sessions.map((s) => assets.find((a) => a.id === s.assetId)).filter((a) => a !== undefined).map(assetName))];
         await Notifications.scheduleNotificationAsync({
           identifier: `${PLAN_PREFIX}${r.day}`,
@@ -133,7 +148,7 @@ export function usePlanReminders() {
         });
       }
     };
-    void sync();
+    enqueue(sync);
     return () => {
       cancelled = true;
     };

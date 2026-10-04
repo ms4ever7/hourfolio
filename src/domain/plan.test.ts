@@ -1,5 +1,5 @@
 import { daysBetween, parseDay } from './dates';
-import { ALL_DAYS, defaultSessionRange, goalsFromAssets, isSessionDone, planReminders, planWeek, replanWeek, sessionsOn, type PlanGoal, type WeekPlan } from './plan';
+import { ALL_DAYS, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, planGoals, planReminders, planWeek, replanWeek, sessionsOn, type PlanGoal, type WeekPlan } from './plan';
 import type { Asset, LogEntry } from './types';
 
 const WEEK = '2026-09-28'; // a Monday
@@ -131,6 +131,57 @@ describe('plans over a week', () => {
     expect(isSessionDone(plan.sessions[0], [log('r', WEEK, 10)])).toBe(false);
     expect(sessionsOn(plan, WEEK)).toHaveLength(1);
     expect(sessionsOn(undefined, WEEK)).toEqual([]);
+  });
+});
+
+describe('recovery, small remainders and keeping done days', () => {
+  const asset = (id: string, over: Partial<Asset> = {}): Asset => ({
+    id,
+    icon: 'guitar',
+    color: 'magenta',
+    energy: 'creative',
+    rhythm: 'fewPerWeek',
+    startingMinutes: 0,
+    createdAt: '2026-01-01T00:00:00Z',
+    ...over,
+  });
+  const log = (assetId: string, day: string, minutes = 10): LogEntry => ({ id: assetId + day, assetId, day, minutes, createdAt: '2026-01-01T00:00:00Z' });
+  const free = [120, 120, 120, 120, 120, 120, 120];
+
+  it('keeps the recovery sessions when re-planning', () => {
+    const assets = [asset('g', { weeklyGoalMinutes: 60 }), asset('recovery', { energy: 'recovery' })];
+    const plan: WeekPlan = { weekFrom: WEEK, rest: 120, sessions: [] };
+    const next = replanWeek(plan, assets, [], free, parseDay('2026-09-30'));
+    expect(next.sessions.filter((s) => s.assetId === 'recovery').reduce((n, s) => n + s.minutes, 0)).toBe(120);
+    expect(next.rest).toBe(120);
+  });
+
+  it('takes what recovery is already logged off the rest', () => {
+    const assets = [asset('recovery', { energy: 'recovery' })];
+    const goals = planGoals(assets, [log('recovery', '2026-09-29', 40)], parseDay('2026-09-30'), 120);
+    expect(goals).toEqual([{ assetId: 'recovery', minutes: 80, session: { min: 20, max: 60 }, days: ALL_DAYS }]);
+  });
+
+  it('keeps only the done sessions from before the given day', () => {
+    const sessions = [
+      { id: 'a', assetId: 'g', day: '2026-09-28', minutes: 30 },
+      { id: 'b', assetId: 'g', day: '2026-09-29', minutes: 30 },
+      { id: 'c', assetId: 'g', day: '2026-10-01', minutes: 30 },
+    ];
+    expect(keepDone(sessions, '2026-10-01', [log('g', '2026-09-28')]).map((s) => s.id)).toEqual(['a']);
+    expect(keepDone(sessions, undefined, [log('g', '2026-09-28')])).toEqual([]);
+  });
+
+  it('plans a short remainder as it is instead of rounding it up to a full session', () => {
+    const r = planWeek({ weekFrom: WEEK, goals: [{ assetId: 'g', minutes: 15, session: { min: 30, max: 60 }, days: ALL_DAYS }], free });
+    expect(r.sessions.map((s) => s.minutes)).toEqual([15]);
+    expect(r.shortBy).toEqual([]);
+  });
+
+  it('copes with a minimum that is not a multiple of 5', () => {
+    const r = planWeek({ weekFrom: WEEK, goals: [{ assetId: 'g', minutes: 90, session: { min: 22, max: 45 }, days: ALL_DAYS }], free: [45, 45, 45, 0, 0, 0, 0] });
+    expect(r.sessions.reduce((n, s) => n + s.minutes, 0)).toBe(90);
+    expect(r.shortBy).toEqual([]);
   });
 });
 

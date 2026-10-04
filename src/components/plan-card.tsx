@@ -4,7 +4,7 @@ import { Pressable } from 'react-native';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Card, Duration, PrimaryButton, SectionHeader, TextButton } from '@/components/ui';
-import { addDays, dayKey, parseDay, startOfWeek } from '@/domain/dates';
+import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { isSessionDone, replanWeek, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
 import { useAssetName, weekdayName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
@@ -13,14 +13,14 @@ import { useAppTheme } from '@/theme/theme';
 
 const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
 
-/** The plan for the week `today` is in, or for the next one when this week has none (planned on a Sunday). */
+/** The plan for the week `today` is in, or on a Sunday, when this week is over, for the next one. */
 export function useWeekPlan(): WeekPlan | undefined {
   const today = useToday();
   const weekFrom = dayKey(startOfWeek(today));
   const nextFrom = dayKey(addDays(startOfWeek(today), 7));
   const plans = usePortfolioStore((s) => s.plans);
   const withSessions = (from: string) => plans.find((p) => p.weekFrom === from && p.sessions.length > 0);
-  return withSessions(weekFrom) ?? withSessions(nextFrom);
+  return withSessions(weekFrom) ?? (weekdayMonFirst(today) === 6 ? withSessions(nextFrom) : undefined);
 }
 
 function SessionRow({ session, done }: { session: PlannedSession; done: boolean }) {
@@ -149,7 +149,7 @@ export function WeekPlanCard() {
   }
 
   const monday = parseDay(plan.weekFrom);
-  const replan = () => setPlan({ ...replanWeek(plan, assets, logs, plan.free ?? DEFAULT_FREE, today), free: plan.free });
+  const replan = () => setPlan(replanWeek(plan, assets, logs, plan.free ?? DEFAULT_FREE, today));
 
   return (
     <Card gap="sm">

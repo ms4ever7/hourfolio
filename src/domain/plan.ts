@@ -4,6 +4,7 @@ import { newId } from './ids';
 import { weekRange } from './goals';
 import { sumMinutes } from './stats';
 import type { Asset, LogEntry } from './types';
+import { RECOVERY_ID } from './types';
 
 /** One block of time planned for an asset on a day. */
 export interface PlannedSession {
@@ -20,6 +21,8 @@ export interface WeekPlan {
   sessions: PlannedSession[];
   /** Free minutes per weekday the plan was made with, so it can be re-planned the same way. */
   free?: number[];
+  /** Minutes of recovery wanted that week, so re-planning keeps them. */
+  rest?: number;
 }
 
 /** Shortest and longest a single session of an asset should be, in minutes. */
@@ -108,13 +111,17 @@ export function planWeek({ weekFrom, goals, free, fromDay }: PlanInput): PlanRes
   const sessions: PlannedSession[] = [];
   const shortBy: PlanResult['shortBy'] = [];
 
-  const openDays = (g: PlanGoal) => g.days.filter((d) => left[d] >= g.session.min);
+  // A session is never shorter than the goal still needs (15 minutes left plans
+  // 15, not the usual 30), and always a whole number of steps.
+  const minOf = (g: PlanGoal) => Math.max(STEP, Math.floor(Math.min(g.session.min, g.minutes) / STEP) * STEP);
+  const openDays = (g: PlanGoal) => g.days.filter((d) => left[d] >= minOf(g));
   const ordered = [...goals]
     .filter((g) => g.minutes > 0)
     .sort((a, b) => openDays(a).length - openDays(b).length || b.minutes - a.minutes);
 
   for (const goal of ordered) {
-    const { min, max } = goal.session;
+    const min = minOf(goal);
+    const { max } = goal.session;
     const open = openDays(goal);
     // As many sessions as the shortest length and the open days allow. Anything
     // that would push a session past the maximum is reported as short.
@@ -173,15 +180,37 @@ export function goalsFromAssets(assets: Asset[], logs: LogEntry[], today: Date):
 }
 
 /**
+ * The goals to plan for the week `base` is in: every asset's weekly goal, plus
+ * `rest` minutes of recovery, each minus what is already logged that week.
+ * Recovery is planned from `rest`, not from its own goal, so the two never double up.
+ */
+export function planGoals(assets: Asset[], logs: LogEntry[], base: Date, rest: number): PlanGoal[] {
+  const goals = goalsFromAssets(
+    assets.filter((a) => a.id !== RECOVERY_ID),
+    logs,
+    base,
+  );
+  const recovery = assets.find((a) => a.id === RECOVERY_ID);
+  const minutes = rest - sumMinutes(logs, weekRange(base), RECOVERY_ID);
+  if (recovery && minutes > 0) goals.push({ assetId: RECOVERY_ID, minutes, session: recovery.sessionMinutes ?? defaultSessionRange(recovery), days: recovery.planDays ?? ALL_DAYS });
+  return goals;
+}
+
+/** What the plan keeps from before `from`: the sessions already done. A missed one just moves on. */
+export function keepDone(sessions: PlannedSession[], from: string | undefined, logs: LogEntry[]): PlannedSession[] {
+  return from ? sessions.filter((s) => s.day < from && isSessionDone(s, logs)) : [];
+}
+
+/**
  * Re-plans the rest of the week from `today` on: sessions already done stay, a
- * missed one just moves on, and what is still missing from each goal is laid out
- * again over the days left.
+ * missed one just moves on, and what is still missing from each goal (recovery
+ * included) is laid out again over the days left.
  */
 export function replanWeek(plan: WeekPlan, assets: Asset[], logs: LogEntry[], free: number[], today: Date): WeekPlan {
   const from = dayKey(today);
-  const kept = plan.sessions.filter((s) => s.day < from && isSessionDone(s, logs));
-  const { sessions } = planWeek({ weekFrom: plan.weekFrom, goals: goalsFromAssets(assets, logs, today), free, fromDay: from });
-  return { weekFrom: plan.weekFrom, sessions: [...kept, ...sessions] };
+  const rest = plan.rest ?? assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0;
+  const { sessions } = planWeek({ weekFrom: plan.weekFrom, goals: planGoals(assets, logs, today, rest), free, fromDay: from });
+  return { weekFrom: plan.weekFrom, free, rest, sessions: [...keepDone(plan.sessions, from, logs), ...sessions] };
 }
 
 /** A planned session is done once its asset has any time logged on that day. */

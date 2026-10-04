@@ -7,7 +7,7 @@ import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
-import { goalsFromAssets, planWeek, type PlannedSession, type PlanResult } from '@/domain/plan';
+import { keepDone, planGoals, planWeek, type PlannedSession, type PlanResult } from '@/domain/plan';
 import { RECOVERY_ID } from '@/domain/types';
 import { durationParts } from '@/domain/format';
 import { useAssetName, weekdayName } from '@/lib/labels';
@@ -53,7 +53,7 @@ export default function PlanWeek() {
   // On Sunday there is nothing left of this week to plan.
   const [when, setWhen] = useState<When>(weekdayMonFirst(today) === 6 ? 'next' : 'this');
   const [free, setFree] = useState(DEFAULT_FREE);
-  const [rest, setRest] = useState(0);
+  const [rest, setRest] = useState(() => assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0);
   const [result, setResult] = useState<PlanResult | null>(null);
 
   const monday = useMemo(() => addDays(startOfWeek(today), when === 'next' ? 7 : 0), [today, when]);
@@ -69,12 +69,7 @@ export default function PlanWeek() {
 
   const make = () => {
     const base = when === 'this' ? today : monday;
-    const goals = goalsFromAssets(
-      assets.filter((a) => a.id !== RECOVERY_ID),
-      logs,
-      base,
-    );
-    if (recovery && rest > 0) goals.push({ assetId: RECOVERY_ID, minutes: rest, session: { min: 20, max: 60 }, days: WEEKDAYS });
+    const goals = planGoals(assets, logs, base, recovery ? rest : 0);
     setResult(planWeek({ weekFrom, goals, free: free.map((m, i) => (isPast(i) ? 0 : m)), fromDay }));
   };
 
@@ -87,7 +82,9 @@ export default function PlanWeek() {
 
   const save = () => {
     if (!result) return;
-    setPlan({ weekFrom, sessions: result.sessions, free });
+    // Planning this week again from midway keeps the days already done.
+    const kept = keepDone(usePortfolioStore.getState().plans.find((p) => p.weekFrom === weekFrom)?.sessions ?? [], fromDay, logs);
+    setPlan({ weekFrom, sessions: [...kept, ...result.sessions], free, rest });
     router.back();
   };
 
