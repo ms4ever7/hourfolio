@@ -36,16 +36,35 @@ Hourfolio does the opposite. It shows how your time is spread across everything 
 | **Recovery** | In every portfolio. Rest days show up as their own thing, not as gaps. |
 | **Energy balance** | Your time split into body, creative, mind and recovery. |
 | **Weekly goals** | Optional. Progress is drawn as a small scene, like a tree growing or a dog running to its bone, and it only ever moves forward. |
+| **Weekly plan** | Optional. Spreads your weekly goals over the days you are free, so you know what to do when. |
 
 ## A tour
 
 ### Today and this week
-The first screen shows today and this week, not a chart. It has what you did today, a row of one-tap tiles for what you usually do, this week's goals, and every asset with its capital. On an empty morning it asks "What are you investing in today?" instead of showing a zero.
+The first screen shows today and this week, not a chart. It has what you did today, a row of one-tap tiles for what you usually do, your plan for the week, this week's goals, and every asset with its capital. On an empty morning it asks "What are you investing in today?" instead of showing a zero.
 
 <p align="center">
   <img src="docs/screenshots/today.png" width="200" alt="Today screen">
   <img src="docs/screenshots/goals.png" width="200" alt="Goals: weekly scenes, scene picker and milestones">
   <img src="docs/screenshots/asset.png" width="200" alt="Asset detail: capital, momentum, hours per week">
+</p>
+
+### Plan your week
+Tell the app how much time you can give each day and it spreads your weekly goals over those days. Say you want 5 hours of CrossFit, 3 of guitar and 2 of DJing, and weekends are busy: CrossFit goes on every weekday, the rest is mixed in around it, and something is planned each day. Free weekends get the longer sessions instead.
+
+- **Sessions fit the activity:** reading splits into short 20–30 minute bites, a workout gets a longer block, and a big goal stretches the sessions rather than losing time.
+- **Rhythm:** the same asset isn't put on back-to-back days when it can be avoided. Each asset can be limited to some weekdays (CrossFit not on weekends) in its editor.
+- **Rest is optional:** add recovery minutes if you want them, or leave them out.
+- **Adjust before saving:** move a session a day earlier or later, or remove it.
+- **No guilt:** time that doesn't fit is just said plainly, and a missed session quietly moves on when you re-plan the rest of the week.
+- **Where it shows:** Today has the week as a strip, with today's sessions and a "Log" chip under it. Goals has the whole plan. Without a plan, Today offers to make one. On a Sunday it plans the next week.
+- **Reminder (optional):** one note in the late afternoon about what is planned and not done yet, for today and tomorrow.
+
+<p align="center">
+  <img src="docs/screenshots/today-plan.png" width="200" alt="Today: the week as a strip with the sessions planned for today">
+  <img src="docs/screenshots/plan-free.png" width="200" alt="Plan your week: free time for each day">
+  <img src="docs/screenshots/plan-result.png" width="200" alt="The plan: sessions spread over the week, each can be moved or removed">
+  <img src="docs/screenshots/goals-plan.png" width="200" alt="Goals: the whole week's plan with a re-plan button">
 </p>
 
 ### Analytics
@@ -96,9 +115,12 @@ Holidays dress the app up. From mid-October the accent turns pumpkin, the scenes
 3. Tell the app when your day starts and ends.
 4. Add a name, picture and color (optional).
 
-There are two reminders, both off until you turn them on:
+There are three reminders, all off until you turn them on:
 - **Evening check-in:** one note an hour before bed, only on days with nothing logged yet.
 - **Nearly-there reminder:** one note on Sunday when a weekly goal is almost met.
+- **Planned sessions:** one note in the late afternoon about what your plan has for today and tomorrow.
+
+The app starts in your phone's language (English if it isn't one of the three) and there is no language question up front. Change it any time in Profile.
 
 <p align="center">
   <img src="docs/screenshots/welcome.png" width="180" alt="Welcome">
@@ -114,7 +136,7 @@ Expo SDK 57 · React Native 0.86 · expo-router · TypeScript (strict) · Restyl
 ```
 src/
   domain/      pure logic, unit-tested: growth (capital, momentum), stats, goals and scenes,
-               the day and reminders, seasons, colors and contrast, emoji search
+               the weekly planner, the day and reminders, seasons, colors and contrast, emoji search
   store/       zustand stores persisted to MMKV
   i18n/        EN / UK / PL, checked for missing keys and plural forms
   theme/       buildTheme({ mode, accent, page }); fixed colors for hours, minutes and days
@@ -138,7 +160,7 @@ mise exec -- bun run typecheck
 mise exec -- bun run lint
 ```
 
-To try it with data, go to Profile → Load sample data.
+To try it with data, go to Profile → Load sample data (it includes a plan for the week).
 
 End-to-end flows run with [Maestro](https://maestro.dev): `maestro test e2e/onboarding.yaml`, then `e2e/tour.yaml` (it loads sample data and saves screenshots to `e2e/screenshots/`).
 
