@@ -22,7 +22,8 @@ appId: com.ms4ever7.hourfolio
     id: profile-name
 - eraseText
 - inputText: 'Roman'
-- hideKeyboard
+- hideKeyboard:
+    optional: true
 - scrollUntilVisible:
     element: 'Load sample data.*'
     direction: DOWN
@@ -35,10 +36,54 @@ appId: com.ms4ever7.hourfolio
     element: 'Good (morning|afternoon|evening).*'
     direction: UP
 - takeScreenshot: e2e/screenshots/10-today
+- scrollUntilVisible:
+    element: 'Your plan for the week'
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: e2e/screenshots/22-today-plan
+- scrollUntilVisible:
+    element: 'Good (morning|afternoon|evening).*'
+    direction: UP
 - tapOn:
     id: tab-goals
-- assertVisible: 'Milestones'
+- scrollUntilVisible:
+    element: 'This week'
+    direction: UP
+- assertVisible: 'This week'
 - takeScreenshot: e2e/screenshots/11-goals
+- scrollUntilVisible:
+    element: 'Edit plan'
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: e2e/screenshots/19-goals-plan
+- tapOn: 'Edit plan'
+- assertVisible: 'When are you free?'
+- takeScreenshot: e2e/screenshots/20-plan-free
+# The sample goals add up to 13 hours, so give the weekdays a realistic evening each.
+- repeat:
+    times: 3
+    commands:
+      - tapOn: 'More: Monday'
+- repeat:
+    times: 3
+    commands:
+      - tapOn: 'More: Tuesday'
+- repeat:
+    times: 3
+    commands:
+      - tapOn: 'More: Wednesday'
+- repeat:
+    times: 3
+    commands:
+      - tapOn: 'More: Thursday'
+- repeat:
+    times: 3
+    commands:
+      - tapOn: 'More: Friday'
+- tapOn: 'Make a plan'
+- assertVisible: 'Your week'
+- takeScreenshot: e2e/screenshots/21-plan-result
+- tapOn: 'Save plan'
 - tapOn:
     id: tab-analytics
 - assertVisible: 'Time allocation'
@@ -88,6 +133,9 @@ appId: com.ms4ever7.hourfolio
 - takeScreenshot: e2e/screenshots/17-today-dark
 - tapOn:
     id: tab-goals
+- scrollUntilVisible:
+    element: 'Share my week'
+    direction: UP
 - tapOn: 'Share my week'
 - assertVisible: 'Share my week'
 - takeScreenshot: e2e/screenshots/18-share-week
