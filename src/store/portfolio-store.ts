@@ -73,7 +73,7 @@ export const usePortfolioStore = create<PortfolioState>()(
       loadDemo: () => {
         const today = new Date();
         const demo = buildDemo(today);
-        set({ assets: [...demo.assets, recoveryAsset(today.toISOString())], logs: demo.logs, plans: [] });
+        set({ assets: [...demo.assets, recoveryAsset(today.toISOString())], logs: demo.logs, plans: [demo.plan] });
       },
       reset: () => set({ assets: [], logs: [], plans: [] }),
     }),

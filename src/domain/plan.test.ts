@@ -68,6 +68,13 @@ describe('planWeek', () => {
     expect(r.sessions.find((s) => s.day === WEEK)?.minutes).toBe(50);
   });
 
+  it('stretches sessions past the usual maximum when the goal needs it', () => {
+    const r = planWeek({ weekFrom: WEEK, goals: [goal('coding', 6, WEEKDAYS, 20, 40)], free });
+    expect(total(r, 'coding')).toBe(360);
+    expect(r.shortBy).toEqual([]);
+    expect(daysOf(r, 'coding')).toHaveLength(5);
+  });
+
   it('plans nothing before fromDay', () => {
     const r = planWeek({ weekFrom: WEEK, goals: [goal('guitar', 2)], free, fromDay: '2026-10-01' });
     expect(r.sessions.every((s) => s.day >= '2026-10-01')).toBe(true);
