@@ -67,6 +67,10 @@ export interface Asset {
   /** Hours put in before the app, so capital starts where the user really is. */
   startingMinutes: number;
   weeklyGoalMinutes?: number;
+  /** Weekdays the planner may use for it, 0 = Monday … 6 = Sunday. Every day when unset. */
+  planDays?: number[];
+  /** Shortest and longest planned session, in minutes. Defaults come from the energy type. */
+  sessionMinutes?: { min: number; max: number };
   createdAt: string;
 }
 

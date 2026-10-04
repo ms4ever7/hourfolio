@@ -53,8 +53,8 @@ function CardHeader({ right }: { right: string }) {
   return (
     <Box flexDirection="row" alignItems="center" gap="s">
       <BrandMark size={22} />
-      <Text style={{ flex: 1, color: CARD.ink, fontFamily: 'Onest_700Bold', fontSize: 14 }}>Hourfolio</Text>
-      <Text style={{ color: CARD.muted, fontFamily: 'Onest_500Medium', fontSize: 12 }}>{right}</Text>
+      <Text style={{ flex: 1, color: CARD.ink, fontFamily: 'Inter_700Bold', fontSize: 14 }}>Hourfolio</Text>
+      <Text style={{ color: CARD.muted, fontFamily: 'Inter_500Medium', fontSize: 12 }}>{right}</Text>
     </Box>
   );
 }
@@ -62,9 +62,9 @@ function CardHeader({ right }: { right: string }) {
 function BigHours({ minutes, size = 56 }: { minutes: number; size?: number }) {
   const { t, i18n } = useTranslation();
   return (
-    <Text style={{ color: CARD.ink, fontFamily: 'Onest_600SemiBold', fontSize: size, lineHeight: size * 1.08, letterSpacing: -1.5 }}>
+    <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: size, lineHeight: size * 1.08, letterSpacing: -1.5 }}>
       {formatHours(minutes, i18n.language)}
-      <Text style={{ color: CARD.hours, fontFamily: 'Onest_600SemiBold', fontSize: size * 0.4 }}> {t('units.h')}</Text>
+      <Text style={{ color: CARD.hours, fontFamily: 'Inter_600SemiBold', fontSize: size * 0.4 }}> {t('units.h')}</Text>
     </Text>
   );
 }
@@ -96,18 +96,18 @@ export function GoalCard({
         <Box flexDirection="row" alignItems="center" gap="sm">
           <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={52} />
           <Box flex={1}>
-            <Text style={{ color: CARD.ink, fontFamily: 'Onest_700Bold', fontSize: 20 }} numberOfLines={1}>
+            <Text style={{ color: CARD.ink, fontFamily: 'Inter_700Bold', fontSize: 20 }} numberOfLines={1}>
               {assetName(asset)}
             </Text>
-            <Text style={{ color: p.soft, fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>{t('congrats.cardGoal')}</Text>
+            <Text style={{ color: p.soft, fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>{t('congrats.cardGoal')}</Text>
           </Box>
         </Box>
         <BigHours minutes={minutes} />
-        <Text style={{ color: CARD.muted, fontFamily: 'Onest_500Medium', fontSize: 13 }}>{t('congrats.cardOf', { goal: formatHours(goal, i18n.language) })}</Text>
+        <Text style={{ color: CARD.muted, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{t('congrats.cardOf', { goal: formatHours(goal, i18n.language) })}</Text>
       </Box>
       <Box gap="m">
         <GoalScene scene={scene === 'bar' ? 'dog' : scene} progress={1} color={p.main} tint={CARD.line} season={season} height={54} />
-        <Text style={{ color: CARD.faint, fontFamily: 'Onest_500Medium', fontSize: 11 }}>{t('share.tagline')}</Text>
+        <Text style={{ color: CARD.faint, fontFamily: 'Inter_500Medium', fontSize: 11 }}>{t('share.tagline')}</Text>
       </Box>
     </CardFrame>
   );
@@ -142,10 +142,10 @@ export function WeekCard({
     <CardFrame glow={accent} cardRef={cardRef}>
       <CardHeader right={weekLabel} />
       <Box gap="xs">
-        <Text style={{ color: CARD.muted, fontFamily: 'Onest_500Medium', fontSize: 13 }}>{t('share.invested')}</Text>
+        <Text style={{ color: CARD.muted, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{t('share.invested')}</Text>
         <BigHours minutes={total} />
         {goalsTotal > 0 ? (
-          <Text style={{ color: CARD.muted, fontFamily: 'Onest_500Medium', fontSize: 13 }}>{t('share.goalsMet', { met: goalsMet, count: goalsTotal })}</Text>
+          <Text style={{ color: CARD.muted, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{t('share.goalsMet', { met: goalsMet, count: goalsTotal })}</Text>
         ) : null}
       </Box>
       <Box gap="sm">
@@ -156,12 +156,12 @@ export function WeekCard({
               <AssetIcon icon={r.asset.icon} color={r.asset.color} face={r.asset.face} size={30} />
               <Box flex={1} gap="xs">
                 <Box flexDirection="row" justifyContent="space-between">
-                  <Text style={{ color: CARD.ink, fontFamily: 'Onest_600SemiBold', fontSize: 13, flex: 1 }} numberOfLines={1}>
+                  <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: 13, flex: 1 }} numberOfLines={1}>
                     {assetName(r.asset)}
                   </Text>
-                  <Text style={{ color: CARD.ink, fontFamily: 'JetBrainsMono_600SemiBold', fontSize: 12 }}>
+                  <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: 12 }}>
                     {formatHours(r.minutes, i18n.language)}
-                    <Text style={{ color: CARD.hours, fontFamily: 'Onest_600SemiBold', fontSize: 11 }}> {t('units.h')}</Text>
+                    <Text style={{ color: CARD.hours, fontFamily: 'Inter_600SemiBold', fontSize: 11 }}> {t('units.h')}</Text>
                   </Text>
                 </Box>
                 <Box height={4} borderRadius="pill" style={{ backgroundColor: CARD.line }}>
@@ -172,7 +172,7 @@ export function WeekCard({
           );
         })}
       </Box>
-      <Text style={{ color: CARD.faint, fontFamily: 'Onest_500Medium', fontSize: 11 }}>{t('share.tagline')}</Text>
+      <Text style={{ color: CARD.faint, fontFamily: 'Inter_500Medium', fontSize: 11 }}>{t('share.tagline')}</Text>
     </CardFrame>
   );
 }

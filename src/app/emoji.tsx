@@ -112,7 +112,7 @@ export default function EmojiPicker() {
             accessibilityLabel={t('emoji.search')}
             autoCorrect={false}
             clearButtonMode="while-editing"
-            style={{ flex: 1, fontFamily: 'Onest_400Regular', fontSize: 16, color: colors.ink }}
+            style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 16, color: colors.ink }}
           />
         </Box>
       </Box>
@@ -139,7 +139,7 @@ export default function EmojiPicker() {
             renderItem={({ item }) => renderRow(item)}
             renderSectionHeader={({ section }) => (
               <Box backgroundColor="ground" justifyContent="flex-end" style={{ height: HEADER, paddingHorizontal: PAD, paddingBottom: 4 }}>
-                <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold' }}>
                   {section.title.toLocaleUpperCase()}
                 </Text>
               </Box>

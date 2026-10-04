@@ -4,8 +4,8 @@ import type { EnergyType, PaletteKey } from '@/domain/types';
 
 export type { Mode } from '@/domain/color';
 
-/** The accent before the user picks one: the hours blue. */
-export const DEFAULT_ACCENT = '#2747D6';
+/** The accent before the user picks one: a clear violet. */
+export const DEFAULT_ACCENT = '#6558F5';
 
 /** Asset colors, as picked for light mode. Dark mode derives its own from these. */
 const PALETTE_LIGHT: Record<PaletteKey, { main: string; tint: string; soft: string }> = {
@@ -32,69 +32,69 @@ export const energyColor: Record<EnergyType, PaletteKey> = {
 };
 
 const LIGHT = {
-  ground: '#F4F2ED',
+  ground: '#F3F2F8',
   card: '#FFFFFF',
-  ink: '#15171A',
-  body: '#4A4F57',
-  muted: '#5E636B',
-  faint: '#6B7078',
-  line: '#F0EDE7',
-  border: '#E1DDD5',
-  track: '#E9E6DF',
-  dashed: '#D6D2CA',
-  axis: '#CFCAC0',
-  previous: '#A3A7AE',
+  ink: '#16151C',
+  body: '#4B4A57',
+  muted: '#5F5E6B',
+  faint: '#6C6B78',
+  line: '#EFEEF5',
+  border: '#E2E1EB',
+  track: '#E8E7F0',
+  dashed: '#D4D3E0',
+  axis: '#CFCEDC',
+  previous: '#A6A5B2',
   // Units of time each have a color: hours are the main currency.
-  hours: '#2747D6',
-  hoursInk: '#1F3FB8',
-  hoursSoft: '#E3E9FF',
-  hoursOnInverse: '#9DB0FF',
+  hours: '#6558F5',
+  hoursInk: '#5143E0',
+  hoursSoft: '#E9E7FE',
+  hoursOnInverse: '#B4ADFF',
   minutes: '#A15F00',
   minutesOnInverse: '#F2B95C',
   days: '#0F7A63',
   daysSoft: '#CDEBE3',
   daysInk: '#0F4D43',
   daysOnInverse: '#7FD9C2',
-  inverse: '#15171A',
+  inverse: '#16151C',
   onInverse: '#FFFFFF',
-  onInverseMuted: '#D5D7DB',
+  onInverseMuted: '#D6D5DD',
   // Rest on the log sheet, in the recovery sky color.
   restInk: '#0E4A63',
   restSub: '#245F78',
   // Only for destructive actions like "Start over", never for a decline.
   danger: '#B3261E',
-  shadow: '#15171A',
+  shadow: '#16151C',
   transparent: 'transparent',
 };
 
 type Colors = typeof LIGHT;
 
 const DARK: Colors = {
-  ground: '#0E0F11',
-  card: '#1A1C20',
-  ink: '#F1F0EC',
-  body: '#C5C8CD',
-  muted: '#A2A6AD',
-  faint: '#8E939A',
-  line: '#25282D',
-  border: '#34373D',
-  track: '#2A2D33',
-  dashed: '#474B52',
-  axis: '#3A3D43',
-  previous: '#7C818A',
-  hours: '#8FA3FF',
-  hoursInk: '#A8B7FF',
-  hoursSoft: '#222A4A',
-  hoursOnInverse: '#2747D6',
+  ground: '#0F0E14',
+  card: '#1B1A22',
+  ink: '#F2F1F6',
+  body: '#C7C6D0',
+  muted: '#A4A3AF',
+  faint: '#908F9C',
+  line: '#26252E',
+  border: '#35343F',
+  track: '#2C2B36',
+  dashed: '#484753',
+  axis: '#3B3A46',
+  previous: '#7E7D8A',
+  hours: '#9C93FF',
+  hoursInk: '#B2ABFF',
+  hoursSoft: '#2A2750',
+  hoursOnInverse: '#5143E0',
   minutes: '#F2B95C',
   minutesOnInverse: '#A15F00',
   days: '#5FCFB3',
   daysSoft: '#16362F',
   daysInk: '#9BE7D4',
   daysOnInverse: '#0F7A63',
-  inverse: '#ECEBE7',
-  onInverse: '#15171A',
-  onInverseMuted: '#4A4F57',
+  inverse: '#ECEBF2',
+  onInverse: '#16151C',
+  onInverseMuted: '#4B4A57',
   restInk: '#D8F0FA',
   restSub: '#A9D6EA',
   danger: '#FF8A80',
@@ -139,9 +139,6 @@ function aroundPage(base: Colors, page: string, mode: Mode): Colors {
     dashed: mix(page, ink, 0.22),
     axis: mix(page, ink, 0.18),
     previous: readable(base.previous, 2.5),
-    hours: readable(base.hours, 3),
-    hoursInk: ensureContrast(base.hoursInk, card, 4.5, ink),
-    hoursSoft: mix(card, base.hours, mode === 'light' ? 0.14 : 0.22),
     minutes: readable(base.minutes, 3),
     days: readable(base.days, 3),
     daysSoft: mix(card, base.days, mode === 'light' ? 0.2 : 0.25),
@@ -162,25 +159,33 @@ export function buildTheme({ mode: picked, accent, page }: ThemeOptions) {
   // A hint of the accent in the default page background, the way Telegram tints a chat.
   // A page color the user picked is used exactly as picked.
   const ground = page ? base.ground : mix(base.ground, tokens.accent, mode === 'dark' ? 0.05 : 0.035);
-  const heat = mode === 'dark' ? [0.28, 0.5, 0.75, 1].map((a) => mix(base.card, base.hours, a)) : ['#DCE3FB', '#AFBEF3', '#6F87E6', '#2747D6'];
+  // Hours are the main currency, so their color is the accent: charts, deltas and the heatmap follow the user's pick.
+  // The accent alone is only checked against the card, so hours text is re-checked against the page and the inverse surface.
+  const hours = {
+    hours: ensureContrast(tokens.accent, ground, 3, base.ink),
+    hoursInk: tokens.accentInk,
+    hoursSoft: tokens.accentSoft,
+    hoursOnInverse: ensureContrast(mode === 'dark' ? mix(tokens.accent, '#000000', 0.25) : mix(tokens.accent, '#FFFFFF', 0.5), base.inverse, 3, base.onInverse),
+  };
+  const heat = [0.22, 0.45, 0.72, 1].map((a) => mix(base.card, tokens.accent, a));
   return createTheme({
-    colors: { ...base, ...tokens, ground },
+    colors: { ...base, ...hours, ...tokens, ground },
     spacing: { 0: 0, xs: 4, s: 8, sm: 12, m: 16, ml: 20, l: 24, xl: 32 },
-    borderRadii: { s: 10, m: 14, l: 18, xl: 20, pill: 999 },
+    borderRadii: { s: 10, m: 14, l: 18, xl: 18, pill: 999 },
     breakpoints: {},
     textVariants: {
-      defaults: { fontFamily: 'Onest_400Regular', fontSize: 15, color: 'ink' },
-      display: { fontFamily: 'Onest_600SemiBold', fontSize: 60, lineHeight: 64, letterSpacing: -2, color: 'ink' },
-      title: { fontFamily: 'Onest_700Bold', fontSize: 28, lineHeight: 33, letterSpacing: -0.6, color: 'ink' },
-      heading: { fontFamily: 'Onest_600SemiBold', fontSize: 17, lineHeight: 22, color: 'ink' },
-      bodyStrong: { fontFamily: 'Onest_600SemiBold', fontSize: 15, lineHeight: 20, color: 'ink' },
-      body: { fontFamily: 'Onest_400Regular', fontSize: 15, lineHeight: 22, color: 'body' },
-      label: { fontFamily: 'Onest_500Medium', fontSize: 14, lineHeight: 19, color: 'ink' },
-      caption: { fontFamily: 'Onest_400Regular', fontSize: 13, lineHeight: 18, color: 'muted' },
-      small: { fontFamily: 'Onest_400Regular', fontSize: 12, lineHeight: 16, color: 'muted' },
-      tiny: { fontFamily: 'Onest_500Medium', fontSize: 11, lineHeight: 14, color: 'muted' },
-      mono: { fontFamily: 'JetBrainsMono_600SemiBold', fontSize: 15, color: 'ink' },
-      monoSmall: { fontFamily: 'JetBrainsMono_500Medium', fontSize: 12, color: 'body' },
+      defaults: { fontFamily: 'Inter_400Regular', fontSize: 15, color: 'ink' },
+      display: { fontFamily: 'Inter_600SemiBold', fontSize: 60, lineHeight: 64, letterSpacing: -2, color: 'ink' },
+      title: { fontFamily: 'Inter_700Bold', fontSize: 28, lineHeight: 33, letterSpacing: -0.6, color: 'ink' },
+      heading: { fontFamily: 'Inter_600SemiBold', fontSize: 17, lineHeight: 22, color: 'ink' },
+      bodyStrong: { fontFamily: 'Inter_600SemiBold', fontSize: 15, lineHeight: 20, color: 'ink' },
+      body: { fontFamily: 'Inter_400Regular', fontSize: 15, lineHeight: 22, color: 'body' },
+      label: { fontFamily: 'Inter_500Medium', fontSize: 14, lineHeight: 19, color: 'ink' },
+      caption: { fontFamily: 'Inter_400Regular', fontSize: 13, lineHeight: 18, color: 'muted' },
+      small: { fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 16, color: 'muted' },
+      tiny: { fontFamily: 'Inter_500Medium', fontSize: 11, lineHeight: 14, color: 'muted' },
+      mono: { fontFamily: 'Inter_600SemiBold', fontSize: 15, color: 'ink', fontVariant: ['tabular-nums'] },
+      monoSmall: { fontFamily: 'Inter_500Medium', fontSize: 12, color: 'body', fontVariant: ['tabular-nums'] },
     },
     mode,
     palette: mode === 'light' ? PALETTE_LIGHT : page ? darkPalette(base.card) : DARK_PALETTE,

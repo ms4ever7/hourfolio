@@ -2,6 +2,7 @@ import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
+import { WeekPlanCard } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, TextButton } from '@/components/ui';
@@ -55,7 +56,7 @@ export default function Goals() {
         {logs.length > 0 ? (
           <RoundButton accessibilityLabel={t('goals.shareWeek')} onPress={() => router.push('/share-week')}>
             <Glyph d={UI_PATHS.share} size={16} color={colors.ink} />
-            <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+            <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
               {t('share.button')}
             </Text>
           </RoundButton>
@@ -82,19 +83,19 @@ export default function Goals() {
                   <Box flexDirection="row" alignItems="center" gap="sm">
                     <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={36} />
                     <Box flex={1} gap="xs">
-                      <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }} numberOfLines={1}>
+                      <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }} numberOfLines={1}>
                         {assetName(asset)}
                       </Text>
                       <Box flexDirection="row" alignItems="baseline" gap="xs">
-                        <Duration minutes={done} size={13} />
+                        <Duration minutes={done} size={13} highlight={p.main} />
                         <Text variant="small">/</Text>
-                        <Duration minutes={goal} size={13} />
+                        <Duration minutes={goal} size={13} quiet />
                       </Box>
                     </Box>
                     {met ? (
                       <Box flexDirection="row" alignItems="center" gap="xs" backgroundColor="daysSoft" borderRadius="pill" paddingHorizontal="s" style={{ paddingVertical: 3 }}>
                         <Glyph d={UI_PATHS.check} size={12} color={colors.days} strokeWidth={3} />
-                        <Text variant="tiny" color="days" style={{ fontFamily: 'Onest_600SemiBold' }}>
+                        <Text variant="tiny" color="days" style={{ fontFamily: 'Inter_600SemiBold' }}>
                           {t('goals.met')}
                         </Text>
                       </Box>
@@ -105,7 +106,7 @@ export default function Goals() {
               );
             })}
             <Box gap="s">
-              <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold' }}>
+              <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {t('goals.scene')}
               </Text>
               <ScenePicker />
@@ -114,6 +115,8 @@ export default function Goals() {
           </>
         )}
       </Card>
+
+      {week.length > 0 ? <WeekPlanCard /> : null}
 
       <Box gap="sm">
         <SectionHeader title={t('goals.milestones')} />
@@ -125,7 +128,7 @@ export default function Goals() {
                 <Box flexDirection="row" alignItems="center" gap="sm">
                   <AssetIcon icon={m.asset.icon} color={m.asset.color} face={m.asset.face} size={36} />
                   <Box flex={1} gap="xs">
-                    <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }} numberOfLines={1}>
+                    <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }} numberOfLines={1}>
                       {assetName(m.asset)}
                     </Text>
                     {m.weeks !== null ? <Text variant="small">{t('asset.milestoneEta', { count: m.weeks })}</Text> : null}

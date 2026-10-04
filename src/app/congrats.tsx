@@ -65,7 +65,7 @@ export default function Congrats() {
             {t('congrats.sub', { name: assetName(asset), hours: formatHours(data.minutes, i18n.language) })}
           </Text>
           {data.all ? (
-            <Text variant="label" color="days" textAlign="center" style={{ fontFamily: 'Onest_600SemiBold' }}>
+            <Text variant="label" color="days" textAlign="center" style={{ fontFamily: 'Inter_600SemiBold' }}>
               {t('congrats.all')}
             </Text>
           ) : null}

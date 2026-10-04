@@ -39,13 +39,13 @@ export function Card({ children, gap = 'm', style }: { children: ReactNode; gap?
   );
 }
 
-/** A number of hours with its unit in the hours color: "114.5 h". */
+/** A number of hours with a quiet unit: "114.5 h". */
 export function Hours({
   minutes,
-  variant = 'mono',
+  variant = 'bodyStrong',
   unitSize = 12,
   color = 'ink',
-  unitColor = 'hours',
+  unitColor = 'muted',
 }: {
   minutes: number;
   variant?: 'display' | 'mono' | 'bodyStrong' | 'heading';
@@ -59,29 +59,41 @@ export function Hours({
     <Text variant={variant} color={color}>
       {formatHours(minutes, i18n.language)}
       <Text variant="bodyStrong" color={unitColor} style={{ fontSize: big ? 24 : unitSize }}>
-        {big ? ' ' : ' '}
+        {' '}
         {t('units.h')}
       </Text>
     </Text>
   );
 }
 
-/** "1 h 35 m" with hours and minutes in their own colors. */
-export function Duration({ minutes, size = 15, prefix = '' }: { minutes: number; size?: number; prefix?: string }) {
+/**
+ * "1 h 35 m". Hours stay ink and minutes carry the color (the accent unless `highlight` says
+ * otherwise, such as an asset's color). At large sizes the hours unit steps back to grey.
+ * `quiet` greys the whole thing, for the goal next to the progress.
+ */
+export function Duration({ minutes, size = 15, prefix = '', highlight = 'accentInk', quiet }: { minutes: number; size?: number; prefix?: string; highlight?: string; quiet?: boolean }) {
   const { t } = useTranslation();
+  const { colors } = useAppTheme();
+  const big = size >= 24;
+  const text = { fontFamily: 'Inter_600SemiBold', fontSize: size, lineHeight: Math.round(size * 1.25), letterSpacing: big ? -1 : 0 };
+  const unit = { fontFamily: 'Inter_600SemiBold', fontSize: big ? size * 0.6 : size };
   return (
-    <Text variant="mono" style={{ fontSize: size }}>
+    <Text variant="bodyStrong" style={{ ...text, color: quiet ? colors.muted : colors.ink }}>
       {prefix}
-      {durationParts(minutes).map((p, i) => (
-        <Text key={p.unit} variant="mono" style={{ fontSize: size }}>
-          {i > 0 ? ' ' : ''}
-          {p.value}
-          <Text variant="bodyStrong" color={p.unit === 'h' ? 'hours' : 'minutes'} style={{ fontSize: size - 3 }}>
-            {' '}
-            {t(`units.${p.unit}`)}
+      {durationParts(minutes).map((p, i) => {
+        const minutesPart = p.unit === 'm';
+        const color = quiet ? colors.muted : minutesPart ? (highlight in colors ? colors[highlight as ThemeColor] : highlight) : colors.ink;
+        return (
+          <Text key={p.unit} style={{ ...text, color }}>
+            {i > 0 ? ' ' : ''}
+            {p.value}
+            <Text style={{ ...unit, color: big && !minutesPart && !quiet ? colors.muted : color }}>
+              {big ? ' ' : ''}
+              {t(`units.${p.unit}`)}
+            </Text>
           </Text>
-        </Text>
-      ))}
+        );
+      })}
     </Text>
   );
 }
@@ -141,7 +153,7 @@ export function LanguageButton() {
   return (
     <RoundButton onPress={() => setLanguage(next)} accessibilityLabel={t('common.changeLanguage')}>
       <Glyph d={UI_PATHS.globe} size={16} color={colors.ink} />
-      <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+      <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
         {LANGUAGE_BADGE[language]}
       </Text>
     </RoundButton>
@@ -257,10 +269,10 @@ export function Segmented<T extends string>({
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: on ? colors.card : 'transparent',
-              boxShadow: on ? '0 1px 2px rgba(21,23,26,0.08)' : undefined,
+              boxShadow: on ? '0 1px 3px rgba(22,21,28,0.10)' : undefined,
             }}
           >
-            <Text variant="label" color={on ? 'ink' : 'body'} numberOfLines={1} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+            <Text variant="label" color={on ? 'ink' : 'body'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
               {o.label}
             </Text>
           </Pressable>
@@ -284,7 +296,7 @@ export function TrendChip({ trend }: { trend: Trend }) {
   const s = TREND_STYLE[trend];
   return (
     <Box backgroundColor={s.bg} borderColor={s.border} borderWidth={1} borderRadius="pill" paddingHorizontal="s" style={{ paddingVertical: 1 }}>
-      <Text variant="tiny" color={s.fg} style={{ fontFamily: 'Onest_600SemiBold' }}>
+      <Text variant="tiny" color={s.fg} style={{ fontFamily: 'Inter_600SemiBold' }}>
         {t(`trend.${trend}`)}
       </Text>
     </Box>
@@ -298,6 +310,17 @@ export function SectionHeader({ title, right }: { title: string; right?: ReactNo
         {title}
       </Text>
       {right}
+    </Box>
+  );
+}
+
+/** An emoji on a soft accent tile, the leading icon of a list row. */
+export function RowIcon({ emoji }: { emoji: string }) {
+  return (
+    <Box width={34} height={34} borderRadius="s" backgroundColor="accentSoft" alignItems="center" justifyContent="center">
+      <Text style={{ fontSize: 18, lineHeight: 24 }} allowFontScaling={false}>
+        {emoji}
+      </Text>
     </Box>
   );
 }
@@ -373,7 +396,7 @@ export function Group({ title, children }: { title?: string; children: ReactNode
   return (
     <Box gap="s">
       {title ? (
-        <Text variant="small" style={{ fontFamily: 'Onest_600SemiBold', letterSpacing: 0.3, marginLeft: 4 }} accessibilityRole="header">
+        <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 0.3, marginLeft: 4 }} accessibilityRole="header">
           {title.toLocaleUpperCase()}
         </Text>
       ) : null}

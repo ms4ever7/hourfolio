@@ -152,7 +152,7 @@ export function ScenePicker() {
             style={{ height: 36, paddingHorizontal: 12, borderRadius: 18, flexDirection: 'row', alignItems: 'center', gap: 6, backgroundColor: on ? colors.inverse : colors.ground, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
           >
             {art ? <Text style={{ fontSize: 16, lineHeight: 20 }}>{art.stages ? art.stages.at(-1) : art.runner}</Text> : null}
-            <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+            <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
               {t(`scenes.${id}`)}
             </Text>
           </Pressable>

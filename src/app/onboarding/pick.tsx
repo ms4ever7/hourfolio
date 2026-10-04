@@ -99,7 +99,7 @@ export default function Pick() {
           placeholder={t('pick.search')}
           placeholderTextColor={colors.faint}
           accessibilityLabel={t('pick.search')}
-          style={{ flex: 1, fontFamily: 'Onest_400Regular', fontSize: 15, color: colors.ink }}
+          style={{ flex: 1, fontFamily: 'Inter_400Regular', fontSize: 15, color: colors.ink }}
         />
       </Box>
 
@@ -122,7 +122,7 @@ export default function Pick() {
                 borderColor: on ? colors.inverse : colors.border,
               }}
             >
-              <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Onest_600SemiBold', fontSize: 13 }}>
+              <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
                 {f === 'all' ? t('pick.all') : t(`energy.${f}`)}
               </Text>
             </Pressable>
@@ -135,7 +135,7 @@ export default function Pick() {
           <AssetIcon icon="moon" color="sky" size={40} />
         </Box>
         <Box flex={1} gap="xs">
-          <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold', color: colors.restInk }}>
+          <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold', color: colors.restInk }}>
             {t('pick.recoveryTitle')}
           </Text>
           <Text variant="small" style={{ color: colors.restSub }}>
@@ -169,7 +169,7 @@ export default function Pick() {
               }}
             >
               <AssetIcon icon={c.icon} color={c.color} size={44} />
-              <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Onest_600SemiBold' }}>
+              <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {t(`catalog.${c.id}`)}
               </Text>
               {on ? (
@@ -185,7 +185,7 @@ export default function Pick() {
           .map((d) => (
             <Box key={d.customName} width="31.4%" height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
               <AssetIcon icon={d.icon} color={d.color} size={44} />
-              <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Onest_600SemiBold' }}>
+              <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {d.customName}
               </Text>
             </Box>
@@ -198,7 +198,7 @@ export default function Pick() {
           <Box width={44} height={44} alignItems="center" justifyContent="center" style={{ borderRadius: 14, backgroundColor: colors.track }}>
             <Glyph d={UI_PATHS.plus} size={22} color={colors.ink} strokeWidth={2} />
           </Box>
-          <Text variant="small" color="ink" textAlign="center" style={{ fontFamily: 'Onest_600SemiBold' }}>
+          <Text variant="small" color="ink" textAlign="center" style={{ fontFamily: 'Inter_600SemiBold' }}>
             {t('pick.custom')}
           </Text>
         </Pressable>

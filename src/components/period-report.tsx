@@ -67,7 +67,7 @@ export function PeriodReport() {
     all: '',
   }[period];
   const gain = total - prevTotal;
-  const chartWidth = width - 48;
+  const chartWidth = width - 48 - 40;
 
   return (
     <>
@@ -82,7 +82,7 @@ export function PeriodReport() {
               <Svg width={10} height={10} viewBox="0 0 10 10">
                 <Path d={gain >= 0 ? 'M5 1l4 7H1z' : 'M5 9L1 2h8z'} fill={gain >= 0 ? colors.hoursInk : colors.body} />
               </Svg>
-              <Text variant="monoSmall" style={{ color: gain >= 0 ? colors.hoursInk : colors.body, fontFamily: 'JetBrainsMono_600SemiBold', fontSize: 13 }}>
+              <Text variant="monoSmall" style={{ color: gain >= 0 ? colors.hoursInk : colors.body, fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>
                 {formatHours(Math.abs(gain), locale)} {t('units.h')}
               </Text>
             </Box>
@@ -95,7 +95,7 @@ export function PeriodReport() {
 
       <Segmented label={t('portfolio.invested', { period: '' })} value={period} onChange={setPeriod} options={PERIODS.map((p) => ({ value: p, label: t(`period.${p}`) }))} />
 
-      <Box gap="s">
+      <Card gap="s">
         <CumulativeChart width={chartWidth} current={chart.current} previous={chart.previous} totalDays={chart.totalDays} labels={chart.labels} accessibilityLabel={t('portfolio.chartLabel')} />
         {previous ? (
           <Box flexDirection="row" gap="ml">
@@ -111,7 +111,7 @@ export function PeriodReport() {
             </Box>
           </Box>
         ) : null}
-      </Box>
+      </Card>
 
       {logs.length === 0 ? (
         <Card>

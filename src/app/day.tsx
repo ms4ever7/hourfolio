@@ -12,6 +12,8 @@ export default function DaySettings() {
   const { t } = useTranslation();
   const checkIn = useSettingsStore((s) => s.eveningCheckIn);
   const setCheckIn = useSettingsStore((s) => s.setEveningCheckIn);
+  const planReminders = useSettingsStore((s) => s.planReminders);
+  const setPlanReminders = useSettingsStore((s) => s.setPlanReminders);
   return (
     <Screen>
       <Box flexDirection="row" alignItems="center" gap="sm">
@@ -33,6 +35,18 @@ export default function DaySettings() {
               return;
             }
             setCheckIn(on);
+          }}
+        />
+        <SwitchRow
+          title={t('day.planReminders')}
+          sub={t('day.planRemindersSub')}
+          value={planReminders}
+          onChange={async (on) => {
+            if (on && !(await allowNotifications())) {
+              Alert.alert(t('profile.nudgesDenied'));
+              return;
+            }
+            setPlanReminders(on);
           }}
           last
         />

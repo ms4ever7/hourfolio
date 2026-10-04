@@ -23,3 +23,13 @@ it('keeps selected segments visible on a black page', () => {
   const { colors } = buildTheme({ mode: 'dark', accent: DEFAULT_ACCENT, page: '#000000' });
   expect(contrast(colors.track, colors.card)).toBeGreaterThan(1.2);
 });
+
+describe('hours colors', () => {
+  const accents = ['#FFF59D', '#C99A06'];
+  const pages = [null, '#FFF8E7', '#1B2233'];
+  it.each(accents.flatMap((accent) => pages.map((page) => [accent, page] as const)))('stay readable for accent %s on page %s', (accent, page) => {
+    const { colors } = buildTheme({ mode: 'light', accent, page });
+    expect(contrast(colors.hours, colors.ground)).toBeGreaterThanOrEqual(3);
+    expect(contrast(colors.hoursOnInverse, colors.inverse)).toBeGreaterThanOrEqual(3);
+  });
+});

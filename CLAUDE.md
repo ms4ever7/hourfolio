@@ -18,11 +18,11 @@ Run through mise so Node 22 and bun 1.3.14 are used:
 - `.claude/skills/create-pr`: checks, commit style and PR description for a PR to main.
 
 ## Layout
-- `src/domain/`: pure logic, fully unit-tested. `growth.ts` (capital never decreases; momentum decays toward a floor of 20, half-life set by the asset's rhythm), `stats.ts` (periods, allocation, energy balance, heatmap), `catalog.ts` (onboarding presets).
+- `src/domain/`: pure logic, fully unit-tested. `growth.ts` (capital never decreases; momentum decays toward a floor of 20, half-life set by the asset's rhythm), `stats.ts` (periods, allocation, energy balance, heatmap), `catalog.ts` (onboarding presets), `plan.ts` (the weekly planner: spreads weekly goals over free days; `planWeek`, `replanWeek`, `planReminders`).
 - `src/store/`: zustand persisted to MMKV (`portfolio-store`, `settings-store`); `onboarding-store` is in-memory.
 - `src/i18n/`: EN/UK/PL as typed TS objects. `en.ts` is the source; other locales must have every key plus the plural forms their language needs (`i18n.test.ts` enforces both).
-- `src/theme/theme.ts`: `buildTheme({ mode, accent, page })` builds the Restyle theme at runtime (`src/lib/appearance.ts` feeds it from settings and the holiday season). Use tokens, never hex: `accent`/`onAccent`/`accentInk`/`accentSoft` for UI chrome, `palette` for asset colors. Units of time keep fixed colors whatever the accent: hours `hours` (blue), minutes `minutes` (amber), days `days` (teal).
-- `src/app/`: expo-router screens: `onboarding/*`, `(tabs)/*` (portfolio, analytics, goals, profile), `asset/[id]`, and the modals `log`, `asset-edit`, `avatar`, `language` (sheet), `congrats`, `share-week`, plus the pushed `appearance` screen.
+- `src/theme/theme.ts`: `buildTheme({ mode, accent, page })` builds the Restyle theme at runtime (`src/lib/appearance.ts` feeds it from settings and the holiday season). Use tokens, never hex: `accent`/`onAccent`/`accentInk`/`accentSoft` for UI chrome, `palette` for asset colors. The `hours` tokens are the accent itself (charts, deltas, heatmap follow the user's pick). `Duration` shows hours in ink and highlights the minutes (accent, or the asset's color); the `days` token (teal) is for rest and met goals. Font is Inter.
+- `src/app/`: expo-router screens: `onboarding/*`, `(tabs)/*` (portfolio, analytics, goals, profile), `asset/[id]`, and the modals `log`, `plan-week`, `goals-edit`, `asset-edit`, `avatar`, `language` (sheet), `congrats`, `share-week`, plus the pushed `appearance` screen.
 
 ## Rules
 - No guilt: never show a loss in red, no streaks. Declines are grey; paused assets say "paused".

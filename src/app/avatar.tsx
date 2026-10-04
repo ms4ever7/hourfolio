@@ -40,7 +40,7 @@ export default function AvatarPicker() {
           <ProfileAvatar avatar={avatar} size={120} />
           <RoundButton onPress={() => void pickPhoto()}>
             <Glyph d={UI_PATHS.image} size={18} color={colors.ink} />
-            <Text variant="label" style={{ fontFamily: 'Onest_600SemiBold' }}>
+            <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }}>
               {t('avatar.photo')}
             </Text>
           </RoundButton>
