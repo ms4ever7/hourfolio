@@ -259,6 +259,7 @@ export const uk: Translations = {
     replan: 'Перепланувати решту',
     edit: 'Змінити план',
     reminderTitle: 'Заплановано на сьогодні',
+    weekTitle: 'Твій план на тиждень',
     yourPlan: 'Твій план',
     noPlan: 'Плану ще немає',
   },

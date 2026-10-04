@@ -243,6 +243,7 @@ export const en = {
     replan: 'Re-plan the rest',
     edit: 'Edit plan',
     reminderTitle: 'Planned for today',
+    weekTitle: 'Your plan for the week',
     yourPlan: 'Your plan',
     noPlan: 'No plan yet',
   },

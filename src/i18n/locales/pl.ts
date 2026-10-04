@@ -259,6 +259,7 @@ export const pl: Translations = {
     replan: 'Zaplanuj resztę od nowa',
     edit: 'Zmień plan',
     reminderTitle: 'Zaplanowane na dziś',
+    weekTitle: 'Twój plan na tydzień',
     yourPlan: 'Twój plan',
     noPlan: 'Brak planu',
   },
