@@ -121,15 +121,16 @@ export function planWeek({ weekFrom, goals, free, fromDay }: PlanInput): PlanRes
 
   for (const goal of ordered) {
     const min = minOf(goal);
-    const { max } = goal.session;
     const open = openDays(goal);
-    // As many sessions as the shortest length and the open days allow. Anything
-    // that would push a session past the maximum is reported as short.
+    // As many sessions as the shortest length and the open days allow.
     const n = Math.min(open.length, Math.max(1, Math.floor(goal.minutes / min)));
     if (n === 0) {
       shortBy.push({ assetId: goal.assetId, minutes: goal.minutes });
       continue;
     }
+    // The maximum is what a session usually is. A goal too big for that (6 hours
+    // of coding in 40-minute sessions) stretches them rather than leaving time unplanned.
+    const max = Math.max(goal.session.max, Math.ceil(goal.minutes / n / STEP) * STEP);
 
     const chosen: number[] = [];
     while (chosen.length < n) {

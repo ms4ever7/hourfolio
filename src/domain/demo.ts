@@ -1,5 +1,6 @@
 import { findCatalogItem } from './catalog';
-import { addDays, dayKey } from './dates';
+import { addDays, dayKey, startOfWeek } from './dates';
+import { planGoals, planWeek, type WeekPlan } from './plan';
 import type { Asset, LogEntry } from './types';
 import { RECOVERY_ID } from './types';
 
@@ -30,7 +31,10 @@ const PROFILE: [string, number, number, number][] = [
 ];
 
 /** A few months of plausible history, for trying the app before real data exists. */
-export function buildDemo(today: Date, days = 120): { assets: Asset[]; logs: LogEntry[] } {
+/** Free minutes per weekday for the demo plan: evenings on weekdays, a longer Saturday, Sunday off. */
+const DEMO_FREE = [150, 150, 150, 150, 150, 180, 0];
+
+export function buildDemo(today: Date, days = 120): { assets: Asset[]; logs: LogEntry[]; plan: WeekPlan } {
   const rand = mulberry32(7);
   const createdAt = addDays(today, -days).toISOString();
   const assets: Asset[] = PROFILE.map(([id, , , startHours]) => {
@@ -54,5 +58,9 @@ export function buildDemo(today: Date, days = 120): { assets: Asset[]; logs: Log
       }
     });
   }
-  return { assets, logs };
+  // The whole current week is planned from the weekly goals, so the plan card has something to show.
+  const weekFrom = dayKey(startOfWeek(today));
+  const goals = planGoals(assets, [], startOfWeek(today), 0);
+  const plan: WeekPlan = { weekFrom, free: DEMO_FREE, rest: 0, sessions: planWeek({ weekFrom, goals, free: DEMO_FREE }).sessions };
+  return { assets, logs, plan };
 }

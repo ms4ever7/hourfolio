@@ -1,11 +1,10 @@
 appId: com.ms4ever7.hourfolio
 ---
-# Onboarding in English from the welcome screen: pick assets, set a goal and its scene,
+# Onboarding from the welcome screen (the app follows the system language, English here): pick assets, set a goal and its scene,
 # the day step, then "Make it yours". Start from a fresh install or Profile → Start over.
 # No launchApp: a dev build would stop at the dev-client launcher. Picks are kept in memory,
 # so restart the app before a second run.
 - runFlow: connect.yaml
-- tapOn: '.*English.*'
 - assertVisible: 'Every hour you spend on yourself is an investment.'
 - takeScreenshot: e2e/screenshots/01-welcome
 - tapOn: 'Get started'
@@ -36,7 +35,8 @@ appId: com.ms4ever7.hourfolio
 - tapOn: 'Your name'
 - inputText: 'Roman'
 - tapOn: '🦊'
-- hideKeyboard
+- hideKeyboard:
+    optional: true
 - takeScreenshot: e2e/screenshots/05-you
 - tapOn: 'Open my portfolio'
 - assertVisible: 'What are you investing in today\?'

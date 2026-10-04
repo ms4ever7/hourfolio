@@ -12,6 +12,9 @@ Run through mise so Node 22 and bun 1.3.14 are used:
 - Real iPhone: `mise exec -- bunx expo run:ios --device <udid>` (UDID from `xcrun devicectl list devices`), then launch it pointed at Metro. Signed with the free personal team, so installs expire after 7 days.
 - Add Expo packages with `mise exec -- bunx expo install <pkg>`
 
+## CI
+`.github/workflows/ci.yml` runs typecheck, lint and test on every pull request and on pushes to main (Node and bun versions come from `mise.toml`). It builds nothing; cloud builds are the EAS commands above.
+
 ## Project skills
 - `.claude/skills/new-screen`: how to add or rebuild a screen (routes, building blocks, tokens, copy, checks).
 - `.claude/skills/on-device`: build, install and launch on the real iPhone with Metro.

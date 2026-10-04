@@ -1,0 +1,43 @@
+name: CI
+
+# Runs the same checks as `bun run typecheck`, `lint` and `test` on every pull
+# request (also ones stacked on another branch) and on every push to main.
+# Nothing is built or deployed here.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A new push to the same branch cancels the run that is still going for it.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# The workflow only reads the code; it gets no permission to change anything.
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    name: Typecheck, lint, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+
+      # Installs the Node and bun versions pinned in mise.toml, the same as on a laptop.
+      - uses: jdx/mise-action@v5
+
+      - name: Cache bun packages
+        uses: actions/cache@v6
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ runner.os }}-${{ hashFiles('bun.lock') }}
+          restore-keys: bun-${{ runner.os }}-
+
+      # --frozen-lockfile fails when package.json and bun.lock disagree.
+      - run: bun install --frozen-lockfile
+      - run: bun run typecheck
+      - run: bun run lint
+      - run: bun run test
