@@ -246,6 +246,7 @@ export const pl: Translations = {
     make: 'Ułóż plan',
     result: 'Twój tydzień',
     resultSub: 'Przenieś sesję na inny dzień albo ją usuń.',
+    empty: 'Na razie nic się nie mieści. Dodaj wolny czas w pozostałe dni albo zaplanuj następny tydzień.',
     nothing: 'Na ten dzień nic nie zaplanowano.',
     short: '{{name}}: {{time}} nie zmieściło się w tym tygodniu.',
     save: 'Zapisz plan',

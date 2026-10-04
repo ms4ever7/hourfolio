@@ -13,11 +13,14 @@ import { useAppTheme } from '@/theme/theme';
 
 const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
 
-/** The saved plan for the week `today` is in, if there is one. */
+/** The plan for the week `today` is in, or for the next one when this week has none (planned on a Sunday). */
 export function useWeekPlan(): WeekPlan | undefined {
   const today = useToday();
   const weekFrom = dayKey(startOfWeek(today));
-  return usePortfolioStore((s) => s.plans.find((p) => p.weekFrom === weekFrom));
+  const nextFrom = dayKey(addDays(startOfWeek(today), 7));
+  const plans = usePortfolioStore((s) => s.plans);
+  const withSessions = (from: string) => plans.find((p) => p.weekFrom === from && p.sessions.length > 0);
+  return withSessions(weekFrom) ?? withSessions(nextFrom);
 }
 
 function SessionRow({ session, done }: { session: PlannedSession; done: boolean }) {
@@ -83,9 +86,8 @@ export function WeekPlanCard() {
   const plan = useWeekPlan();
   const { assets, logs } = usePortfolio();
   const setPlan = usePortfolioStore((s) => s.setPlan);
-  const monday = startOfWeek(today);
 
-  if (!plan) {
+  if (!plan || plan.sessions.length === 0) {
     return (
       <Card gap="sm">
         <SectionHeader title={t('plan.yourPlan')} />
@@ -95,6 +97,7 @@ export function WeekPlanCard() {
     );
   }
 
+  const monday = parseDay(plan.weekFrom);
   const replan = () => setPlan({ ...replanWeek(plan, assets, logs, plan.free ?? DEFAULT_FREE, today), free: plan.free });
 
   return (
@@ -115,7 +118,7 @@ export function WeekPlanCard() {
           </Box>
         );
       })}
-      <TextButton label={t('plan.replan')} onPress={replan} />
+      {plan.weekFrom <= dayKey(today) ? <TextButton label={t('plan.replan')} onPress={replan} /> : null}
       <TextButton label={t('plan.edit')} onPress={() => router.push('/plan-week')} />
     </Card>
   );

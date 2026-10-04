@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton } from '@/components/ui';
-import { addDays, dayKey, parseDay, startOfWeek } from '@/domain/dates';
+import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { goalsFromAssets, planWeek, type PlannedSession, type PlanResult } from '@/domain/plan';
 import { RECOVERY_ID } from '@/domain/types';
 import { durationParts } from '@/domain/format';
@@ -50,7 +50,8 @@ export default function PlanWeek() {
   const logs = usePortfolioStore((s) => s.logs);
   const setPlan = usePortfolioStore((s) => s.setPlan);
 
-  const [when, setWhen] = useState<When>('this');
+  // On Sunday there is nothing left of this week to plan.
+  const [when, setWhen] = useState<When>(weekdayMonFirst(today) === 6 ? 'next' : 'this');
   const [free, setFree] = useState(DEFAULT_FREE);
   const [rest, setRest] = useState(0);
   const [result, setResult] = useState<PlanResult | null>(null);
@@ -152,7 +153,7 @@ export default function PlanWeek() {
           </>
         ) : (
           <>
-            <Text variant="body">{t('plan.resultSub')}</Text>
+            <Text variant="body">{result.sessions.length === 0 ? t('plan.empty') : t('plan.resultSub')}</Text>
             {WEEKDAYS.map((i) => {
               const day = addDays(monday, i);
               const key = dayKey(day);
@@ -205,7 +206,7 @@ export default function PlanWeek() {
       </ScrollView>
       {hasGoals ? (
         <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
-          {result ? <PrimaryButton label={t('plan.save')} onPress={save} /> : <PrimaryButton label={t('plan.make')} onPress={make} />}
+          {result ? <PrimaryButton label={t('plan.save')} onPress={save} disabled={result.sessions.length === 0} /> : <PrimaryButton label={t('plan.make')} onPress={make} />}
         </Box>
       ) : null}
     </Box>
