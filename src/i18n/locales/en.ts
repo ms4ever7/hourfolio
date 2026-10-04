@@ -231,6 +231,8 @@ export const en = {
     result: 'Your week',
     resultSub: 'Move a session to another day or remove it.',
     empty: 'Nothing fits yet. Add free time on the days left, or plan next week.',
+    log: 'Log',
+    nothingToday: 'Nothing planned for today.',
     nothing: 'Nothing planned for this day.',
     short: '{{name}}: {{time}} did not fit this week.',
     save: 'Save plan',

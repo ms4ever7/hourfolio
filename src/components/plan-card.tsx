@@ -6,6 +6,7 @@ import { Box, Text } from '@/components/primitives';
 import { Card, Duration, PrimaryButton, SectionHeader, TextButton } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { isSessionDone, replanWeek, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
+import type { LogEntry } from '@/domain/types';
 import { useAssetName, weekdayName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
@@ -41,46 +42,112 @@ function SessionRow({ session, done }: { session: PlannedSession; done: boolean 
         {assetName(asset)}
       </Text>
       <Duration minutes={session.minutes} size={13} quiet={done} />
-      {done ? <Glyph d={UI_PATHS.check} size={14} color={colors.days} strokeWidth={3} /> : null}
+      {done ? (
+        <Box width={20} height={20} borderRadius="pill" backgroundColor="daysSoft" alignItems="center" justifyContent="center">
+          <Glyph d={UI_PATHS.check} size={12} color={colors.days} strokeWidth={3} />
+        </Box>
+      ) : (
+        <Box backgroundColor="accentSoft" borderRadius="pill" paddingHorizontal="sm" style={{ paddingVertical: 6 }}>
+          <Text variant="tiny" color="accentInk" style={{ fontFamily: 'Inter_600SemiBold' }}>
+            {t('plan.log')}
+          </Text>
+        </Box>
+      )}
     </Pressable>
   );
 }
 
-/** On Today: the week's plan at a glance, or a quiet way into making one. */
+const WEEK = [0, 1, 2, 3, 4, 5, 6];
+
+/** The week as seven days: its name, a circle (ticked when everything planned is done) and a dot per asset. */
+function WeekStrip({ monday, plan, todayKey, logs, onPress }: { monday: Date; plan?: WeekPlan; todayKey: string; logs: LogEntry[]; onPress: () => void }) {
+  const { i18n } = useTranslation();
+  const { colors, palette } = useAppTheme();
+  const assets = usePortfolioStore((s) => s.assets);
+  return (
+    <Pressable onPress={onPress} accessibilityRole="button" style={{ flexDirection: 'row', gap: 4 }}>
+      {WEEK.map((i) => {
+        const date = addDays(monday, i);
+        const key = dayKey(date);
+        const sessions = sessionsOn(plan, key);
+        const isToday = key === todayKey;
+        const past = key < todayKey;
+        const allDone = sessions.length > 0 && sessions.every((s) => isSessionDone(s, logs));
+        const ids = [...new Set(sessions.map((s) => s.assetId))].slice(0, 3);
+        return (
+          <Box key={key} flex={1} alignItems="center" gap="s" backgroundColor={isToday ? 'accentSoft' : undefined} style={{ paddingTop: 8, paddingBottom: 6, borderRadius: 14 }}>
+            <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+              {new Intl.DateTimeFormat(i18n.language, { weekday: 'short' }).format(date)}
+            </Text>
+            <Box width={28} height={28} borderRadius="pill" alignItems="center" justifyContent="center" backgroundColor={isToday ? 'accent' : past && allDone ? 'daysSoft' : 'track'}>
+              {past && allDone ? (
+                <Glyph d={UI_PATHS.check} size={12} color={colors.days} strokeWidth={3} />
+              ) : (
+                <Text variant="tiny" color={isToday ? 'onAccent' : 'body'} style={{ fontFamily: 'Inter_600SemiBold', opacity: past ? 0.6 : 1 }}>
+                  {date.getDate()}
+                </Text>
+              )}
+            </Box>
+            <Box flexDirection="row" height={6} style={{ gap: 3 }}>
+              {ids.map((id) => {
+                const asset = assets.find((a) => a.id === id);
+                const done = sessions.filter((s) => s.assetId === id).every((s) => isSessionDone(s, logs));
+                return asset ? <Box key={id} width={6} height={6} borderRadius="pill" style={{ backgroundColor: palette[asset.color].main, opacity: done ? 0.35 : 1 }} /> : null;
+              })}
+            </Box>
+          </Box>
+        );
+      })}
+    </Pressable>
+  );
+}
+
+/** On Today: the week as a strip with today's sessions under it, or an invitation to plan one. */
 export function TodayPlan() {
   const { t, i18n } = useTranslation();
   const { colors } = useAppTheme();
   const today = useToday();
   const plan = useWeekPlan();
   const { assets, logs } = usePortfolio();
-  const toGoals = () => router.navigate('/(tabs)/goals');
+  const todayKey = dayKey(today);
 
   if (!plan) {
     if (!assets.some((a) => a.weeklyGoalMinutes)) return null;
+    const monday = startOfWeek(today);
     return (
-      <Pressable
-        accessibilityRole="button"
-        onPress={() => router.push('/plan-week')}
-        style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 18, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, opacity: pressed ? 0.8 : 1 })}
-      >
-        <Box flex={1} gap="xs">
-          <Text variant="bodyStrong">{t('plan.cta')}</Text>
+      <Box backgroundColor="accentSoft" borderRadius="xl" borderWidth={1} borderColor="line" padding="m" gap="m">
+        <Box gap="xs">
+          <Text variant="heading" style={{ fontSize: 18 }}>
+            {t('plan.cta')}
+          </Text>
           <Text variant="small">{t('plan.ctaSub')}</Text>
         </Box>
-        <Glyph d={UI_PATHS.arrowRight} size={20} color={colors.accentInk} strokeWidth={2.2} />
-      </Pressable>
+        <Box flexDirection="row" accessible={false} style={{ gap: 4 }}>
+          {WEEK.map((i) => (
+            <Box key={i} flex={1} alignItems="center" gap="s">
+              <Text variant="tiny" color="muted" numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                {new Intl.DateTimeFormat(i18n.language, { weekday: 'short' }).format(addDays(monday, i))}
+              </Text>
+              <Box width={28} height={28} borderRadius="pill" style={{ borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.muted, opacity: 0.6 }} />
+            </Box>
+          ))}
+        </Box>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push('/plan-week')}
+          style={({ pressed }) => ({ height: 50, borderRadius: 16, backgroundColor: colors.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: pressed ? 0.85 : 1 })}
+        >
+          <Text variant="bodyStrong" color="onAccent">
+            {t('plan.make')}
+          </Text>
+          <Glyph d={UI_PATHS.arrowRight} size={18} color={colors.onAccent} strokeWidth={2.2} />
+        </Pressable>
+      </Box>
     );
   }
 
-  const monday = parseDay(plan.weekFrom);
-  const todayKey = dayKey(today);
-  const days = [0, 1, 2, 3, 4, 5, 6]
-    .map((i) => {
-      const date = addDays(monday, i);
-      return { date, key: dayKey(date), sessions: sessionsOn(plan, dayKey(date)) };
-    })
-    .filter((d) => d.sessions.length > 0);
-
+  const toGoals = () => router.navigate('/(tabs)/goals');
+  const sessions = sessionsOn(plan, todayKey);
   return (
     <Card gap="sm">
       <Pressable accessibilityRole="button" accessibilityLabel={t('plan.weekTitle')} onPress={toGoals} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -89,44 +156,16 @@ export function TodayPlan() {
         </Text>
         <Glyph d={UI_PATHS.chevronRight} size={16} color={colors.faint} strokeWidth={2} />
       </Pressable>
-      {days.map(({ date, key, sessions }) => {
-        const isToday = key === todayKey;
-        const label = isToday ? t('meta.today') : new Intl.DateTimeFormat(i18n.language, { weekday: 'short' }).format(date);
-        if (isToday) {
-          return (
-            <Box key={key} gap="xs">
-              <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
-                {label}
-              </Text>
-              {sessions.map((s) => (
-                <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
-              ))}
-            </Box>
-          );
-        }
-        return <DayRow key={key} label={label} sessions={sessions} muted={key < todayKey} onPress={toGoals} />;
-      })}
-    </Card>
-  );
-}
-
-/** One day of the week in a line: its name, the assets planned and the time in all. */
-function DayRow({ label, sessions, muted, onPress }: { label: string; sessions: PlannedSession[]; muted: boolean; onPress: () => void }) {
-  const assets = usePortfolioStore((s) => s.assets);
-  const ids = [...new Set(sessions.map((s) => s.assetId))];
-  return (
-    <Pressable onPress={onPress} accessibilityRole="button" style={{ flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 36, opacity: muted ? 0.55 : 1 }}>
-      <Text variant="small" style={{ width: 52, fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
-        {label}
+      <WeekStrip monday={parseDay(plan.weekFrom)} plan={plan} todayKey={todayKey} logs={logs} onPress={toGoals} />
+      <Box height={1} backgroundColor="line" />
+      <Text variant="tiny" color="muted" style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+        {t('meta.today')}
       </Text>
-      <Box flex={1} flexDirection="row" gap="xs">
-        {ids.map((id) => {
-          const a = assets.find((x) => x.id === id);
-          return a ? <AssetIcon key={id} icon={a.icon} color={a.color} face={a.face} size={26} /> : null;
-        })}
-      </Box>
-      <Duration minutes={sessions.reduce((n, s) => n + s.minutes, 0)} size={13} quiet />
-    </Pressable>
+      {sessions.length === 0 ? <Text variant="small">{t('plan.nothingToday')}</Text> : null}
+      {sessions.map((s) => (
+        <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
+      ))}
+    </Card>
   );
 }
 
