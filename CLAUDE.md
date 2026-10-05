@@ -10,6 +10,7 @@ Run through mise so Node 22 and bun 1.3.14 are used:
 - `mise exec -- bun run typecheck` / `lint` / `test`
 - `mise exec -- bunx expo run:ios` (dev build; MMKV needs native code, so no Expo Go)
 - Real iPhone: `mise exec -- bunx expo run:ios --device <udid>` (UDID from `xcrun devicectl list devices`), then launch it pointed at Metro. Signed with the free personal team, so installs expire after 7 days.
+- Cloud builds (EAS, paid Apple team): `mise exec -- bunx eas-cli build -p ios --profile staging` (bundle id `.stg`, installs next to production) or `--profile production`, then `eas-cli submit -p ios --profile <same>` to TestFlight. `app.config.ts` reads `APP_VARIANT` from `eas.json`; local builds are the plain app signed by the free team.
 - Add Expo packages with `mise exec -- bunx expo install <pkg>`
 
 ## CI

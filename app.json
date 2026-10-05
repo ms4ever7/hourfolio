@@ -11,7 +11,10 @@
       "icon": "./assets/hourfolio.icon",
       "bundleIdentifier": "com.ms4ever7.hourfolio",
       "appleTeamId": "2RMJ37733D",
-      "supportsTablet": false
+      "supportsTablet": false,
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
