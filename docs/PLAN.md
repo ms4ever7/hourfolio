@@ -158,6 +158,13 @@ People with many parallel pursuits (music, sport, coding, learning, collecting�
 - **Not done yet:** per-asset session length in the UI (`sessionMinutes` exists on the asset), time-of-day slots (kept as an advanced option for later), and a look at the plan screens in dark mode and in Ukrainian (they were checked on the simulator in light mode and English).
 - **Also:** the welcome screen no longer asks for a language. It follows the system (English when unsupported); Profile → Language changes it.
 
+### 2.8 Staging feedback (added 2026-10-06)
+- **Onboarding:** a three-slide tour (plan your week, see your progress, see your investment) before the first hobby, built from real components on static sample data so it follows language and theme. In the hobby setup the picture is now a choice of icon, emoji or photo (shared `FacePicker` with `asset-edit`), the rhythm options say what they mean ("2–4 times a week, like gym or guitar"), starting capital accepts any number of hours, and the weekly goal moves in half-hour steps.
+- **Dashboard:** "This week's goals" left Today (goals live on Goals). The plan card shows a progress bar, hours per day and session tiles in each hobby's color. Milestones on Goals are cards with capital / next mark, a bar and "incl. N h before the app".
+- **Goals:** changing weekly goals offers to re-plan the rest of the week. "Re-plan the rest" and "Edit plan" are real buttons (`ActionButton`).
+- **Fixes:** switching goal scenes (rocket and dog) could crash on a `transform` going from unset to set; the tree scene now shows its goal from the start. The crash itself was not reproduced, so this is a likely cause, not a confirmed one.
+- **Not done yet:** the setup screen is long with the icon grid open; paywall and pricing are for later (ideas: Pro for the planner and history, cosmetics, widgets).
+
 ### Order and scope
 1. 2.1 Profile + language row + accent and dark mode. This is the base for everything visual.
 2. 2.2 Emoji and photo for assets.

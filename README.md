@@ -11,7 +11,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/today.png" width="240" alt="Today: hours invested today by asset, one-tap log tiles, this week's goals as growing trees">
+  <img src="docs/screenshots/today.png" width="240" alt="Today: hours invested today by asset, one-tap log tiles and the plan for the week">
   <img src="docs/screenshots/goal-met.gif" width="240" alt="Logging a session completes a weekly goal: the congrats screen with confetti and a share card">
   <img src="docs/screenshots/today-dark.png" width="240" alt="The same screen in dark mode with a violet accent and a wave pattern">
 </p>
@@ -41,11 +41,11 @@ Hourfolio does the opposite. It shows how your time is spread across everything 
 ## A tour
 
 ### Today and this week
-The first screen shows today and this week, not a chart. It has what you did today, a row of one-tap tiles for what you usually do, your plan for the week, this week's goals, and every asset with its capital. On an empty morning it asks "What are you investing in today?" instead of showing a zero.
+The first screen shows today and this week, not a chart. It has what you did today, a row of one-tap tiles for what you usually do, your plan for the week (a progress bar, hours for each day and today's sessions as tiles in each hobby's color), and every asset with its capital. Weekly goals live on the Goals tab. On an empty morning it asks "What are you investing in today?" instead of showing a zero.
 
 <p align="center">
   <img src="docs/screenshots/today.png" width="200" alt="Today screen">
-  <img src="docs/screenshots/goals.png" width="200" alt="Goals: weekly scenes, scene picker and milestones">
+  <img src="docs/screenshots/goals.png" width="200" alt="Goals: weekly scenes, the week's plan and milestone cards with capital and progress">
   <img src="docs/screenshots/asset.png" width="200" alt="Asset detail: capital, momentum, hours per week">
 </p>
 
@@ -57,7 +57,8 @@ Tell the app how much time you can give each day and it spreads your weekly goal
 - **Rest is optional:** add recovery minutes if you want them, or leave them out.
 - **Adjust before saving:** move a session a day earlier or later, or remove it.
 - **No guilt:** time that doesn't fit is just said plainly, and a missed session quietly moves on when you re-plan the rest of the week.
-- **Where it shows:** Today has the week as a strip, with today's sessions and a "Log" chip under it. Goals has the whole plan. Without a plan, Today offers to make one. On a Sunday it plans the next week.
+- **Where it shows:** Today has the week as a strip with each day's hours, and today's sessions as tiles with a "Log" chip. Goals has the whole plan, with "Re-plan the rest" and "Edit plan" buttons. Without a plan, Today offers to make one. On a Sunday it plans the next week.
+- **Goals and plan stay in step:** after you change weekly goals, the app offers to re-plan the rest of the week.
 - **Reminder (optional):** one note in the late afternoon about what is planned and not done yet, for today and tomorrow.
 
 <p align="center">
@@ -110,8 +111,9 @@ Holidays dress the app up. From mid-October the accent turns pumpkin, the scenes
 </p>
 
 ### Onboarding and gentle reminders
+0. Three quick looks at the app after a few months of use: plan your week, see your progress, see your investment. Swipe through or skip.
 1. Pick from 35 activities or add your own.
-2. Tune each one: color, rhythm, starting capital and an optional weekly goal, with a live preview of its scene.
+2. Tune each one: a picture (an icon from the app, an emoji or your own photo), color, how often you do it, starting capital (a quick pick or any number of hours) and an optional weekly goal in half-hour steps, with a live preview of its scene.
 3. Tell the app when your day starts and ends.
 4. Add a name, picture and color (optional).
 
@@ -124,6 +126,13 @@ The app starts in your phone's language (English if it isn't one of the three) a
 
 <p align="center">
   <img src="docs/screenshots/welcome.png" width="180" alt="Welcome">
+  <img src="docs/screenshots/tour-plan.png" width="180" alt="Tour: plan your week">
+  <img src="docs/screenshots/tour-progress.png" width="180" alt="Tour: see your progress">
+  <img src="docs/screenshots/tour-investment.png" width="180" alt="Tour: see your investment">
+</p>
+
+<p align="center">
+  <img src="docs/screenshots/setup.png" width="180" alt="Setting up a hobby: picture, color, rhythm and starting capital">
   <img src="docs/screenshots/setup-goal.png" width="180" alt="Setting a weekly goal and choosing the tree scene">
   <img src="docs/screenshots/day.png" width="180" alt="Your day: wake and bed times, reminders">
   <img src="docs/screenshots/you.png" width="180" alt="Make it yours: name, picture, color">
