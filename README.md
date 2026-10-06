@@ -178,3 +178,7 @@ This app is also a hands-on way to learn AI-assisted development with Claude Cod
 | Artifacts | claude.ai | Mockups of three home screen directions, to pick one before building |
 
 The plan and the reasoning behind decisions are in [`docs/PLAN.md`](docs/PLAN.md).
+
+## License
+
+Copyright (c) 2026 Roman Blyztsiv. All rights reserved. See [`LICENSE`](LICENSE): the code may not be copied, modified or distributed without written permission.
