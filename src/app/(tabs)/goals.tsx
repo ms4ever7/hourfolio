@@ -5,7 +5,7 @@ import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { WeekPlanCard } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene, ScenePicker } from '@/components/scenes';
-import { Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, TextButton } from '@/components/ui';
+import { ActionButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { capitalMinutes, nextMilestone, weeksTo } from '@/domain/growth';
 import { sumMinutes, weeklyMinutes } from '@/domain/stats';
@@ -39,7 +39,8 @@ export default function Goals() {
         .map((a) => {
           const m = nextMilestone(capitalMinutes(a, logs));
           const pace = weeklyMinutes(logs, a.id, 12, today).reduce((s, v) => s + v, 0) / 12;
-          return { asset: a, ...m, weeks: weeksTo(m.toGoMinutes, pace) };
+          const capital = capitalMinutes(a, logs);
+          return { asset: a, capital, ...m, weeks: weeksTo(m.toGoMinutes, pace) };
         })
         .sort((x, y) => y.progress - x.progress),
     [assets, logs, today],
@@ -111,7 +112,9 @@ export default function Goals() {
               </Text>
               <ScenePicker />
             </Box>
-            <TextButton label={t('goals.edit')} onPress={() => router.push('/goals-edit')} />
+            <Box flexDirection="row">
+              <ActionButton label={t('goals.edit')} icon={UI_PATHS.pencil} tone="outline" onPress={() => router.push('/goals-edit')} />
+            </Box>
           </>
         )}
       </Card>
@@ -120,22 +123,31 @@ export default function Goals() {
 
       <Box gap="sm">
         <SectionHeader title={t('goals.milestones')} />
-        <Box backgroundColor="card" borderRadius="xl" paddingVertical="xs">
-          {milestones.map((m, i) => {
+        <Box gap="sm">
+          {milestones.map((m) => {
             const p = palette[m.asset.color];
             return (
-              <Box key={m.asset.id} gap="s" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={i === milestones.length - 1 ? 0 : 1} borderColor="line">
+              <Box key={m.asset.id} backgroundColor="card" borderRadius="xl" padding="m" gap="s" accessible accessibilityLabel={`${assetName(m.asset)}, ${Math.floor(m.capital / 60)} / ${m.next} ${t('units.h')}`}>
                 <Box flexDirection="row" alignItems="center" gap="sm">
                   <AssetIcon icon={m.asset.icon} color={m.asset.color} face={m.asset.face} size={36} />
-                  <Box flex={1} gap="xs">
-                    <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold' }} numberOfLines={1}>
-                      {assetName(m.asset)}
+                  <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
+                    {assetName(m.asset)}
+                  </Text>
+                  <Box flexDirection="row" alignItems="baseline" gap="xs">
+                    <Duration minutes={m.capital} size={15} highlight={p.main} />
+                    <Text variant="small">/</Text>
+                    <Hours minutes={m.next * 60} variant="bodyStrong" />
+                  </Box>
+                </Box>
+                <GoalScene scene="bar" progress={m.progress} color={p.main} tint={p.tint} season={null} />
+                {m.weeks !== null || m.asset.startingMinutes > 0 ? (
+                  <Box flexDirection="row" justifyContent="space-between" gap="s">
+                    <Text variant="small" numberOfLines={1} style={{ flexShrink: 1 }}>
+                      {m.asset.startingMinutes > 0 ? t('goals.milestoneBefore', { hours: Math.round(m.asset.startingMinutes / 60) }) : ' '}
                     </Text>
                     {m.weeks !== null ? <Text variant="small">{t('asset.milestoneEta', { count: m.weeks })}</Text> : null}
                   </Box>
-                  <Hours minutes={m.next * 60} variant="bodyStrong" />
-                </Box>
-                <GoalScene scene="bar" progress={m.progress} color={p.main} tint={p.tint} season={null} />
+                ) : null}
               </Box>
             );
           })}

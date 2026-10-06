@@ -197,6 +197,25 @@ export function TextButton({ label, onPress }: { label: string; onPress: () => v
   );
 }
 
+/** A roomy action button, filling its row or sharing it: `soft` for what changes things in place, `outline` for what opens an editor. */
+export function ActionButton({ label, icon, tone, onPress }: { label: string; icon: string; tone: 'soft' | 'outline'; onPress: () => void }) {
+  const { colors } = useAppTheme();
+  const soft = tone === 'soft';
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      onPress={onPress}
+      style={({ pressed }) => ({ flex: 1, height: 46, borderRadius: 14, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, paddingHorizontal: 8, backgroundColor: soft ? colors.accentSoft : colors.ground, borderWidth: 1, borderColor: soft ? colors.accentSoft : colors.border, opacity: pressed ? 0.75 : 1 })}
+    >
+      <Glyph d={icon} size={16} color={soft ? colors.accentInk : colors.ink} strokeWidth={2} />
+      <Text variant="label" numberOfLines={1} color={soft ? 'accentInk' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold', flexShrink: 1 }}>
+        {label}
+      </Text>
+    </Pressable>
+  );
+}
+
 /** A selectable option: dark outline when chosen. */
 export function OptionButton({
   selected,

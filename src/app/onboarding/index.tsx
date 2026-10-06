@@ -49,7 +49,7 @@ export default function Welcome() {
     <Screen
       footer={
         <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 16 }}>
-          <PrimaryButton label={t('welcome.cta')} onPress={() => router.push('/onboarding/pick')} />
+          <PrimaryButton label={t('welcome.cta')} onPress={() => router.push('/onboarding/tour')} />
         </Box>
       }
     >

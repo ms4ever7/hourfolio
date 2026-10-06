@@ -7,6 +7,7 @@ import { Box, Text } from '@/components/primitives';
 import { EMOJI_GROUPS, emojiInGroup, searchEmoji } from '@/domain/emoji';
 import { deletePhoto } from '@/lib/photos';
 import { usePortfolioStore } from '@/store/portfolio-store';
+import { useOnboardingStore } from '@/store/onboarding-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
 
@@ -25,9 +26,12 @@ export default function EmojiPicker() {
   const { t, i18n } = useTranslation();
   const { colors } = useAppTheme();
   const { width } = useWindowDimensions();
-  const { assetId } = useLocalSearchParams<{ assetId: string }>();
+  const { assetId, draft: draftParam } = useLocalSearchParams<{ assetId?: string; draft?: string }>();
+  const draftIndex = draftParam === undefined ? undefined : Number(draftParam);
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === assetId));
   const updateAsset = usePortfolioStore((s) => s.updateAsset);
+  const draft = useOnboardingStore((s) => (draftIndex === undefined ? undefined : s.drafts[draftIndex]));
+  const updateDraft = useOnboardingStore((s) => s.updateDraft);
   const recent = useSettingsStore((s) => s.recentEmoji);
   const addRecent = useSettingsStore((s) => s.addRecentEmoji);
   const [query, setQuery] = useState('');
@@ -62,15 +66,16 @@ export default function EmojiPicker() {
   }, [sections, cell]);
 
   const pick = (emoji: string) => {
-    if (asset) {
-      if (asset.face?.kind === 'photo') deletePhoto(asset.face.file);
-      updateAsset(asset.id, { face: { kind: 'emoji', emoji } });
-    }
+    const target = asset ?? draft;
+    if (target?.face?.kind === 'photo') deletePhoto(target.face.file);
+    if (asset) updateAsset(asset.id, { face: { kind: 'emoji', emoji } });
+    else if (draftIndex !== undefined) updateDraft(draftIndex, { face: { kind: 'emoji', emoji } });
     addRecent(emoji);
     router.back();
   };
 
-  const selected = asset?.face?.kind === 'emoji' ? asset.face.emoji : null;
+  const face = (asset ?? draft)?.face;
+  const selected = face?.kind === 'emoji' ? face.emoji : null;
   const renderRow = (row: string[]) => (
     <Box flexDirection="row" style={{ paddingHorizontal: PAD }}>
       {row.map((e) => (

@@ -1,11 +1,15 @@
 import { router } from 'expo-router';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ScrollView } from 'react-native';
+import { Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Duration, PrimaryButton, RoundButton } from '@/components/ui';
+import { DEFAULT_FREE, useWeekPlan } from '@/components/plan-card';
+import { replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
+import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 
 const STEP = 30;
@@ -18,8 +22,32 @@ export default function GoalsEdit() {
   const assetName = useAssetName();
   const assets = usePortfolioStore((s) => s.assets);
   const updateAsset = usePortfolioStore((s) => s.updateAsset);
+  const setPlan = usePortfolioStore((s) => s.setPlan);
+  const today = useToday();
+  const plan = useWeekPlan();
+  // Goals as they were when the screen opened, to tell whether anything changed.
+  const before = useRef(new Map(assets.map((a) => [a.id, a.weeklyGoalMinutes ?? 0])));
 
   const set = (id: string, minutes: number) => updateAsset(id, { weeklyGoalMinutes: minutes > 0 ? minutes : undefined });
+
+  const done = () => {
+    const changed = assets.some((a) => (a.weeklyGoalMinutes ?? 0) !== (before.current.get(a.id) ?? 0));
+    router.back();
+    if (!changed || !plan) return;
+    // Only the days still ahead are re-planned; sessions already done stay.
+    Alert.alert(t('goals.replanTitle'), t('goals.replanBody'), [
+      { text: t('goals.replanKeep'), style: 'cancel' },
+      {
+        text: t('goals.replanYes'),
+        onPress: () => {
+          // Read fresh: the plan or logs may have changed while the alert was open.
+          const { assets: now, logs: nowLogs, plans } = usePortfolioStore.getState();
+          const current = plans.find((p) => p.weekFrom === plan.weekFrom);
+          if (current) setPlan(replanWeek(current, now, nowLogs, current.free ?? DEFAULT_FREE, today));
+        },
+      },
+    ]);
+  };
 
   return (
     <Box flex={1} backgroundColor="ground">
@@ -56,7 +84,7 @@ export default function GoalsEdit() {
         </Box>
       </ScrollView>
       <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
-        <PrimaryButton label={t('goals.done')} onPress={() => router.back()} />
+        <PrimaryButton label={t('goals.done')} onPress={done} />
       </Box>
     </Box>
   );

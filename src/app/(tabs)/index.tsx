@@ -6,15 +6,11 @@ import { ProfileAvatar } from '@/components/avatar';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { TodayPlan } from '@/components/plan-card';
-import { GoalScene } from '@/components/scenes';
-import { Card, Duration, Hours, Screen, SectionHeader, TextButton, TrendChip } from '@/components/ui';
-import { daysBetween, parseDay, weekdayMonFirst } from '@/domain/dates';
+import { Card, Duration, Hours, Screen, SectionHeader, TrendChip } from '@/components/ui';
+import { daysBetween, parseDay } from '@/domain/dates';
 import { restingAsset } from '@/domain/day';
-import { weekRange, type SceneId } from '@/domain/goals';
 import { capitalMinutes, lastLogDay, trend } from '@/domain/growth';
-import { sumMinutes } from '@/domain/stats';
 import { minutesByAsset, quickAssets, todaysSessions } from '@/domain/today';
-import type { SeasonId } from '@/domain/seasons';
 import type { Asset } from '@/domain/types';
 import { RECOVERY_ID } from '@/domain/types';
 import { capitalize, longDate, useAssetName } from '@/lib/labels';
@@ -46,7 +42,7 @@ function LogTile({ asset, label }: { asset: Asset; label: string }) {
   );
 }
 
-/** Home: today first, then this week's goals, then the assets. Charts live in Analytics. */
+/** Home: today first, then the week's plan, then the assets. Charts live in Analytics. */
 export default function Today() {
   const { t, i18n } = useTranslation();
   const locale = i18n.language;
@@ -56,12 +52,10 @@ export default function Today() {
   const { assets, logs } = usePortfolio();
   const avatar = useSettingsStore((s) => s.avatar);
   const name = useSettingsStore((s) => s.name.trim());
-  const scene = useSettingsStore((s) => s.goalScene);
   const season = useSeason();
   const byId = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
 
   const d = useMemo(() => {
-    const week = weekRange(today);
     const sessions = todaysSessions(logs, today);
     const resting = restingAsset(assets, logs, today);
     return {
@@ -69,7 +63,6 @@ export default function Today() {
       todayMinutes: sessions.reduce((s, l) => s + l.minutes, 0),
       byAsset: minutesByAsset(sessions),
       quick: quickAssets(assets, logs, today, 3),
-      goals: assets.filter((a) => a.weeklyGoalMinutes).map((a) => ({ asset: a, done: sumMinutes(logs, week, a.id), goal: a.weeklyGoalMinutes! })),
       // Only a gentle word about an asset that is actually paused, never about one that is just a bit quiet.
       resting: resting && trend(resting, logs, today) === 'paused' ? resting : null,
       holdings: assets
@@ -80,7 +73,6 @@ export default function Today() {
 
   const recovery = byId.get(RECOVERY_ID);
   const greeting = t(`greeting.${greetingKey(new Date().getHours())}`);
-  const daysLeft = 7 - weekdayMonFirst(today);
   const relDay = (day: string) => {
     const n = daysBetween(parseDay(day), today);
     return n === 0 ? t('meta.today') : n === 1 ? t('meta.yesterday') : t('meta.daysAgo', { count: n });
@@ -149,39 +141,6 @@ export default function Today() {
 
       <TodayPlan />
 
-      <Box gap="sm">
-        <SectionHeader title={t('today.goals')} right={d.goals.length ? <Text variant="small">{t('goals.daysLeft', { count: daysLeft })}</Text> : undefined} />
-        {d.goals.length === 0 ? (
-          <Card gap="xs">
-            <Text variant="caption">{t('goals.noGoals')}</Text>
-            <TextButton label={t('goals.set')} onPress={() => router.push('/goals-edit')} />
-          </Card>
-        ) : (
-          <Pressable accessibilityRole="link" onPress={() => router.navigate('/(tabs)/goals')} style={({ pressed }) => ({ opacity: pressed ? 0.85 : 1 })}>
-            <Card gap="sm">
-              {d.goals.map(({ asset, done, goal }) => {
-                const met = done >= goal;
-                return (
-                  <Box key={asset.id} gap="xs">
-                    <Box flexDirection="row" alignItems="center" gap="s">
-                      <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
-                        {assetName(asset)}
-                      </Text>
-                      <Box flexDirection="row" alignItems="baseline" gap="xs">
-                        <Duration minutes={done} size={13} highlight={palette[asset.color].main} />
-                        <Text variant="small">/</Text>
-                        <Duration minutes={goal} size={13} quiet />
-                      </Box>
-                    </Box>
-                    <GoalSceneRow scene={scene} progress={done / goal} met={met} color={asset.color} season={season?.id ?? null} label={assetName(asset)} />
-                  </Box>
-                );
-              })}
-            </Card>
-          </Pressable>
-        )}
-      </Box>
-
       {d.resting ? (
         <Pressable
           accessibilityRole="button"
@@ -229,10 +188,4 @@ export default function Today() {
       </Box>
     </Screen>
   );
-}
-
-function GoalSceneRow({ scene, progress, met, color, season, label }: { scene: SceneId; progress: number; met: boolean; color: Asset['color']; season: SeasonId | null; label: string }) {
-  const { colors, palette } = useAppTheme();
-  const p = palette[color];
-  return <GoalScene scene={scene} progress={progress} color={met ? colors.days : p.main} tint={met ? colors.daysSoft : p.tint} season={season} height={36} accessibilityLabel={label} />;
 }

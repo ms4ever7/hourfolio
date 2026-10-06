@@ -60,26 +60,47 @@ appId: com.ms4ever7.hourfolio
 - assertVisible: 'When are you free?'
 - takeScreenshot: e2e/screenshots/20-plan-free
 # The sample goals add up to 13 hours, so give the weekdays a realistic evening each.
-- repeat:
-    times: 3
+# Days already past this week have no buttons, so each day is only touched when it can be.
+- runFlow:
+    when:
+      visible: 'More: Monday'
     commands:
-      - tapOn: 'More: Monday'
-- repeat:
-    times: 3
+      - repeat:
+          times: 3
+          commands:
+            - tapOn: 'More: Monday'
+- runFlow:
+    when:
+      visible: 'More: Tuesday'
     commands:
-      - tapOn: 'More: Tuesday'
-- repeat:
-    times: 3
+      - repeat:
+          times: 3
+          commands:
+            - tapOn: 'More: Tuesday'
+- runFlow:
+    when:
+      visible: 'More: Wednesday'
     commands:
-      - tapOn: 'More: Wednesday'
-- repeat:
-    times: 3
+      - repeat:
+          times: 3
+          commands:
+            - tapOn: 'More: Wednesday'
+- runFlow:
+    when:
+      visible: 'More: Thursday'
     commands:
-      - tapOn: 'More: Thursday'
-- repeat:
-    times: 3
+      - repeat:
+          times: 3
+          commands:
+            - tapOn: 'More: Thursday'
+- runFlow:
+    when:
+      visible: 'More: Friday'
     commands:
-      - tapOn: 'More: Friday'
+      - repeat:
+          times: 3
+          commands:
+            - tapOn: 'More: Friday'
 - tapOn: 'Make a plan'
 - assertVisible: 'Your week'
 - takeScreenshot: e2e/screenshots/21-plan-result
