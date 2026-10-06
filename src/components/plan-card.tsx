@@ -1,9 +1,11 @@
 import { router } from 'expo-router';
+import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Card, Duration, PrimaryButton, SectionHeader, TextButton } from '@/components/ui';
+import { GoalScene } from '@/components/scenes';
+import { ActionButton, Card, Duration, PrimaryButton, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { isSessionDone, replanWeek, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
 import type { LogEntry } from '@/domain/types';
@@ -12,7 +14,7 @@ import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
 
-const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
+export const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
 
 /** The plan for the week `today` is in, or on a Sunday, when this week is over, for the next one. */
 export function useWeekPlan(): WeekPlan | undefined {
@@ -24,30 +26,41 @@ export function useWeekPlan(): WeekPlan | undefined {
   return withSessions(weekFrom) ?? (weekdayMonFirst(today) === 6 ? withSessions(nextFrom) : undefined);
 }
 
+/** "45m", "2h" or "1.5h": short enough for a day column. */
+function shortDuration(minutes: number, t: TFunction): string {
+  if (minutes < 60) return `${minutes}${t('units.m')}`;
+  const h = Math.round((minutes / 60) * 10) / 10;
+  return `${h}${t('units.h')}`;
+}
+
+/** One planned session as a tile in its asset's color: tap to log it. */
 function SessionRow({ session, done }: { session: PlannedSession; done: boolean }) {
   const { t } = useTranslation();
-  const { colors } = useAppTheme();
+  const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === session.assetId));
   if (!asset) return null;
+  const p = palette[asset.color];
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${assetName(asset)}${done ? `, ${t('plan.done')}` : ''}`}
       onPress={() => router.push({ pathname: '/log', params: { assetId: asset.id } })}
-      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 4, minHeight: 44, opacity: pressed ? 0.7 : 1 })}
+      style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: done ? colors.track : p.tint, minHeight: 56, opacity: pressed ? 0.7 : 1 })}
     >
-      <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={32} />
-      <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
-        {assetName(asset)}
-      </Text>
-      <Duration minutes={session.minutes} size={13} quiet={done} />
+      <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={36} />
+      <Box flex={1} gap="xs">
+        <Text variant="label" numberOfLines={1} color={done ? 'muted' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
+          {assetName(asset)}
+        </Text>
+        <Duration minutes={session.minutes} size={13} quiet={done} highlight={p.main} />
+      </Box>
       {done ? (
-        <Box width={20} height={20} borderRadius="pill" backgroundColor="daysSoft" alignItems="center" justifyContent="center">
-          <Glyph d={UI_PATHS.check} size={12} color={colors.days} strokeWidth={3} />
+        <Box width={26} height={26} borderRadius="pill" backgroundColor="daysSoft" alignItems="center" justifyContent="center">
+          <Glyph d={UI_PATHS.check} size={14} color={colors.days} strokeWidth={3} />
         </Box>
       ) : (
-        <Box backgroundColor="accentSoft" borderRadius="pill" paddingHorizontal="sm" style={{ paddingVertical: 6 }}>
+        <Box backgroundColor="card" borderRadius="pill" paddingHorizontal="sm" style={{ paddingVertical: 7 }}>
           <Text variant="tiny" color="accentInk" style={{ fontFamily: 'Inter_600SemiBold' }}>
             {t('plan.log')}
           </Text>
@@ -61,7 +74,7 @@ const WEEK = [0, 1, 2, 3, 4, 5, 6];
 
 /** The week as seven days: its name, a circle (ticked when everything planned is done) and a dot per asset. */
 function WeekStrip({ monday, plan, todayKey, logs, onPress }: { monday: Date; plan?: WeekPlan; todayKey: string; logs: LogEntry[]; onPress: () => void }) {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors, palette } = useAppTheme();
   const assets = usePortfolioStore((s) => s.assets);
   return (
@@ -88,6 +101,9 @@ function WeekStrip({ monday, plan, todayKey, logs, onPress }: { monday: Date; pl
                 </Text>
               )}
             </Box>
+            <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold', opacity: allDone ? 0.5 : 1 }}>
+              {sessions.length ? shortDuration(sessions.reduce((sum, s) => sum + s.minutes, 0), t) : ' '}
+            </Text>
             <Box flexDirection="row" height={6} style={{ gap: 3 }}>
               {ids.map((id) => {
                 const asset = assets.find((a) => a.id === id);
@@ -148,19 +164,32 @@ export function TodayPlan() {
 
   const toGoals = () => router.navigate('/(tabs)/goals');
   const sessions = sessionsOn(plan, todayKey);
+  const planned = plan.sessions.reduce((sum, s) => sum + s.minutes, 0);
+  const done = plan.sessions.filter((s) => isSessionDone(s, logs)).reduce((sum, s) => sum + s.minutes, 0);
+  const todayLeft = sessions.filter((s) => !isSessionDone(s, logs)).reduce((sum, s) => sum + s.minutes, 0);
   return (
     <Card gap="sm">
-      <Pressable accessibilityRole="button" accessibilityLabel={t('plan.weekTitle')} onPress={toGoals} style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-        <Text variant="bodyStrong" style={{ flex: 1 }}>
-          {t('plan.weekTitle')}
-        </Text>
-        <Glyph d={UI_PATHS.chevronRight} size={16} color={colors.faint} strokeWidth={2} />
+      <Pressable accessibilityRole="button" accessibilityLabel={t('plan.weekTitle')} onPress={toGoals} style={{ gap: 10 }}>
+        <Box flexDirection="row" alignItems="center" gap="s">
+          <Text variant="bodyStrong" style={{ flex: 1 }}>
+            {t('plan.weekTitle')}
+          </Text>
+          <Box flexDirection="row" alignItems="baseline" gap="xs">
+            <Duration minutes={done} size={13} />
+            <Text variant="small">/</Text>
+            <Duration minutes={planned} size={13} quiet />
+          </Box>
+          <Glyph d={UI_PATHS.chevronRight} size={16} color={colors.faint} strokeWidth={2} />
+        </Box>
+        <GoalScene scene="bar" progress={planned > 0 ? done / planned : 0} color={colors.accent} tint={colors.accentSoft} season={null} height={8} />
       </Pressable>
       <WeekStrip monday={parseDay(plan.weekFrom)} plan={plan} todayKey={todayKey} logs={logs} onPress={toGoals} />
-      <Box height={1} backgroundColor="line" />
-      <Text variant="tiny" color="muted" style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 0.5, textTransform: 'uppercase' }}>
-        {t('meta.today')}
-      </Text>
+      <Box flexDirection="row" alignItems="center" justifyContent="space-between" style={{ marginTop: 4 }}>
+        <Text variant="tiny" color="muted" style={{ fontFamily: 'Inter_600SemiBold', letterSpacing: 0.5, textTransform: 'uppercase' }}>
+          {t('meta.today')}
+        </Text>
+        {todayLeft > 0 ? <Duration minutes={todayLeft} size={12} quiet /> : null}
+      </Box>
       {sessions.length === 0 ? <Text variant="small">{t('plan.nothingToday')}</Text> : null}
       {sessions.map((s) => (
         <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
@@ -198,18 +227,25 @@ export function WeekPlanCard() {
         const sessions = sessionsOn(plan, dayKey(day));
         if (sessions.length === 0) return null;
         return (
-          <Box key={i} gap="xs">
-            <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
-              {weekdayName(i18n.language, parseDay(dayKey(day)))}
-            </Text>
+          <Box key={i} gap="s">
+            <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+              <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
+                {weekdayName(i18n.language, parseDay(dayKey(day)))}
+              </Text>
+              <Duration minutes={sessions.reduce((sum, s) => sum + s.minutes, 0)} size={12} quiet />
+            </Box>
             {sessions.map((s) => (
               <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
             ))}
           </Box>
         );
       })}
-      {plan.weekFrom <= dayKey(today) ? <TextButton label={t('plan.replan')} onPress={replan} /> : null}
-      <TextButton label={t('plan.edit')} onPress={() => router.push('/plan-week')} />
+      <Box flexDirection="row" gap="s" style={{ marginTop: 4 }}>
+        {plan.weekFrom <= dayKey(today) ? (
+          <ActionButton label={t('plan.replan')} icon={UI_PATHS.refresh} tone="soft" onPress={replan} />
+        ) : null}
+        <ActionButton label={t('plan.edit')} icon={UI_PATHS.pencil} tone="outline" onPress={() => router.push('/plan-week')} />
+      </Box>
     </Card>
   );
 }

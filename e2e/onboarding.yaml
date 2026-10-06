@@ -8,12 +8,27 @@ appId: com.ms4ever7.hourfolio
 - assertVisible: 'Every hour you spend on yourself is an investment.'
 - takeScreenshot: e2e/screenshots/01-welcome
 - tapOn: 'Get started'
+- assertVisible: 'Plan your week'
+- takeScreenshot: e2e/screenshots/00-tour-plan
+- swipe:
+    direction: LEFT
+- assertVisible: 'See your progress'
+- takeScreenshot: e2e/screenshots/00-tour-progress
+- swipe:
+    direction: LEFT
+- assertVisible: 'See your investment'
+- takeScreenshot: e2e/screenshots/00-tour-investment
+- tapOn: 'Choose my hobbies'
 - tapOn: 'Guitar'
 - tapOn: 'Piano'
 - tapOn: 'DJing'
 - takeScreenshot: e2e/screenshots/02-pick
 - tapOn: 'Continue'
 - assertVisible: 'Step 2 of 2 · asset 1 of 3'
+- takeScreenshot: e2e/screenshots/03-setup
+- scrollUntilVisible:
+    element: '.*A few times a week.*'
+    direction: DOWN
 - tapOn: '.*A few times a week.*'
 - scrollUntilVisible:
     element: 'More'

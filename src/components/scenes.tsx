@@ -43,8 +43,8 @@ export function GoalScene({
     );
   }
   const art = sceneArt(scene, season);
-  if (art.stages) return <GrowScene stages={art.stages} goal={art.goal} progress={progress} color={color} tint={tint} height={height} a11y={a11y} />;
-  return <RunScene runner={art.runner} goal={art.goal} flip={art.flip} progress={progress} color={color} tint={tint} height={height} a11y={a11y} />;
+  if (art.stages) return <GrowScene key={scene} stages={art.stages} goal={art.goal} progress={progress} color={color} tint={tint} height={height} a11y={a11y} />;
+  return <RunScene key={scene} runner={art.runner} goal={art.goal} flip={art.flip} progress={progress} color={color} tint={tint} height={height} a11y={a11y} />;
 }
 
 type A11y = Record<string, unknown>;
@@ -82,7 +82,7 @@ function RunScene({ runner, goal, flip, progress, color, tint, height, a11y }: {
         <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: color }, trailStyle]} />
       </Box>
       <Animated.View style={[{ position: 'absolute', left: 0, bottom: 6 }, runnerStyle]}>
-        <Text style={{ fontSize: size, lineHeight: size * 1.2, transform: flip ? [{ scaleX: -1 }] : undefined }} allowFontScaling={false}>
+        <Text style={{ fontSize: size, lineHeight: size * 1.2, transform: [{ scaleX: flip ? -1 : 1 }] }} allowFontScaling={false}>
           {runner}
         </Text>
       </Animated.View>
@@ -120,11 +120,9 @@ function GrowScene({ stages, goal, progress, color, tint, height, a11y }: { stag
       <Box flex={1} height={6} borderRadius="pill" style={{ backgroundColor: tint, marginBottom: 10 }}>
         <Box height={6} borderRadius="pill" style={{ width: `${Math.max(2, clamped * 100)}%`, backgroundColor: color }} />
       </Box>
-      {done ? (
-        <Text style={{ fontSize: size * 0.7, lineHeight: size }} allowFontScaling={false}>
-          {goal}
-        </Text>
-      ) : null}
+      <Text style={{ fontSize: size * 0.7, lineHeight: size, opacity: done ? 1 : 0.9 }} allowFontScaling={false}>
+        {goal}
+      </Text>
     </Box>
   );
 }
