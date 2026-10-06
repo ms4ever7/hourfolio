@@ -9,7 +9,7 @@ import { Duration, PrimaryButton, RoundButton } from '@/components/ui';
 import { DEFAULT_FREE, useWeekPlan } from '@/components/plan-card';
 import { replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
-import { usePortfolio, useToday } from '@/lib/usePortfolio';
+import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 
 const STEP = 30;
@@ -25,7 +25,6 @@ export default function GoalsEdit() {
   const setPlan = usePortfolioStore((s) => s.setPlan);
   const today = useToday();
   const plan = useWeekPlan();
-  const { logs } = usePortfolio();
   // Goals as they were when the screen opened, to tell whether anything changed.
   const before = useRef(new Map(assets.map((a) => [a.id, a.weeklyGoalMinutes ?? 0])));
 
