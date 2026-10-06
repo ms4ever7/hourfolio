@@ -38,7 +38,15 @@ export default function GoalsEdit() {
     // Only the days still ahead are re-planned; sessions already done stay.
     Alert.alert(t('goals.replanTitle'), t('goals.replanBody'), [
       { text: t('goals.replanKeep'), style: 'cancel' },
-      { text: t('goals.replanYes'), onPress: () => setPlan(replanWeek(plan, usePortfolioStore.getState().assets, logs, plan.free ?? DEFAULT_FREE, today)) },
+      {
+        text: t('goals.replanYes'),
+        onPress: () => {
+          // Read fresh: the plan or logs may have changed while the alert was open.
+          const { assets: now, logs: nowLogs, plans } = usePortfolioStore.getState();
+          const current = plans.find((p) => p.weekFrom === plan.weekFrom);
+          if (current) setPlan(replanWeek(current, now, nowLogs, current.free ?? DEFAULT_FREE, today));
+        },
+      },
     ]);
   };
 

@@ -33,12 +33,16 @@ export default function Setup() {
   const scene = useSettingsStore((s) => s.goalScene);
   const season = useSeason();
 
-  const [capitalText, setCapitalText] = useState(draft?.startingMinutes ? String(Math.round((draft.startingMinutes / 60) * 100) / 100) : '');
+  const capitalFor = (minutes: number | undefined) => (minutes ? String(Math.round((minutes / 60) * 100) / 100) : '');
+  const [capitalText, setCapitalText] = useState(capitalFor(draft?.startingMinutes));
   const onCapitalText = (text: string) => {
     setCapitalText(text);
     const minutes = text.trim() === '' ? 0 : parseStartingMinutes(text);
     if (minutes !== null) updateDraft(step, { startingMinutes: minutes });
   };
+
+  // An input the parser rejects ("1.2.3") must not linger as if it were saved.
+  const onCapitalBlur = () => setCapitalText(capitalFor(useOnboardingStore.getState().drafts[step]?.startingMinutes));
 
   const finish = () => router.push('/onboarding/day');
 
@@ -171,6 +175,7 @@ export default function Setup() {
             placeholder={t('setup.capitalCustom')}
             placeholderTextColor={colors.faint}
             maxLength={8}
+            onBlur={onCapitalBlur}
             accessibilityLabel={t('setup.capitalCustom')}
             style={{ flex: 1, height: 44, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1, borderColor: colors.border, backgroundColor: colors.card, fontFamily: 'Inter_400Regular', fontSize: 16, color: colors.ink }}
           />
