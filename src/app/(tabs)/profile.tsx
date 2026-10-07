@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
+import { useRef } from 'react';
 import { Alert, Pressable, TextInput } from 'react-native';
 import { ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
@@ -25,6 +26,7 @@ export default function Profile() {
   const reset = usePortfolioStore((st) => st.reset);
   const season = useSeason();
   const [icon, setIcon] = useAppIcon();
+  const nameInput = useRef<TextInput>(null);
 
   const capital = assets.reduce((sum, a) => sum + capitalMinutes(a, logs), 0);
   const modeLabel = t(`appearance.${s.themeMode}`);
@@ -49,18 +51,24 @@ export default function Profile() {
             <Glyph d={UI_PATHS.pencil} size={15} color={colors.onAccent} strokeWidth={2.2} />
           </Box>
         </Pressable>
-        <TextInput
-          value={s.name}
-          onChangeText={s.setName}
-          placeholder={t('profile.namePlaceholder')}
-          placeholderTextColor={colors.faint}
-          accessibilityLabel={t('profile.nameLabel')}
-          testID="profile-name"
-          textAlign="center"
-          returnKeyType="done"
-          maxLength={40}
-          style={{ minWidth: 200, fontFamily: 'Inter_700Bold', fontSize: 24, color: colors.ink, paddingVertical: 4 }}
-        />
+        <Box flexDirection="row" alignItems="center" justifyContent="center" gap="s" style={{ borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: 4 }}>
+          <TextInput
+            ref={nameInput}
+            value={s.name}
+            onChangeText={s.setName}
+            placeholder={t('profile.namePlaceholder')}
+            placeholderTextColor={colors.faint}
+            accessibilityLabel={t('profile.nameLabel')}
+            testID="profile-name"
+            textAlign="center"
+            returnKeyType="done"
+            maxLength={40}
+            style={{ minWidth: 160, fontFamily: 'Inter_700Bold', fontSize: 24, color: colors.ink, paddingVertical: 4 }}
+          />
+          <Pressable accessibilityRole="button" accessibilityLabel={t('profile.nameLabel')} onPress={() => nameInput.current?.focus()} hitSlop={12}>
+            <Glyph d={UI_PATHS.pencil} size={16} color={colors.faint} strokeWidth={2.2} />
+          </Pressable>
+        </Box>
         <Text variant="caption">{t('profile.summary', { hours: formatHours(capital, i18n.language), count: assets.length })}</Text>
       </Box>
 

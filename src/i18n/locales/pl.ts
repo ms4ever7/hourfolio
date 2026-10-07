@@ -258,6 +258,8 @@ export const pl: Translations = {
     recoverySub: 'Opcjonalnie. Dodaj regenerację tam, gdzie pasuje.',
     noGoals: 'Najpierw ustaw cele tygodniowe, wtedy plan rozłoży je na dni.',
     setGoals: 'Ustaw cele',
+    goalsCta: 'Ustaw cele na tydzień',
+    goalsCtaSub: 'Powiedz, ile godzin tygodniowo chcesz poświęcić każdemu hobby. Potem zaplanujesz tydzień.',
     make: 'Ułóż plan',
     result: 'Twój tydzień',
     resultSub: 'Przenieś sesję na inny dzień albo ją usuń.',

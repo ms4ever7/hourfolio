@@ -242,6 +242,8 @@ export const en = {
     recoverySub: 'Optional. Add some recovery where it suits you.',
     noGoals: 'Set weekly goals first, then the plan can spread them over your days.',
     setGoals: 'Set weekly goals',
+    goalsCta: 'Set your weekly goals',
+    goalsCtaSub: 'Say how many hours a week you want for each hobby. Then you can plan your week.',
     make: 'Make a plan',
     result: 'Your week',
     resultSub: 'Move a session to another day or remove it.',
