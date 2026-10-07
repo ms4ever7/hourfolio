@@ -10,7 +10,7 @@ import type { ConfigContext, ExpoConfig } from 'expo/config';
 const VARIANT = process.env.APP_VARIANT ?? 'development';
 
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const base = config as ExpoConfig;
+  const base = { ...(config as ExpoConfig), extra: { ...config.extra, variant: VARIANT } };
   if (VARIANT === 'development') return base;
   const cloud = { ...base, ios: { ...base.ios, appleTeamId: undefined } };
   if (VARIANT !== 'staging') return cloud;
