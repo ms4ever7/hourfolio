@@ -12,6 +12,7 @@ import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
 import { allowNotifications } from '@/lib/notifications';
 import { usePortfolio } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
+import { SHOW_TEST_TOOLS } from '@/lib/variant';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
 
@@ -114,13 +115,15 @@ export default function Profile() {
 
       <Group title={t('profile.portfolio')}>
         <ListRow left={<RowIcon emoji="➕" />} title={t('pick.custom')} sub={t('custom.label')} onPress={() => router.push({ pathname: '/onboarding/custom', params: { mode: 'add' } })} />
-        <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() =>
-            confirm(() => {
-              loadDemo();
-              s.clearCelebrated();
-            })
-          }
-        />
+        {SHOW_TEST_TOOLS ? (
+          <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() =>
+              confirm(() => {
+                loadDemo();
+                s.clearCelebrated();
+              })
+            }
+          />
+        ) : null}
         <ListRow
           danger
           last
