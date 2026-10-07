@@ -72,6 +72,12 @@
       ],
       "./plugins/without-push-entitlement"
     ],
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/b8387471-8b97-49e7-baf3-32d6ce840a91"
+    },
     "experiments": {
       "typedRoutes": false,
       "reactCompiler": true
