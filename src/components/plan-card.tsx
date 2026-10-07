@@ -128,7 +128,29 @@ export function TodayPlan() {
   const todayKey = dayKey(today);
 
   if (!plan) {
-    if (!assets.some((a) => a.weeklyGoalMinutes)) return null;
+    if (!assets.some((a) => a.weeklyGoalMinutes)) {
+      // The plan spreads weekly goals over the week, so goals come first.
+      return (
+        <Box backgroundColor="accentSoft" borderRadius="xl" borderWidth={1} borderColor="line" padding="m" gap="m">
+          <Box gap="xs">
+            <Text variant="heading" style={{ fontSize: 18 }}>
+              {t('plan.goalsCta')}
+            </Text>
+            <Text variant="small">{t('plan.goalsCtaSub')}</Text>
+          </Box>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => router.push('/goals-edit')}
+            style={({ pressed }) => ({ height: 50, borderRadius: 16, backgroundColor: colors.accent, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: pressed ? 0.85 : 1 })}
+          >
+            <Text variant="bodyStrong" color="onAccent">
+              {t('plan.setGoals')}
+            </Text>
+            <Glyph d={UI_PATHS.arrowRight} size={18} color={colors.onAccent} strokeWidth={2.2} />
+          </Pressable>
+        </Box>
+      );
+    }
     const monday = startOfWeek(today);
     return (
       <Box backgroundColor="accentSoft" borderRadius="xl" borderWidth={1} borderColor="line" padding="m" gap="m">
