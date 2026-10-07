@@ -1,9 +1,9 @@
-import { ColorPicker, Host } from '@expo/ui/swift-ui';
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { Backdrop } from '@/components/backdrop';
+import { HAS_NATIVE_COLOR_PICKER, NativeColorPicker } from '@/components/native-color-picker';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { BackButton, Card, Group, Hours, Screen, Segmented, SwitchRow, TrendChip } from '@/components/ui';
@@ -61,7 +61,6 @@ function Preview() {
 export default function Appearance() {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
-  const { mode } = useAppTheme();
   const season = useSeason();
   const s = useSettingsStore();
   const [icon, setIcon] = useAppIcon();
@@ -117,15 +116,15 @@ export default function Appearance() {
             );
           })}
         </Box>
+        {HAS_NATIVE_COLOR_PICKER ? (
         <Box flexDirection="row" alignItems="center" gap="sm" backgroundColor="card" borderRadius="l" paddingVertical="sm" paddingHorizontal="m" style={{ borderWidth: s.pageColor && !PAGES.includes(s.pageColor) ? 2 : 0, borderColor: colors.ink }}>
           <Box flex={1} gap="xs">
             <Text variant="bodyStrong">{t('appearance.anyColor')}</Text>
             <Text variant="small">{t('appearance.pageNote')}</Text>
           </Box>
-          <Host matchContents colorScheme={mode}>
-            <ColorPicker selection={s.pageColor ?? colors.ground} onSelectionChange={(c) => s.setPageColor(toHex(parseHex(c)))} />
-          </Host>
+          <NativeColorPicker value={s.pageColor ?? colors.ground} onChange={s.setPageColor} />
         </Box>
+        ) : null}
       </Box>
 
       <Box gap="sm">
@@ -149,15 +148,15 @@ export default function Appearance() {
             );
           })}
         </Box>
+        {HAS_NATIVE_COLOR_PICKER ? (
         <Box flexDirection="row" alignItems="center" gap="sm" backgroundColor="card" borderRadius="l" paddingVertical="sm" paddingHorizontal="m" style={{ borderWidth: custom ? 2 : 0, borderColor: colors.ink }}>
           <Box flex={1} gap="xs">
             <Text variant="bodyStrong">{t('appearance.anyColor')}</Text>
             <Text variant="small">{t('appearance.anyColorSub')}</Text>
           </Box>
-          <Host matchContents colorScheme={mode}>
-            <ColorPicker selection={accent} onSelectionChange={(c) => s.setAccent(toHex(parseHex(c)))} />
-          </Host>
+          <NativeColorPicker value={accent} onChange={s.setAccent} />
         </Box>
+        ) : null}
         <Text variant="small">{season && s.seasonal ? t('appearance.seasonalNow', { season: t(`seasons.${season.id}`) }) : t('appearance.accentNote')}</Text>
       </Box>
 

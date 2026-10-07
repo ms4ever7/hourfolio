@@ -1,24 +1,15 @@
-import { DatePicker, Host } from '@expo/ui/swift-ui';
 import { useTranslation } from 'react-i18next';
-import { atMinutes } from '@/domain/day';
 import { useSettingsStore } from '@/store/settings-store';
-import { useAppTheme } from '@/theme/theme';
 import { Box, Text } from './primitives';
+import { TimeField } from './time-field';
 
 function TimeRow({ label, minutes, onChange, last }: { label: string; minutes: number; onChange: (m: number) => void; last?: boolean }) {
-  const { mode } = useAppTheme();
   return (
     <Box flexDirection="row" alignItems="center" gap="sm" paddingVertical="s" paddingHorizontal="m" borderBottomWidth={last ? 0 : 1} borderColor="line" style={{ minHeight: 56 }}>
       <Text variant="bodyStrong" style={{ flex: 1 }}>
         {label}
       </Text>
-      <Host matchContents colorScheme={mode}>
-        <DatePicker
-          displayedComponents={['hourAndMinute']}
-          selection={atMinutes(new Date(), minutes)}
-          onDateChange={(d) => onChange(d.getHours() * 60 + d.getMinutes())}
-        />
-      </Host>
+      <TimeField label={label} minutes={minutes} onChange={onChange} />
     </Box>
   );
 }
