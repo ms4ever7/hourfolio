@@ -16,6 +16,12 @@ Run through mise so Node 22 and bun 1.3.14 are used:
 ## CI
 `.github/workflows/ci.yml` runs typecheck, lint and test on every pull request and on pushes to main (Node and bun versions come from `mise.toml`). It builds nothing; cloud builds are the EAS commands above.
 
+## OTA updates (EAS Update)
+Builds listen on a channel (`staging` or `production`, set per profile in `eas.json`). JS-only changes ship without a new build or App Review:
+- `mise exec -- bun run update:staging` / `update:production`. Always use these scripts: they set `APP_VARIANT`, which `app.config.ts` bakes into the update. A bare `eas update` would publish `variant: development` and show "Load sample data" in production.
+- `runtimeVersion` uses the `fingerprint` policy, so an update only reaches builds with the same native code. Anything native (new Expo package, plugin or `app.json` change) needs a new build first.
+- An update downloads on one launch and applies on the next. Builds made before `expo-updates` was added (staging build 3) never receive updates.
+
 ## Project skills
 - `.claude/skills/new-screen`: how to add or rebuild a screen (routes, building blocks, tokens, copy, checks).
 - `.claude/skills/on-device`: build, install and launch on the real iPhone with Metro.
