@@ -71,8 +71,8 @@
     "test": "jest",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
-    "update:staging": "APP_VARIANT=staging eas-cli update --channel staging --environment preview --auto",
-    "update:production": "APP_VARIANT=production eas-cli update --channel production --environment production --auto"
+    "update:staging": "APP_VARIANT=staging bunx eas-cli update --channel staging --environment preview --auto",
+    "update:production": "APP_VARIANT=production bunx eas-cli update --channel production --environment production --auto"
   },
   "private": true,
   "license": "UNLICENSED",
