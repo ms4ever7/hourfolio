@@ -1,0 +1,6 @@
+# Local Android builds write into node_modules (build output, and a rewritten AndroidManifest.xml).
+# EAS cloud builds start clean, so these must not change the fingerprint. A package upgrade still
+# changes its package.json, so real dependency changes are still caught.
+node_modules/**/android/build/**
+node_modules/**/android/.cxx/**
+node_modules/**/android/src/main/AndroidManifest.xml
