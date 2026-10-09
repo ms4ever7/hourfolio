@@ -164,6 +164,7 @@ People with many parallel pursuits (music, sport, coding, learning, collectingâ€
 - **Goals:** changing weekly goals offers to re-plan the rest of the week. "Re-plan the rest" and "Edit plan" are real buttons (`ActionButton`).
 - **Fixes:** switching goal scenes (rocket and dog) could crash on a `transform` going from unset to set; the tree scene now shows its goal from the start. The crash itself was not reproduced, so this is a likely cause, not a confirmed one.
 - **Not done yet:** the setup screen is long with the icon grid open; paywall and pricing are for later (ideas: Pro for the planner and history, cosmetics, widgets).
+- **Onboarding polish (2026-10-09):** the starting-capital question left the hobby setup (it added little to analytics; `startingMinutes` stays in the model and new hobbies start at 0). The weekly goal now sits right under the hobby header, "Add your own" is the first tile on the pick screen, and the setup footer is its own panel with a short fade above it while there is more below. Tapping the active tab scrolls to the top, and inputs lift above the keyboard.
 
 ### Order and scope
 1. 2.1 Profile + language row + accent and dark mode. This is the base for everything visual.
