@@ -1,5 +1,7 @@
-import type { ReactNode } from 'react';
-import { Pressable, ScrollView, Switch, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { useScrollToTop } from 'expo-router';
+import { useId, useRef, useState, type ReactNode } from 'react';
+import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import { Platform, Pressable, ScrollView, Switch, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { durationParts, formatHours } from '@/domain/format';
@@ -11,8 +13,29 @@ import { Backdrop } from './backdrop';
 import { Glyph, UI_PATHS } from './icons';
 import { Box, Text } from './primitives';
 
-export function Screen({ children, footer, scroll = true }: { children: ReactNode; footer?: ReactNode; scroll?: boolean }) {
+/** Space under the button of a modal or editor footer: the home indicator minus what the button already leaves. */
+// On Android the bottom inset is a real navigation bar (the 3-button bar is ~48 pt), so keep all of it.
+export const footerPad = (insetBottom: number) => (Platform.OS === 'ios' ? Math.max(insetBottom - 12, 8) : insetBottom + 12);
+
+/** `scrollHint` fades the content out above the footer while there is more below the fold, and flashes the scroll bar once. */
+export function Screen({ children, footer, scroll = true, scrollHint }: { children: ReactNode; footer?: ReactNode; scroll?: boolean; scrollHint?: boolean }) {
+  const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
+  const scrollRef = useRef<ScrollView>(null);
+  const [more, setMore] = useState(false);
+  const flashed = useRef(false);
+  const metrics = useRef({ offset: 0, content: 0, view: 0 });
+  // Tapping the focused tab again scrolls back to the top.
+  useScrollToTop(scrollRef);
+  const flashIfMore = () => {
+    const { offset, content, view } = metrics.current;
+    const overflowing = content - view - offset > 48;
+    setMore(overflowing);
+    if (overflowing && scrollHint && !flashed.current && view > 0) {
+      flashed.current = true;
+      scrollRef.current?.flashScrollIndicators();
+    }
+  };
   const content = (
     <Box paddingHorizontal="l" gap="l" style={{ paddingTop: insets.top + 12, paddingBottom: footer ? 24 : insets.bottom + 32 }}>
       {children}
@@ -21,12 +44,96 @@ export function Screen({ children, footer, scroll = true }: { children: ReactNod
   return (
     <Box flex={1} backgroundColor="ground">
       <Backdrop />
-      {scroll ? <ScrollView keyboardShouldPersistTaps="handled">{content}</ScrollView> : content}
+      {scroll ? (
+        <Box flex={1}>
+          <ScrollView
+            ref={scrollRef}
+            keyboardShouldPersistTaps="handled"
+            automaticallyAdjustKeyboardInsets
+            scrollEventThrottle={32}
+            onScroll={
+              scrollHint
+                ? (e) => {
+                    metrics.current.offset = e.nativeEvent.contentOffset.y;
+                    flashIfMore();
+                  }
+                : undefined
+            }
+            onContentSizeChange={
+              scrollHint
+                ? (_w, h) => {
+                    metrics.current.content = h;
+                    flashIfMore();
+                  }
+                : undefined
+            }
+            onLayout={
+              scrollHint
+                ? (e) => {
+                    metrics.current.view = e.nativeEvent.layout.height;
+                    flashIfMore();
+                  }
+                : undefined
+            }
+          >
+            {content}
+          </ScrollView>
+          {scrollHint && more ? <ScrollFade color={colors.ground} /> : null}
+        </Box>
+      ) : (
+        content
+      )}
       {/* Keeps scrolled content from running under the status bar; the backdrop shows through it unchanged. */}
       <Box position="absolute" backgroundColor="ground" overflow="hidden" style={{ top: 0, left: 0, right: 0, height: insets.top }}>
         <Backdrop />
       </Box>
       {footer}
+    </Box>
+  );
+}
+
+function ScrollFade({ color }: { color: string }) {
+  const id = useId().replace(/:/g, '');
+  return (
+    <Box position="absolute" pointerEvents="none" style={{ left: 0, right: 0, bottom: 0, height: 36 }}>
+      <Svg width="100%" height="100%">
+        <Defs>
+          <LinearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+            <Stop offset="0" stopColor={color} stopOpacity={0} />
+            <Stop offset="0.5" stopColor={color} stopOpacity={0.55} />
+            <Stop offset="1" stopColor={color} stopOpacity={1} />
+          </LinearGradient>
+        </Defs>
+        <Rect width="100%" height="100%" fill={`url(#${id})`} />
+      </Svg>
+    </Box>
+  );
+}
+
+/**
+ * The bottom of every onboarding screen. The primary button is always the lowest thing and sits at
+ * the same distance from the bottom, so it never jumps between screens. A link or caption goes
+ * above it (`above`), never below, so screens without one have no empty gap. `panel` gives it its
+ * own surface for screens whose content scrolls under it.
+ */
+export function OnboardingFooter({ primary, above, panel }: { primary: ReactNode; above?: ReactNode; panel?: boolean }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Box
+      paddingHorizontal="l"
+      paddingTop={panel ? 'm' : 's'}
+      gap="xs"
+      backgroundColor={panel ? 'card' : undefined}
+      borderTopWidth={panel ? 1 : undefined}
+      borderColor="track"
+      style={{ paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom - 4, 16) : insets.bottom + 12 }}
+    >
+      {above ? (
+        <Box alignItems="center" justifyContent="center" style={{ minHeight: 36 }}>
+          {above}
+        </Box>
+      ) : null}
+      {primary}
     </Box>
   );
 }

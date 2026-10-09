@@ -5,7 +5,7 @@ import { Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton } from '@/components/ui';
+import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton, footerPad } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { keepDone, planGoals, planWeek, type PlannedSession, type PlanResult } from '@/domain/plan';
 import { RECOVERY_ID } from '@/domain/types';
@@ -202,7 +202,7 @@ export default function PlanWeek() {
         )}
       </ScrollView>
       {hasGoals ? (
-        <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
+        <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
           {result ? <PrimaryButton label={t('plan.save')} onPress={save} disabled={result.sessions.length === 0} /> : <PrimaryButton label={t('plan.make')} onPress={make} />}
         </Box>
       ) : null}

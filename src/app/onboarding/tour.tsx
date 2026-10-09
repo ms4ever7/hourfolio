@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BrandMark } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { InvestmentPreview, PlanPreview, ProgressPreview } from '@/components/tour-previews';
-import { PrimaryButton, TextButton } from '@/components/ui';
+import { OnboardingFooter, PrimaryButton, TextButton } from '@/components/ui';
 import { useAppTheme } from '@/theme/theme';
 
 const SLIDES = [
@@ -63,14 +63,14 @@ export default function Tour() {
         ))}
       </ScrollView>
 
-      <Box paddingHorizontal="l" gap="m" style={{ paddingBottom: insets.bottom + 16, paddingTop: 8 }}>
+      <Box paddingHorizontal="l" style={{ paddingTop: 8, paddingBottom: 16 }}>
         <Box flexDirection="row" justifyContent="center" gap="xs" accessible accessibilityLabel={t('setup.step', { current: index + 1, total: SLIDES.length })}>
           {SLIDES.map((s, i) => (
             <Box key={s.key} width={i === index ? 20 : 6} height={6} borderRadius="pill" style={{ backgroundColor: i === index ? colors.accent : colors.dashed }} />
           ))}
         </Box>
-        <PrimaryButton label={last ? t('tour.start') : t('common.continue')} onPress={next} />
       </Box>
+      <OnboardingFooter primary={<PrimaryButton label={last ? t('tour.start') : t('common.continue')} onPress={next} />} />
     </Box>
   );
 }

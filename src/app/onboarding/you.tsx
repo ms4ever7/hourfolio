@@ -1,11 +1,10 @@
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { Pressable, TextInput } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PresetTile, ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { BackButton, LanguageButton, PrimaryButton, Screen, TextButton } from '@/components/ui';
+import { BackButton, LanguageButton, OnboardingFooter, PrimaryButton, Screen, TextButton } from '@/components/ui';
 import { AVATAR_PRESETS } from '@/domain/avatars';
 import { useOnboardingStore } from '@/store/onboarding-store';
 import { usePortfolioStore } from '@/store/portfolio-store';
@@ -20,7 +19,6 @@ const ACCENTS = [DEFAULT_ACCENT, '#2747D6', '#C2388A', '#E4572E', '#1F8A5B', '#1
 export default function YouStep() {
   const { t } = useTranslation();
   const { colors } = useAppTheme();
-  const insets = useSafeAreaInsets();
   const drafts = useOnboardingStore((s) => s.drafts);
   const setUpPortfolio = usePortfolioStore((s) => s.setUpPortfolio);
   const s = useSettingsStore();
@@ -35,10 +33,7 @@ export default function YouStep() {
   return (
     <Screen
       footer={
-        <Box paddingHorizontal="l" gap="xs" style={{ paddingBottom: insets.bottom + 8 }}>
-          <PrimaryButton label={t('day.open')} icon={UI_PATHS.arrowRight} onPress={finish} />
-          <TextButton label={t('you.skip')} onPress={finish} />
-        </Box>
+        <OnboardingFooter primary={<PrimaryButton label={t('day.open')} icon={UI_PATHS.arrowRight} onPress={finish} />} above={<TextButton label={t('you.skip')} onPress={finish} />} />
       }
     >
       <Box flexDirection="row" alignItems="center" justifyContent="space-between">

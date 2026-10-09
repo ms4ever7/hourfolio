@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PresetTile, ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, RoundButton } from '@/components/ui';
+import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
 import { AVATAR_GROUPS, type Avatar } from '@/domain/avatars';
 import { deletePhoto, pickSquarePhoto } from '@/lib/photos';
 import { useSettingsStore } from '@/store/settings-store';
@@ -68,7 +68,7 @@ export default function AvatarPicker() {
           </Box>
         ))}
       </ScrollView>
-      <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
+      <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
         <PrimaryButton label={t('avatar.done')} onPress={() => router.back()} />
       </Box>
     </Box>

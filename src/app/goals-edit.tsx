@@ -5,7 +5,7 @@ import { Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Duration, PrimaryButton, RoundButton } from '@/components/ui';
+import { Duration, PrimaryButton, RoundButton, footerPad } from '@/components/ui';
 import { DEFAULT_FREE, useWeekPlan } from '@/components/plan-card';
 import { replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
@@ -83,7 +83,7 @@ export default function GoalsEdit() {
           })}
         </Box>
       </ScrollView>
-      <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
+      <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
         <PrimaryButton label={t('goals.done')} onPress={done} />
       </Box>
     </Box>
