@@ -56,7 +56,7 @@ export default function AssetEdit() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 22 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 22 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Text variant="title" accessibilityRole="header">
           {t('assetEdit.title')}
         </Text>
