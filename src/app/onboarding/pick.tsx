@@ -61,7 +61,7 @@ export default function Pick() {
           paddingTop="m"
           borderTopWidth={1}
           borderColor="track"
-          style={{ paddingBottom: insets.bottom + 12 }}
+          style={{ paddingBottom: Math.max(insets.bottom - 8, 12) }}
         >
           <Text variant="label" color="body" style={{ flex: 1 }}>
             {t('pick.selected', { count })}
@@ -145,6 +145,28 @@ export default function Pick() {
       </Box>
 
       <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }}>
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push({ pathname: '/onboarding/custom', params: { name: query } })}
+          style={{ width: '31.4%', height: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center', gap: 8 }}
+        >
+          <Box width={44} height={44} alignItems="center" justifyContent="center" style={{ borderRadius: 14, backgroundColor: colors.track }}>
+            <Glyph d={UI_PATHS.plus} size={22} color={colors.ink} strokeWidth={2} />
+          </Box>
+          <Text variant="small" color="ink" textAlign="center" style={{ fontFamily: 'Inter_600SemiBold' }}>
+            {t('pick.custom')}
+          </Text>
+        </Pressable>
+        {drafts
+          .filter((d) => d.customName)
+          .map((d) => (
+            <Box key={d.customName} width="31.4%" height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
+              <AssetIcon icon={d.icon} color={d.color} size={44} />
+              <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                {d.customName}
+              </Text>
+            </Box>
+          ))}
         {items.map((c) => {
           const on = selected.includes(c.id);
           const p = palette[c.color];
@@ -180,28 +202,6 @@ export default function Pick() {
             </Pressable>
           );
         })}
-        {drafts
-          .filter((d) => d.customName)
-          .map((d) => (
-            <Box key={d.customName} width="31.4%" height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
-              <AssetIcon icon={d.icon} color={d.color} size={44} />
-              <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
-                {d.customName}
-              </Text>
-            </Box>
-          ))}
-        <Pressable
-          accessibilityRole="button"
-          onPress={() => router.push({ pathname: '/onboarding/custom', params: { name: query } })}
-          style={{ width: '31.4%', height: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center', gap: 8 }}
-        >
-          <Box width={44} height={44} alignItems="center" justifyContent="center" style={{ borderRadius: 14, backgroundColor: colors.track }}>
-            <Glyph d={UI_PATHS.plus} size={22} color={colors.ink} strokeWidth={2} />
-          </Box>
-          <Text variant="small" color="ink" textAlign="center" style={{ fontFamily: 'Inter_600SemiBold' }}>
-            {t('pick.custom')}
-          </Text>
-        </Pressable>
       </Box>
       {items.length === 0 ? <Text variant="caption">{t('pick.noMatch')}</Text> : null}
     </Screen>
