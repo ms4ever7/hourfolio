@@ -1,10 +1,9 @@
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 import { AssetIcon, BrandMark } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, Screen } from '@/components/ui';
+import { OnboardingFooter, PrimaryButton, Screen } from '@/components/ui';
 import { formatHours } from '@/domain/format';
 import { useAppTheme } from '@/theme/theme';
 
@@ -43,14 +42,11 @@ function HeroArt() {
 
 export default function Welcome() {
   const { t } = useTranslation();
-  const insets = useSafeAreaInsets();
 
   return (
     <Screen
       footer={
-        <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 16 }}>
-          <PrimaryButton label={t('welcome.cta')} onPress={() => router.push('/onboarding/tour')} />
-        </Box>
+        <OnboardingFooter primary={<PrimaryButton label={t('welcome.cta')} onPress={() => router.push('/onboarding/tour')} />} />
       }
     >
       <Box flexDirection="row" alignItems="center" gap="s">

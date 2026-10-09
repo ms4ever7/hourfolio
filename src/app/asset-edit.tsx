@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FacePicker, ColorPicker } from '@/components/face-picker';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton } from '@/components/ui';
+import { PrimaryButton, footerPad } from '@/components/ui';
 import { addDays, startOfWeek } from '@/domain/dates';
 import { ALL_DAYS } from '@/domain/plan';
 import type { AssetFace } from '@/domain/types';
@@ -117,7 +117,7 @@ export default function AssetEdit() {
           </Box>
         </Box>
       </ScrollView>
-      <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
+      <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
         <PrimaryButton
           label={t('assetEdit.done')}
           onPress={() => {

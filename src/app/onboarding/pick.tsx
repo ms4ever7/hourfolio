@@ -2,10 +2,9 @@ import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, TextInput } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { BackButton, LanguageButton, PrimaryButton, Screen } from '@/components/ui';
+import { BackButton, LanguageButton, OnboardingFooter, PrimaryButton, Screen } from '@/components/ui';
 import { CATALOG, type CatalogItem } from '@/domain/catalog';
 import type { EnergyType } from '@/domain/types';
 import { useOnboardingStore } from '@/store/onboarding-store';
@@ -17,7 +16,6 @@ const FILTERS: Filter[] = ['all', 'body', 'creative', 'mind'];
 export default function Pick() {
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
-  const insets = useSafeAreaInsets();
   const drafts = useOnboardingStore((s) => s.drafts);
   const setDrafts = useOnboardingStore((s) => s.setDrafts);
   const [selected, setSelected] = useState<string[]>(() =>
@@ -52,24 +50,15 @@ export default function Pick() {
   return (
     <Screen
       footer={
-        <Box
-          flexDirection="row"
-          alignItems="center"
-          gap="sm"
-          backgroundColor="card"
-          paddingHorizontal="l"
-          paddingTop="m"
-          borderTopWidth={1}
-          borderColor="track"
-          style={{ paddingBottom: Math.max(insets.bottom - 8, 12) }}
-        >
-          <Text variant="label" color="body" style={{ flex: 1 }}>
-            {t('pick.selected', { count })}
-          </Text>
-          <Box style={{ minWidth: 150 }}>
-            <PrimaryButton label={t('common.continue')} onPress={next} disabled={count === 0} />
-          </Box>
-        </Box>
+        <OnboardingFooter
+          panel
+          primary={<PrimaryButton label={t('common.continue')} onPress={next} disabled={count === 0} />}
+          above={
+            <Text variant="label" color="body">
+              {t('pick.selected', { count })}
+            </Text>
+          }
+        />
       }
     >
       <Box flexDirection="row" alignItems="center" justifyContent="space-between">

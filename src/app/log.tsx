@@ -6,7 +6,7 @@ import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, RoundButton, Segmented } from '@/components/ui';
+import { PrimaryButton, RoundButton, Segmented, footerPad } from '@/components/ui';
 import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
@@ -180,7 +180,7 @@ export default function LogSheet() {
           />
         </Box>
       </ScrollView>
-      <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
+      <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
         <PrimaryButton label={t('log.save', { duration: durationLabel })} onPress={save} />
       </Box>
     </Box>

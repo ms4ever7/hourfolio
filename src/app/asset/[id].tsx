@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WeeklyBars } from '@/components/charts';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { BackButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader } from '@/components/ui';
+import { BackButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, footerPad } from '@/components/ui';
 import { addDays, dayKey, daysBetween, parseDay, startOfMonth, startOfWeek } from '@/domain/dates';
 import { formatHours, formatHoursDelta } from '@/domain/format';
 import { capitalMinutes, momentum, MOMENTUM_FLOOR, nextMilestone, trend, weeksTo } from '@/domain/growth';
@@ -91,7 +91,7 @@ export default function AssetScreen() {
   return (
     <Screen
       footer={
-        <Box paddingHorizontal="l" style={{ paddingBottom: insets.bottom + 12, paddingTop: 8 }}>
+        <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
           <PrimaryButton dark icon={UI_PATHS.plus} label={t('asset.log')} onPress={() => router.push({ pathname: '/log', params: { assetId: asset.id } })} />
         </Box>
       }

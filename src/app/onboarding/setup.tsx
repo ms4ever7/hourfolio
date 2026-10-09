@@ -1,11 +1,10 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FacePicker, ColorPicker } from '@/components/face-picker';
 import { AssetIcon, UI_PATHS } from '@/components/icons';
 import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Box, Text } from '@/components/primitives';
-import { BackButton, Card, Duration, LanguageButton, OptionButton, PrimaryButton, RoundButton, Screen, Segmented, TextButton } from '@/components/ui';
+import { BackButton, Card, Duration, LanguageButton, OnboardingFooter, OptionButton, PrimaryButton, RoundButton, Screen, Segmented, TextButton } from '@/components/ui';
 import { ENERGY_TYPES, RHYTHMS, type AssetFace } from '@/domain/types';
 import { useSeason } from '@/lib/appearance';
 import { useAssetName } from '@/lib/labels';
@@ -20,7 +19,6 @@ const GOAL_MAX = 40 * 60;
 export default function Setup() {
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
-  const insets = useSafeAreaInsets();
   const assetName = useAssetName();
   const step = Number(useLocalSearchParams<{ step: string }>().step ?? 0);
   const drafts = useOnboardingStore((s) => s.drafts);
@@ -45,14 +43,17 @@ export default function Setup() {
     <Screen
       scrollHint
       footer={
-        <Box paddingHorizontal="l" paddingTop="m" gap="xs" backgroundColor="card" borderTopWidth={1} borderColor="track" style={{ paddingBottom: Math.max(insets.bottom - 12, 8) }}>
-          <PrimaryButton
-            label={isLast ? t('common.continue') : t('setup.next', { name: assetName(drafts[step + 1]) })}
-            icon={UI_PATHS.arrowRight}
-            onPress={() => (isLast ? finish() : router.push({ pathname: '/onboarding/setup', params: { step: String(step + 1) } }))}
-          />
-          {!isLast ? <TextButton label={t('setup.later')} onPress={finish} /> : null}
-        </Box>
+        <OnboardingFooter
+          panel
+          primary={
+            <PrimaryButton
+              label={isLast ? t('common.continue') : t('setup.next', { name: assetName(drafts[step + 1]) })}
+              icon={UI_PATHS.arrowRight}
+              onPress={() => (isLast ? finish() : router.push({ pathname: '/onboarding/setup', params: { step: String(step + 1) } }))}
+            />
+          }
+          above={!isLast ? <TextButton label={t('setup.later')} onPress={finish} /> : undefined}
+        />
       }
     >
       <Box flexDirection="row" alignItems="center" justifyContent="space-between" gap="s">

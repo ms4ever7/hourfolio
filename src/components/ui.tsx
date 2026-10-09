@@ -1,7 +1,7 @@
 import { useScrollToTop } from 'expo-router';
 import { useId, useRef, useState, type ReactNode } from 'react';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
-import { Pressable, ScrollView, Switch, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
+import { Platform, Pressable, ScrollView, Switch, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { durationParts, formatHours } from '@/domain/format';
@@ -12,6 +12,10 @@ import { useAppTheme, type ThemeColor } from '@/theme/theme';
 import { Backdrop } from './backdrop';
 import { Glyph, UI_PATHS } from './icons';
 import { Box, Text } from './primitives';
+
+/** Space under the button of a modal or editor footer: the home indicator minus what the button already leaves. */
+// On Android the bottom inset is a real navigation bar (the 3-button bar is ~48 pt), so keep all of it.
+export const footerPad = (insetBottom: number) => (Platform.OS === 'ios' ? Math.max(insetBottom - 12, 8) : insetBottom + 12);
 
 /** `scrollHint` fades the content out above the footer while there is more below the fold, and flashes the scroll bar once. */
 export function Screen({ children, footer, scroll = true, scrollHint }: { children: ReactNode; footer?: ReactNode; scroll?: boolean; scrollHint?: boolean }) {
@@ -102,6 +106,34 @@ function ScrollFade({ color }: { color: string }) {
         </Defs>
         <Rect width="100%" height="100%" fill={`url(#${id})`} />
       </Svg>
+    </Box>
+  );
+}
+
+/**
+ * The bottom of every onboarding screen. The primary button is always the lowest thing and sits at
+ * the same distance from the bottom, so it never jumps between screens. A link or caption goes
+ * above it (`above`), never below, so screens without one have no empty gap. `panel` gives it its
+ * own surface for screens whose content scrolls under it.
+ */
+export function OnboardingFooter({ primary, above, panel }: { primary: ReactNode; above?: ReactNode; panel?: boolean }) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Box
+      paddingHorizontal="l"
+      paddingTop={panel ? 'm' : 's'}
+      gap="xs"
+      backgroundColor={panel ? 'card' : undefined}
+      borderTopWidth={panel ? 1 : undefined}
+      borderColor="track"
+      style={{ paddingBottom: Platform.OS === 'ios' ? Math.max(insets.bottom - 4, 16) : insets.bottom + 12 }}
+    >
+      {above ? (
+        <Box alignItems="center" justifyContent="center" style={{ minHeight: 36 }}>
+          {above}
+        </Box>
+      ) : null}
+      {primary}
     </Box>
   );
 }

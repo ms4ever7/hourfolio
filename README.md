@@ -31,7 +31,7 @@ Hourfolio does the opposite. It shows how your time is spread across everything 
 
 | | |
 |---|---|
-| **Capital** | Every hour you have put into a hobby, including the years before the app. It never goes down. |
+| **Capital** | Every hour you have put into a hobby. It never goes down. |
 | **Momentum** | Recent activity on a 0–100 scale. It fades during a break but never drops below 20, and it decays at each hobby's own rhythm (daily, a few times a week, weekly, whenever). |
 | **Recovery** | In every portfolio. Rest days show up as their own thing, not as gaps. |
 | **Energy balance** | Your time split into body, creative, mind and recovery. |
@@ -113,7 +113,7 @@ Holidays dress the app up. From mid-October the accent turns pumpkin, the scenes
 ### Onboarding and gentle reminders
 0. Three quick looks at the app after a few months of use: plan your week, see your progress, see your investment. Swipe through or skip.
 1. Pick from 35 activities or add your own.
-2. Tune each one: a picture (an icon from the app, an emoji or your own photo), color, how often you do it, starting capital (a quick pick or any number of hours) and an optional weekly goal in half-hour steps, with a live preview of its scene.
+2. Tune each one: an optional weekly goal first (half-hour steps, with a live preview of its scene), then a picture (an icon from the app, an emoji or your own photo), color, energy type and how often you do it. "Set up the rest later" skips to the next step. Every hobby starts at zero hours.
 3. Tell the app when your day starts and ends.
 4. Add a name, picture and color (optional).
 
@@ -132,7 +132,7 @@ The app starts in your phone's language (English if it isn't one of the three) a
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/setup.png" width="180" alt="Setting up a hobby: picture, color, rhythm and starting capital">
+  <img src="docs/screenshots/setup.png" width="180" alt="Setting up a hobby: picture, color, energy type and rhythm">
   <img src="docs/screenshots/setup-goal.png" width="180" alt="Setting a weekly goal and choosing the tree scene">
   <img src="docs/screenshots/day.png" width="180" alt="Your day: wake and bed times, reminders">
   <img src="docs/screenshots/you.png" width="180" alt="Make it yours: name, picture, color">
