@@ -25,6 +25,7 @@ Builds listen on a channel (`staging` or `production`, set per profile in `eas.j
 ## Project skills
 - `.claude/skills/new-screen`: how to add or rebuild a screen (routes, building blocks, tokens, copy, checks).
 - `.claude/skills/on-device`: build, install and launch on the real iPhone with Metro.
+- `.claude/skills/ota-update`: publish a JS-only update to staging and/or production and say how to check it.
 - `.claude/skills/create-pr`: checks, commit style and PR description for a PR to main.
 
 ## Layout
