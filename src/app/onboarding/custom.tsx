@@ -8,12 +8,11 @@ import { BackButton, Card, LanguageButton, PrimaryButton, Screen } from '@/compo
 import { suggestSetup } from '@/domain/suggest';
 import { en } from '@/i18n/locales/en';
 import { useOnboardingStore } from '@/store/onboarding-store';
-import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
 
 /**
- * Add a custom asset. During onboarding (`mode` unset) it joins the picks;
- * from the app (`mode=add`) it goes straight into the portfolio.
+ * Add a custom asset to the picks. Both onboarding and adding from the app
+ * then go on to set it up; `mode=add` only hides the language button.
  */
 export default function Custom() {
   const { t } = useTranslation();
@@ -21,7 +20,6 @@ export default function Custom() {
   const params = useLocalSearchParams<{ name?: string; mode?: string }>();
   const [name, setName] = useState(params.name ?? '');
   const addDraft = useOnboardingStore((s) => s.addDraft);
-  const addAsset = usePortfolioStore((s) => s.addAsset);
 
   const catalogNames = useMemo(
     () => Object.fromEntries(Object.keys(en.catalog).map((id) => [id, t(`catalog.${id}`)])),
@@ -32,13 +30,8 @@ export default function Custom() {
 
   const use = () => {
     const asset = { customName: trimmed, ...s, startingMinutes: 0 };
-    if (params.mode === 'add') {
-      const id = addAsset(asset);
-      router.replace({ pathname: '/asset/[id]', params: { id } });
-    } else {
-      addDraft(asset);
-      router.back();
-    }
+    addDraft(asset);
+    router.back();
   };
 
   const rows: [string, string][] = [

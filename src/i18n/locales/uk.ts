@@ -95,6 +95,7 @@ export const uk: Translations = {
   },
   setup: {
     step: 'Крок 2 з 2 · актив {{current}} з {{total}}',
+    stepAdd: 'Додавання · актив {{current}} з {{total}}',
     tagline: 'Налаштуй під те, як ти справді цим займаєшся.',
     color: 'Колір',
     energy: 'Тип енергії',
@@ -116,6 +117,21 @@ export const uk: Translations = {
     suggested: 'Пропоноване налаштування',
     iconNote: 'Іконку й колір підібрано',
     use: 'Підходить',
+  },
+  goalField: {
+    perWeek: 'На тиждень',
+    perDay: 'На день',
+    aWeek: 'на тиждень',
+  },
+  addAsset: {
+    title: 'Додати до портфеля',
+    sub: 'Обери зі списку або додай своє.',
+    link: 'Додати',
+    added: 'Додано',
+    add_one: 'Далі ({{count}})',
+    add_few: 'Далі ({{count}})',
+    add_many: 'Далі ({{count}})',
+    add_other: 'Далі ({{count}})',
   },
   greeting: { morning: 'Доброго ранку', afternoon: 'Добрий день', evening: 'Добрий вечір', named: '{{greeting}}, {{name}}' },
   portfolio: {

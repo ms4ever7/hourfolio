@@ -156,7 +156,16 @@ export default function Today() {
       ) : null}
 
       <Box gap="sm">
-        <SectionHeader title={t('portfolio.assets')} />
+        <SectionHeader
+          title={t('portfolio.assets')}
+          right={
+            <Pressable accessibilityRole="button" accessibilityLabel={t('addAsset.title')} onPress={() => router.push('/add-asset')} hitSlop={10} testID="add-asset">
+              <Text variant="label" color="accentInk" style={{ fontFamily: 'Inter_600SemiBold' }}>
+                {`+ ${t('addAsset.link')}`}
+              </Text>
+            </Pressable>
+          }
+        />
         <Box backgroundColor="card" borderRadius="xl" paddingVertical="xs">
           {d.holdings.map((h, i) => (
             <Pressable

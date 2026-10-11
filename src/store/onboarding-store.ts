@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { applyGoalPatch } from '@/domain/goals';
 import { deletePhoto } from '@/lib/photos';
 import type { NewAsset } from './portfolio-store';
 
@@ -20,6 +21,6 @@ export const useOnboardingStore = create<OnboardingState>()((set) => ({
       return { drafts };
     }),
   updateDraft: (index, patch) =>
-    set((s) => ({ drafts: s.drafts.map((d, i) => (i === index ? { ...d, ...patch } : d)) })),
+    set((s) => ({ drafts: s.drafts.map((d, i) => (i === index ? applyGoalPatch(d, patch) : d)) })),
   addDraft: (draft) => set((s) => ({ drafts: [...s.drafts, draft] })),
 }));

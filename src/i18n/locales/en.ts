@@ -91,6 +91,7 @@ export const en = {
   },
   setup: {
     step: 'Step 2 of 2 · asset {{current}} of {{total}}',
+    stepAdd: 'Adding · asset {{current}} of {{total}}',
     tagline: 'Tune it to how you actually do it.',
     color: 'Color',
     energy: 'Energy type',
@@ -112,6 +113,19 @@ export const en = {
     suggested: 'Suggested setup',
     iconNote: 'Icon and color picked for you',
     use: 'Looks right',
+  },
+  goalField: {
+    perWeek: 'Per week',
+    perDay: 'Per day',
+    aWeek: 'a week',
+  },
+  addAsset: {
+    title: 'Add to your portfolio',
+    sub: 'Pick from the list or add your own.',
+    link: 'Add',
+    added: 'Added',
+    add_one: 'Continue ({{count}})',
+    add_other: 'Continue ({{count}})',
   },
   greeting: { morning: 'Good morning', afternoon: 'Good afternoon', evening: 'Good evening', named: '{{greeting}}, {{name}}' },
   portfolio: {
