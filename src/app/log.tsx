@@ -35,7 +35,9 @@ export default function LogSheet() {
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
   const [minutes, setMinutes] = useState(plannedMinutes > 0 && plannedMinutes <= 24 * 60 ? Math.max(5, Math.ceil(plannedMinutes / 5) * 5) : 60);
   const [when, setWhen] = useState<string>(params.day && days.includes(params.day) ? params.day : days[0]);
+  const [picking, setPicking] = useState(false);
   const [note, setNote] = useState('');
+  const dayLabel = (d: string) => (d === days[1] ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(d)));
 
   const others = assets.filter((a) => a.id !== RECOVERY_ID);
   const restOn = assetId === RECOVERY_ID;
@@ -163,25 +165,44 @@ export default function LogSheet() {
 
         <Box gap="s">
           <Text variant="bodyStrong">{t('log.when')}</Text>
-          <Box flexDirection="row" flexWrap="wrap" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('log.when')}>
-            {days.map((d, i) => {
-              const on = d === when;
-              const label = i === 0 ? t('log.today') : i === 1 ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(d));
-              return (
-                <Pressable
-                  key={d}
-                  accessibilityRole="radio"
-                  accessibilityState={{ checked: on }}
-                  onPress={() => setWhen(d)}
-                  style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.inverse : colors.card, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
-                >
-                  <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
-                    {label}
-                  </Text>
-                </Pressable>
-              );
-            })}
+          <Box flexDirection="row" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('log.when')}>
+            {[
+              { key: 'today', label: t('log.today'), on: when === days[0], onPress: () => { setWhen(days[0]); setPicking(false); } },
+              { key: 'other', label: when !== days[0] ? dayLabel(when) : t('log.chooseDay'), on: when !== days[0], onPress: () => setPicking((v) => !v) },
+            ].map((o) => (
+              <Pressable
+                key={o.key}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: o.on, expanded: o.key === 'other' ? picking : undefined }}
+                onPress={o.onPress}
+                style={{ flex: 1, height: 44, paddingHorizontal: 14, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: o.on ? colors.inverse : colors.card, borderWidth: 1, borderColor: o.on ? colors.inverse : colors.border }}
+              >
+                <Text variant="label" color={o.on ? 'onInverse' : 'ink'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                  {o.label}
+                </Text>
+              </Pressable>
+            ))}
           </Box>
+          {picking ? (
+            <Box flexDirection="row" flexWrap="wrap" gap="s">
+              {days.slice(1).map((d) => {
+                const on = d === when;
+                return (
+                  <Pressable
+                    key={d}
+                    accessibilityRole="radio"
+                    accessibilityState={{ checked: on }}
+                    onPress={() => { setWhen(d); setPicking(false); }}
+                    style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.inverse : colors.card, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
+                  >
+                    <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                      {dayLabel(d)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </Box>
+          ) : null}
         </Box>
 
         <Box gap="s">

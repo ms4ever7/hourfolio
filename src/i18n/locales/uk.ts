@@ -218,6 +218,7 @@ export const uk: Translations = {
     when: 'Коли?',
     today: 'Сьогодні',
     yesterday: 'Вчора',
+    chooseDay: 'Обрати день',
     note: 'Нотатка',
     notePlaceholder: 'Що саме? Наприклад, баре-акорди',
     save: 'Інвестувати {{duration}}',

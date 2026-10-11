@@ -202,6 +202,7 @@ export const en = {
     when: 'When?',
     today: 'Today',
     yesterday: 'Yesterday',
+    chooseDay: 'Choose a day',
     note: 'Note',
     notePlaceholder: 'What did you work on?',
     save: 'Invest {{duration}}',

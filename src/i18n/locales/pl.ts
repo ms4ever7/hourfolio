@@ -218,6 +218,7 @@ export const pl: Translations = {
     when: 'Kiedy?',
     today: 'Dziś',
     yesterday: 'Wczoraj',
+    chooseDay: 'Wybierz dzień',
     note: 'Notatka',
     notePlaceholder: 'Co dokładnie? Np. akordy barré',
     save: 'Zainwestuj {{duration}}',
