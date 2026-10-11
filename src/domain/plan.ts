@@ -239,14 +239,14 @@ export function planWeek({ weekFrom, goals, free, fromDay, kept = [] }: PlanInpu
   return { sessions, shortBy };
 }
 
-/** The weekly goals of the portfolio as planner input, minus what is already logged this week. */
+/** The weekly goals of the portfolio as planner input, minus what is already logged this week. A per-day goal plans one session of that length on each day. */
 export function goalsFromAssets(assets: Asset[], logs: LogEntry[], today: Date): PlanGoal[] {
   const week = weekRange(today);
   const goals: PlanGoal[] = [];
   for (const a of assets) {
     if (!a.weeklyGoalMinutes) continue;
     const minutes = a.weeklyGoalMinutes - sumMinutes(logs, week, a.id);
-    if (minutes > 0) goals.push({ assetId: a.id, minutes, session: a.sessionMinutes ?? defaultSessionRange(a), days: a.planDays ?? ALL_DAYS });
+    if (minutes > 0) goals.push({ assetId: a.id, minutes, session: a.dailyGoalMinutes ? { min: a.dailyGoalMinutes, max: a.dailyGoalMinutes } : (a.sessionMinutes ?? defaultSessionRange(a)), days: a.planDays ?? ALL_DAYS });
   }
   return goals;
 }

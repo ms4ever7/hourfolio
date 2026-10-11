@@ -223,6 +223,10 @@ export const uk: Translations = {
     notePlaceholder: 'Що саме? Наприклад, баре-акорди',
     save: 'Інвестувати {{duration}}',
   },
+  dayPicker: {
+    prevMonth: 'Попередній місяць',
+    nextMonth: 'Наступний місяць',
+  },
   settings: {
     title: 'Налаштування',
     language: 'Мова',

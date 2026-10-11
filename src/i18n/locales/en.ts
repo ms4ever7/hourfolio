@@ -207,6 +207,10 @@ export const en = {
     notePlaceholder: 'What did you work on?',
     save: 'Invest {{duration}}',
   },
+  dayPicker: {
+    prevMonth: 'Previous month',
+    nextMonth: 'Next month',
+  },
   settings: {
     title: 'Settings',
     language: 'Language',

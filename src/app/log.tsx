@@ -35,7 +35,9 @@ export default function LogSheet() {
   const logTime = usePortfolioStore((s) => s.logTime);
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
   const [minutes, setMinutes] = useState(plannedMinutes > 0 && plannedMinutes <= 24 * 60 ? Math.max(5, Math.ceil(plannedMinutes / 5) * 5) : 60);
-  const [when, setWhen] = useState<string>(params.day && days.includes(params.day) ? params.day : days[0]);
+  // null means "today", resolved when saving, so a sheet left open past midnight still logs to the day it is then.
+  const [picked, setPicked] = useState<string | null>(params.day && params.day !== days[0] && days.includes(params.day) ? params.day : null);
+  const when = picked ?? days[0];
   const [picking, setPicking] = useState(false);
   const [note, setNote] = useState('');
   const dayLabel = (d: string) => (d === days[1] ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, d >= days[6] ? { weekday: 'short', day: 'numeric' } : { day: 'numeric', month: 'short' }).format(parseDay(d)));
@@ -47,7 +49,7 @@ export default function LogSheet() {
     .join(' ');
 
   const save = () => {
-    const entry = { assetId, minutes, day: when, note: note.trim() || undefined };
+    const entry = { assetId, minutes, day: picked ?? dayKey(new Date()), note: note.trim() || undefined };
     const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
     logTime(entry);
     if (met) {
@@ -168,7 +170,7 @@ export default function LogSheet() {
           <Text variant="bodyStrong">{t('log.when')}</Text>
           <Box flexDirection="row" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('log.when')}>
             {[
-              { key: 'today', label: t('log.today'), on: when === days[0], onPress: () => { setWhen(days[0]); setPicking(false); } },
+              { key: 'today', label: t('log.today'), on: when === days[0], onPress: () => { setPicked(null); setPicking(false); } },
               { key: 'other', label: when !== days[0] ? dayLabel(when) : t('log.chooseDay'), on: when !== days[0], onPress: () => setPicking(true) },
             ].map((o) => (
               <Pressable
@@ -184,7 +186,7 @@ export default function LogSheet() {
               </Pressable>
             ))}
           </Box>
-          <DayPicker visible={picking} value={when} max={days[0]} onPick={(d) => { setWhen(d); setPicking(false); }} onClose={() => setPicking(false)} />
+          <DayPicker visible={picking} value={when} max={days[0]} onPick={(d) => { setPicked(d === days[0] ? null : d); setPicking(false); }} onClose={() => setPicking(false)} />
         </Box>
 
         <Box gap="s">

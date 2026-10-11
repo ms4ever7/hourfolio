@@ -223,6 +223,10 @@ export const pl: Translations = {
     notePlaceholder: 'Co dokładnie? Np. akordy barré',
     save: 'Zainwestuj {{duration}}',
   },
+  dayPicker: {
+    prevMonth: 'Poprzedni miesiąc',
+    nextMonth: 'Następny miesiąc',
+  },
   settings: {
     title: 'Ustawienia',
     language: 'Język',

@@ -29,7 +29,7 @@ export function DayPicker({ visible, value, max, onPick, onClose }: { visible: b
       <Pressable accessibilityLabel={t('common.cancel')} onPress={onClose} style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} />
       <Box backgroundColor="ground" style={{ padding: 20, paddingBottom: insets.bottom + 20, borderTopLeftRadius: 24, borderTopRightRadius: 24, gap: 12 }}>
         <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={() => shift(-1)} hitSlop={10} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('dayPicker.prevMonth')} onPress={() => shift(-1)} hitSlop={10} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
             <Box style={{ transform: [{ rotate: '180deg' }] }}>
               <Glyph d={UI_PATHS.chevronRight} size={20} color={colors.ink} strokeWidth={2.4} />
             </Box>
@@ -37,7 +37,7 @@ export function DayPicker({ visible, value, max, onPick, onClose }: { visible: b
           <Text variant="heading" accessibilityRole="header" style={{ textTransform: 'capitalize' }}>
             {title}
           </Text>
-          <Pressable accessibilityRole="button" accessibilityLabel={t('common.continue')} disabled={atMax} onPress={() => shift(1)} hitSlop={10} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: atMax ? 0.3 : 1 }}>
+          <Pressable accessibilityRole="button" accessibilityLabel={t('dayPicker.nextMonth')} disabled={atMax} onPress={() => shift(1)} hitSlop={10} style={{ width: 44, height: 44, alignItems: 'center', justifyContent: 'center', opacity: atMax ? 0.3 : 1 }}>
             <Glyph d={UI_PATHS.chevronRight} size={20} color={colors.ink} strokeWidth={2.4} />
           </Pressable>
         </Box>

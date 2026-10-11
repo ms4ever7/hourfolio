@@ -1,4 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
+import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FacePicker, ColorPicker } from '@/components/face-picker';
 import { AssetIcon, UI_PATHS } from '@/components/icons';
@@ -29,11 +30,15 @@ export default function Setup() {
   const scene = useSettingsStore((s) => s.goalScene);
   const season = useSeason();
 
+  const finished = useRef(false);
   const finish = () => {
     if (!adding) {
       router.push('/onboarding/day');
       return;
     }
+    // A double tap must not add every pick twice.
+    if (finished.current) return;
+    finished.current = true;
     // Adding from the app: the picks go straight into the portfolio, and the app carries on.
     for (const d of drafts) addAsset(d);
     // Not setDrafts: it deletes photos no draft references, and these now belong to the portfolio.

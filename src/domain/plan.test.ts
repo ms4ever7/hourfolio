@@ -117,6 +117,14 @@ describe('plans over a week', () => {
     ]);
   });
 
+  it('plans a per-day goal as one session of that length per day', () => {
+    const a = asset('d', 0, { weeklyGoalMinutes: 140, dailyGoalMinutes: 20 });
+    const [goal] = goalsFromAssets([a], [], parseDay('2026-09-30'));
+    expect(goal.session).toEqual({ min: 20, max: 20 });
+    const { sessions } = planWeek({ weekFrom: '2026-09-28', goals: [goal], free });
+    expect(sessions.map((x) => x.minutes)).toEqual([20, 20, 20, 20, 20, 20, 20]);
+  });
+
   it('drops goals that are already met', () => {
     expect(goalsFromAssets([asset('g', 1)], [log('g', '2026-09-29', 60)], parseDay('2026-09-30'))).toEqual([]);
   });

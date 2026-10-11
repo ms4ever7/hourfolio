@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Text } from '@/components/primitives';
 import { Duration, RoundButton, Segmented } from '@/components/ui';
@@ -19,6 +19,8 @@ export function GoalField({ asset, onChange, label }: { asset: GoalAsset; onChan
   // Kept in state so a per-day goal stepped down to off stays on "per day".
   const [unit, setUnit] = useState<Unit>(daily > 0 ? 'day' : 'week');
   const value = unit === 'day' ? daily : weekly;
+  // The weekly goal as it was when switching to per day: toggling back untouched must not drift by the 5-minute rounding.
+  const before = useRef<{ weekly: number; daily: number } | null>(null);
 
   const set = (minutes: number) => {
     if (unit === 'day') onChange(minutes > 0 ? { dailyGoalMinutes: minutes } : { dailyGoalMinutes: undefined, weeklyGoalMinutes: undefined });
@@ -29,8 +31,14 @@ export function GoalField({ asset, onChange, label }: { asset: GoalAsset; onChan
   const switchTo = (next: Unit) => {
     if (next === unit) return;
     setUnit(next);
-    if (next === 'day') onChange(weekly > 0 ? { dailyGoalMinutes: dailyFromWeekly(weekly, asset) } : {});
-    else onChange({ weeklyGoalMinutes: weekly > 0 ? weekly : undefined });
+    if (next === 'day') {
+      const nextDaily = weekly > 0 ? dailyFromWeekly(weekly, asset) : 0;
+      before.current = weekly > 0 ? { weekly, daily: nextDaily } : null;
+      onChange(weekly > 0 ? { dailyGoalMinutes: nextDaily } : {});
+    } else {
+      const restore = before.current && before.current.daily === daily ? before.current.weekly : weekly;
+      onChange({ weeklyGoalMinutes: restore > 0 ? restore : undefined });
+    }
   };
 
   return (
