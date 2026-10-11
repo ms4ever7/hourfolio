@@ -6,7 +6,7 @@ import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, RoundButton, Segmented, footerPad } from '@/components/ui';
+import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
 import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
@@ -27,13 +27,14 @@ export default function LogSheet() {
   const today = useToday();
   // A planned session passes its own day and what is left of it, so logging it ticks it off.
   const params = useLocalSearchParams<{ assetId?: string; day?: string; minutes?: string }>();
-  const earlierDay = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) && params.day < dayKey(addDays(today, -1)) && params.day >= dayKey(addDays(today, -6)) ? params.day : null;
+  // The last seven days can be logged, so a whole week's sessions can be filled in.
+  const days = Array.from({ length: 7 }, (_, i) => dayKey(addDays(today, -i)));
   const plannedMinutes = Number(params.minutes);
   const assets = usePortfolioStore((s) => s.assets);
   const logTime = usePortfolioStore((s) => s.logTime);
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
   const [minutes, setMinutes] = useState(plannedMinutes > 0 && plannedMinutes <= 24 * 60 ? Math.max(5, Math.ceil(plannedMinutes / 5) * 5) : 60);
-  const [when, setWhen] = useState<string>(earlierDay ?? (params.day === dayKey(addDays(today, -1)) ? 'yesterday' : 'today'));
+  const [when, setWhen] = useState<string>(params.day && days.includes(params.day) ? params.day : days[0]);
   const [note, setNote] = useState('');
 
   const others = assets.filter((a) => a.id !== RECOVERY_ID);
@@ -43,7 +44,7 @@ export default function LogSheet() {
     .join(' ');
 
   const save = () => {
-    const entry = { assetId, minutes, day: when === 'today' ? dayKey(new Date()) : when === 'yesterday' ? dayKey(addDays(new Date(), -1)) : when, note: note.trim() || undefined };
+    const entry = { assetId, minutes, day: when, note: note.trim() || undefined };
     const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
     logTime(entry);
     if (met) {
@@ -162,16 +163,25 @@ export default function LogSheet() {
 
         <Box gap="s">
           <Text variant="bodyStrong">{t('log.when')}</Text>
-          <Segmented
-            label={t('log.when')}
-            value={when}
-            onChange={setWhen}
-            options={[
-              { value: 'today', label: t('log.today') },
-              { value: 'yesterday', label: t('log.yesterday') },
-              ...(earlierDay ? [{ value: earlierDay, label: new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(earlierDay)) }] : []),
-            ]}
-          />
+          <Box flexDirection="row" flexWrap="wrap" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('log.when')}>
+            {days.map((d, i) => {
+              const on = d === when;
+              const label = i === 0 ? t('log.today') : i === 1 ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(d));
+              return (
+                <Pressable
+                  key={d}
+                  accessibilityRole="radio"
+                  accessibilityState={{ checked: on }}
+                  onPress={() => setWhen(d)}
+                  style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.inverse : colors.card, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
+                >
+                  <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                    {label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </Box>
         </Box>
 
         <Box gap="s">
