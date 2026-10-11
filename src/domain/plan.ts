@@ -1,4 +1,4 @@
-import { addDays, dayKey, parseDay } from './dates';
+import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from './dates';
 import { atMinutes } from './day';
 import { newId } from './ids';
 import { weekRange } from './goals';
@@ -23,6 +23,24 @@ export interface WeekPlan {
   free?: number[];
   /** Minutes of recovery wanted that week, so re-planning keeps them. */
   rest?: number;
+}
+
+/** From Friday the next week is worth planning. */
+const PLAN_AHEAD_FROM = 4;
+
+/**
+ * The plans around `today`. `shown` is the one to display: this week's, or on a
+ * Sunday with nothing left to show of it, next week's. `next` is next week's plan
+ * whether or not it is shown, and `askNext` says when to offer planning it.
+ */
+export function plansAround(plans: WeekPlan[], today: Date): { shown?: WeekPlan; next?: WeekPlan; askNext: boolean } {
+  const withSessions = (from: string) => plans.find((p) => p.weekFrom === from && p.sessions.length > 0);
+  const monday = startOfWeek(today);
+  const current = withSessions(dayKey(monday));
+  const next = withSessions(dayKey(addDays(monday, 7)));
+  const day = weekdayMonFirst(today);
+  const shown = current ?? (day === 6 ? next : undefined);
+  return { shown, next, askNext: day >= PLAN_AHEAD_FROM && shown !== undefined && shown !== next };
 }
 
 /** Shortest and longest a single session of an asset should be, in minutes. */

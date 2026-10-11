@@ -1,5 +1,5 @@
 import { daysBetween, parseDay } from './dates';
-import { ALL_DAYS, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, planGoals, planReminders, planWeek, replanWeek, sessionsOn, type PlanGoal, type WeekPlan } from './plan';
+import { ALL_DAYS, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, planGoals, planReminders, plansAround, planWeek, replanWeek, sessionsOn, type PlanGoal, type WeekPlan } from './plan';
 import type { Asset, LogEntry } from './types';
 
 const WEEK = '2026-09-28'; // a Monday
@@ -228,5 +228,32 @@ describe('planReminders', () => {
   it('keeps the reminder inside a short waking day', () => {
     const r = planReminders([plan], [], morning, 6 * 60, 18 * 60);
     expect(r[0].at).toEqual(new Date(2026, 8, 29, 16, 30));
+  });
+});
+
+describe('plansAround', () => {
+  const session = (day: string) => ({ id: day, assetId: 'a', day, minutes: 30 });
+  const thisWeek: WeekPlan = { weekFrom: WEEK, sessions: [session('2026-09-30')] };
+  const nextWeek: WeekPlan = { weekFrom: '2026-10-05', sessions: [session('2026-10-06')] };
+  const at = (day: string) => parseDay(day);
+
+  it('shows this week and offers the next one from Friday', () => {
+    expect(plansAround([thisWeek], at('2026-10-01')).askNext).toBe(false);
+    expect(plansAround([thisWeek], at('2026-10-02'))).toMatchObject({ shown: thisWeek, next: undefined, askNext: true });
+    expect(plansAround([thisWeek], at('2026-10-04')).askNext).toBe(true);
+  });
+
+  it('keeps showing what is left of this week on a Sunday, next to a plan for the next one', () => {
+    const r = plansAround([thisWeek, nextWeek], at('2026-10-04'));
+    expect(r).toMatchObject({ shown: thisWeek, next: nextWeek, askNext: true });
+  });
+
+  it('falls back to next week on a Sunday when this week has no plan, and then asks nothing', () => {
+    expect(plansAround([nextWeek], at('2026-10-04'))).toMatchObject({ shown: nextWeek, next: nextWeek, askNext: false });
+    expect(plansAround([nextWeek], at('2026-10-02')).shown).toBeUndefined();
+  });
+
+  it('offers nothing when there is no plan to sit beside', () => {
+    expect(plansAround([], at('2026-10-03')).askNext).toBe(false);
   });
 });

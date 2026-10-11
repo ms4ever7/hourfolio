@@ -6,8 +6,8 @@ import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene } from '@/components/scenes';
 import { ActionButton, Card, Duration, PrimaryButton, SectionHeader } from '@/components/ui';
-import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
-import { isSessionDone, replanWeek, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
+import { addDays, dayKey, parseDay, startOfWeek } from '@/domain/dates';
+import { isSessionDone, plansAround, replanWeek, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
 import type { LogEntry } from '@/domain/types';
 import { useAssetName, weekdayName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
@@ -16,15 +16,21 @@ import { useAppTheme } from '@/theme/theme';
 
 export const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
 
-/** The plan for the week `today` is in, or on a Sunday, when this week is over, for the next one. */
+/** The plan to show: this week's, or on a Sunday with none, next week's. */
 export function useWeekPlan(): WeekPlan | undefined {
   const today = useToday();
-  const weekFrom = dayKey(startOfWeek(today));
-  const nextFrom = dayKey(addDays(startOfWeek(today), 7));
   const plans = usePortfolioStore((s) => s.plans);
-  const withSessions = (from: string) => plans.find((p) => p.weekFrom === from && p.sessions.length > 0);
-  return withSessions(weekFrom) ?? (weekdayMonFirst(today) === 6 ? withSessions(nextFrom) : undefined);
+  return plansAround(plans, today).shown;
 }
+
+/** Next week's plan, and whether it is time (Friday on) to offer making one. */
+export function useNextWeek() {
+  const today = useToday();
+  const plans = usePortfolioStore((s) => s.plans);
+  return plansAround(plans, today);
+}
+
+const planNext = () => router.push({ pathname: '/plan-week', params: { when: 'next' } });
 
 /** "45m", "2h" or "1.5h": short enough for a day column. */
 function shortDuration(minutes: number, t: TFunction): string {
@@ -124,6 +130,7 @@ export function TodayPlan() {
   const { colors } = useAppTheme();
   const today = useToday();
   const plan = useWeekPlan();
+  const { next, askNext } = useNextWeek();
   const { assets, logs } = usePortfolio();
   const todayKey = dayKey(today);
 
@@ -216,6 +223,11 @@ export function TodayPlan() {
       {sessions.map((s) => (
         <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
       ))}
+      {askNext ? (
+        <Box flexDirection="row" style={{ marginTop: 4 }}>
+          <ActionButton label={next ? t('plan.editNext') : t('plan.planNext')} icon={next ? UI_PATHS.pencil : UI_PATHS.arrowRight} tone={next ? 'outline' : 'soft'} onPress={planNext} />
+        </Box>
+      ) : null}
     </Card>
   );
 }
@@ -225,6 +237,7 @@ export function WeekPlanCard() {
   const { t, i18n } = useTranslation();
   const today = useToday();
   const plan = useWeekPlan();
+  const { next } = useNextWeek();
   const { assets, logs } = usePortfolio();
   const setPlan = usePortfolioStore((s) => s.setPlan);
 
@@ -268,6 +281,11 @@ export function WeekPlanCard() {
         ) : null}
         <ActionButton label={t('plan.edit')} icon={UI_PATHS.pencil} tone="outline" onPress={() => router.push('/plan-week')} />
       </Box>
+      {plan !== next ? (
+        <Box flexDirection="row">
+          <ActionButton label={next ? t('plan.editNext') : t('plan.planNext')} icon={next ? UI_PATHS.pencil : UI_PATHS.arrowRight} tone="outline" onPress={planNext} />
+        </Box>
+      ) : null}
     </Card>
   );
 }

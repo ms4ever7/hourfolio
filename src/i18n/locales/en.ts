@@ -260,6 +260,8 @@ export const en = {
     weekTitle: 'Your plan for the week',
     yourPlan: 'Your plan',
     noPlan: 'No plan yet',
+    planNext: 'Plan next week',
+    editNext: 'Edit next week',
   },
   profile: {
     title: 'Profile',

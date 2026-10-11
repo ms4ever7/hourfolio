@@ -276,6 +276,8 @@ export const pl: Translations = {
     weekTitle: 'Twój plan na tydzień',
     yourPlan: 'Twój plan',
     noPlan: 'Brak planu',
+    planNext: 'Zaplanuj następny tydzień',
+    editNext: 'Zmień plan na następny tydzień',
   },
   profile: {
     title: 'Profil',

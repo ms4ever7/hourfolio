@@ -276,6 +276,8 @@ export const uk: Translations = {
     weekTitle: 'Твій план на тиждень',
     yourPlan: 'Твій план',
     noPlan: 'Плану ще немає',
+    planNext: 'Спланувати наступний тиждень',
+    editNext: 'Змінити план на наступний тиждень',
   },
   profile: {
     title: 'Профіль',

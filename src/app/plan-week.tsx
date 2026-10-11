@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
@@ -50,10 +50,13 @@ export default function PlanWeek() {
   const logs = usePortfolioStore((s) => s.logs);
   const setPlan = usePortfolioStore((s) => s.setPlan);
 
+  const params = useLocalSearchParams<{ when?: string }>();
   // On Sunday there is nothing left of this week to plan.
-  const [when, setWhen] = useState<When>(weekdayMonFirst(today) === 6 ? 'next' : 'this');
-  const [free, setFree] = useState(DEFAULT_FREE);
-  const [rest, setRest] = useState(() => assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0);
+  const [when, setWhen] = useState<When>(params.when === 'next' || (params.when !== 'this' && weekdayMonFirst(today) === 6) ? 'next' : 'this');
+  // Planning a week that already has a plan starts from the free time it was made with.
+  const earlier = usePortfolioStore.getState().plans.find((p) => p.weekFrom === dayKey(addDays(startOfWeek(today), when === 'next' ? 7 : 0)));
+  const [free, setFree] = useState(earlier?.free ?? DEFAULT_FREE);
+  const [rest, setRest] = useState(() => earlier?.rest ?? assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0);
   const [result, setResult] = useState<PlanResult | null>(null);
 
   const monday = useMemo(() => addDays(startOfWeek(today), when === 'next' ? 7 : 0), [today, when]);
