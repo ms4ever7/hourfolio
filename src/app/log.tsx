@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DayPicker } from '@/components/day-picker';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
@@ -27,7 +28,7 @@ export default function LogSheet() {
   const today = useToday();
   // A planned session passes its own day and what is left of it, so logging it ticks it off.
   const params = useLocalSearchParams<{ assetId?: string; day?: string; minutes?: string }>();
-  // The last seven days can be logged, so a whole week's sessions can be filled in.
+  // Today, yesterday and the days before are labelled by name for a week; the calendar reaches further back.
   const days = Array.from({ length: 7 }, (_, i) => dayKey(addDays(today, -i)));
   const plannedMinutes = Number(params.minutes);
   const assets = usePortfolioStore((s) => s.assets);
@@ -37,7 +38,7 @@ export default function LogSheet() {
   const [when, setWhen] = useState<string>(params.day && days.includes(params.day) ? params.day : days[0]);
   const [picking, setPicking] = useState(false);
   const [note, setNote] = useState('');
-  const dayLabel = (d: string) => (d === days[1] ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(d)));
+  const dayLabel = (d: string) => (d === days[1] ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, d >= days[6] ? { weekday: 'short', day: 'numeric' } : { day: 'numeric', month: 'short' }).format(parseDay(d)));
 
   const others = assets.filter((a) => a.id !== RECOVERY_ID);
   const restOn = assetId === RECOVERY_ID;
@@ -168,12 +169,12 @@ export default function LogSheet() {
           <Box flexDirection="row" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('log.when')}>
             {[
               { key: 'today', label: t('log.today'), on: when === days[0], onPress: () => { setWhen(days[0]); setPicking(false); } },
-              { key: 'other', label: when !== days[0] ? dayLabel(when) : t('log.chooseDay'), on: when !== days[0], onPress: () => setPicking((v) => !v) },
+              { key: 'other', label: when !== days[0] ? dayLabel(when) : t('log.chooseDay'), on: when !== days[0], onPress: () => setPicking(true) },
             ].map((o) => (
               <Pressable
                 key={o.key}
                 accessibilityRole="radio"
-                accessibilityState={{ checked: o.on, expanded: o.key === 'other' ? picking : undefined }}
+                accessibilityState={{ checked: o.on }}
                 onPress={o.onPress}
                 style={{ flex: 1, height: 44, paddingHorizontal: 14, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: o.on ? colors.inverse : colors.card, borderWidth: 1, borderColor: o.on ? colors.inverse : colors.border }}
               >
@@ -183,26 +184,7 @@ export default function LogSheet() {
               </Pressable>
             ))}
           </Box>
-          {picking ? (
-            <Box flexDirection="row" flexWrap="wrap" gap="s">
-              {days.slice(1).map((d) => {
-                const on = d === when;
-                return (
-                  <Pressable
-                    key={d}
-                    accessibilityRole="radio"
-                    accessibilityState={{ checked: on }}
-                    onPress={() => { setWhen(d); setPicking(false); }}
-                    style={{ height: 40, paddingHorizontal: 14, borderRadius: 20, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.inverse : colors.card, borderWidth: 1, borderColor: on ? colors.inverse : colors.border }}
-                  >
-                    <Text variant="label" color={on ? 'onInverse' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
-                      {dayLabel(d)}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </Box>
-          ) : null}
+          <DayPicker visible={picking} value={when} max={days[0]} onPick={(d) => { setWhen(d); setPicking(false); }} onClose={() => setPicking(false)} />
         </Box>
 
         <Box gap="s">
