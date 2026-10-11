@@ -12,6 +12,7 @@ import { durationParts } from '@/domain/format';
 import { celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
 import { RECOVERY_ID } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
+import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
@@ -19,16 +20,20 @@ import { useAppTheme } from '@/theme/theme';
 const QUICK = [15, 30, 45, 60, 90, 120];
 
 export default function LogSheet() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { colors, palette } = useAppTheme();
   const insets = useSafeAreaInsets();
   const assetName = useAssetName();
-  const params = useLocalSearchParams<{ assetId?: string }>();
+  const today = useToday();
+  // A planned session passes its own day and what is left of it, so logging it ticks it off.
+  const params = useLocalSearchParams<{ assetId?: string; day?: string; minutes?: string }>();
+  const earlierDay = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) && params.day < dayKey(addDays(today, -1)) && params.day >= dayKey(addDays(today, -6)) ? params.day : null;
+  const plannedMinutes = Number(params.minutes);
   const assets = usePortfolioStore((s) => s.assets);
   const logTime = usePortfolioStore((s) => s.logTime);
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
-  const [minutes, setMinutes] = useState(60);
-  const [when, setWhen] = useState<'today' | 'yesterday'>('today');
+  const [minutes, setMinutes] = useState(plannedMinutes >= 5 && plannedMinutes <= 24 * 60 ? Math.round(plannedMinutes / 5) * 5 : 60);
+  const [when, setWhen] = useState<string>(earlierDay ?? (params.day === dayKey(addDays(today, -1)) ? 'yesterday' : 'today'));
   const [note, setNote] = useState('');
 
   const others = assets.filter((a) => a.id !== RECOVERY_ID);
@@ -38,7 +43,7 @@ export default function LogSheet() {
     .join(' ');
 
   const save = () => {
-    const entry = { assetId, minutes, day: dayKey(when === 'today' ? new Date() : addDays(new Date(), -1)), note: note.trim() || undefined };
+    const entry = { assetId, minutes, day: when === 'today' ? dayKey(new Date()) : when === 'yesterday' ? dayKey(addDays(new Date(), -1)) : when, note: note.trim() || undefined };
     const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
     logTime(entry);
     if (met) {
@@ -164,6 +169,7 @@ export default function LogSheet() {
             options={[
               { value: 'today', label: t('log.today') },
               { value: 'yesterday', label: t('log.yesterday') },
+              ...(earlierDay ? [{ value: earlierDay, label: new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(earlierDay)) }] : []),
             ]}
           />
         </Box>

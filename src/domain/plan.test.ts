@@ -1,5 +1,5 @@
 import { daysBetween, parseDay } from './dates';
-import { ALL_DAYS, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, planGoals, planReminders, plansAround, planWeek, replanWeek, sessionsOn, type PlanGoal, type WeekPlan } from './plan';
+import { ALL_DAYS, DEFAULT_FREE, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, loggedFor, minutesLeft, moveTarget, overFree, planGoals, planReminders, plansAround, planWeek, previousSetup, replanWeek, resized, sessionsOn, type PlanGoal, type PlannedSession, type WeekPlan } from './plan';
 import type { Asset, LogEntry } from './types';
 
 const WEEK = '2026-09-28'; // a Monday
@@ -134,8 +134,9 @@ describe('plans over a week', () => {
 
   it('knows which sessions are done and what is planned on a day', () => {
     const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: 'a', assetId: 'g', day: WEEK, minutes: 30 }] };
-    expect(isSessionDone(plan.sessions[0], [log('g', WEEK, 10)])).toBe(true);
-    expect(isSessionDone(plan.sessions[0], [log('r', WEEK, 10)])).toBe(false);
+    expect(isSessionDone(plan.sessions[0], [log('g', WEEK, 30)])).toBe(true);
+    expect(isSessionDone(plan.sessions[0], [log('g', WEEK, 10), log('g', WEEK, 20)])).toBe(true);
+    expect(isSessionDone(plan.sessions[0], [log('r', WEEK, 30)])).toBe(false);
     expect(sessionsOn(plan, WEEK)).toHaveLength(1);
     expect(sessionsOn(undefined, WEEK)).toEqual([]);
   });
@@ -169,14 +170,14 @@ describe('recovery, small remainders and keeping done days', () => {
     expect(goals).toEqual([{ assetId: 'recovery', minutes: 80, session: { min: 20, max: 60 }, days: ALL_DAYS }]);
   });
 
-  it('keeps only the done sessions from before the given day', () => {
+  it('keeps only the sessions done up to the given day, that day included', () => {
     const sessions = [
       { id: 'a', assetId: 'g', day: '2026-09-28', minutes: 30 },
       { id: 'b', assetId: 'g', day: '2026-09-29', minutes: 30 },
       { id: 'c', assetId: 'g', day: '2026-10-01', minutes: 30 },
     ];
-    expect(keepDone(sessions, '2026-10-01', [log('g', '2026-09-28')]).map((s) => s.id)).toEqual(['a']);
-    expect(keepDone(sessions, undefined, [log('g', '2026-09-28')])).toEqual([]);
+    expect(keepDone(sessions, '2026-10-01', [log('g', '2026-09-28', 30)]).map((s) => s.id)).toEqual(['a']);
+    expect(keepDone(sessions, undefined, [log('g', '2026-09-28', 30)])).toEqual([]);
   });
 
   it('plans a short remainder as it is instead of rounding it up to a full session', () => {
@@ -202,27 +203,27 @@ describe('planReminders', () => {
       { id: 'd', assetId: 'g', day: '2026-10-01', minutes: 30 },
     ],
   };
-  const done = (assetId: string, day: string): LogEntry => ({ id: assetId + day, assetId, day, minutes: 10, createdAt: '2026-01-01T00:00:00Z' });
+  const done = (assetId: string, day: string): LogEntry => ({ id: assetId + day, assetId, day, minutes: 60, createdAt: '2026-01-01T00:00:00Z' });
   const morning = new Date(2026, 8, 29, 8, 0);
   const wake = 7 * 60;
   const bed = 23 * 60;
 
-  it('reminds for today and tomorrow only', () => {
+  it('reminds for today and the next three days', () => {
     const r = planReminders([plan], [], morning, wake, bed);
-    expect(r.map((x) => x.day)).toEqual(['2026-09-29', '2026-09-30']);
+    expect(r.map((x) => x.day)).toEqual(['2026-09-29', '2026-09-30', '2026-10-01']);
     expect(r[0].sessions).toHaveLength(2);
     expect(r[0].at).toEqual(new Date(2026, 8, 29, 17, 30));
   });
 
   it('leaves out what is already done, and days with nothing left', () => {
     const r = planReminders([plan], [done('g', '2026-09-29'), done('r', '2026-09-29')], morning, wake, bed);
-    expect(r.map((x) => x.day)).toEqual(['2026-09-30']);
+    expect(r.map((x) => x.day)).toEqual(['2026-09-30', '2026-10-01']);
     expect(planReminders([plan], [done('g', '2026-09-29')], morning, wake, bed)[0].sessions.map((s) => s.id)).toEqual(['b']);
   });
 
   it('skips a time that has already passed', () => {
     const evening = new Date(2026, 8, 29, 19, 0);
-    expect(planReminders([plan], [], evening, wake, bed).map((x) => x.day)).toEqual(['2026-09-30']);
+    expect(planReminders([plan], [], evening, wake, bed).map((x) => x.day)).toEqual(['2026-09-30', '2026-10-01']);
   });
 
   it('keeps the reminder inside a short waking day', () => {
@@ -255,5 +256,162 @@ describe('plansAround', () => {
 
   it('offers nothing when there is no plan to sit beside', () => {
     expect(plansAround([], at('2026-10-03')).askNext).toBe(false);
+  });
+});
+
+describe('how far a session got', () => {
+  const session: PlannedSession = { id: 's', assetId: 'g', day: WEEK, minutes: 60 };
+  const log = (assetId: string, day: string, minutes: number): LogEntry => ({ id: assetId + day + minutes, assetId, day, minutes, createdAt: '2026-01-01T00:00:00Z' });
+
+  it('is not done by a few minutes, and says what is left', () => {
+    expect(isSessionDone(session, [log('g', WEEK, 5)])).toBe(false);
+    expect(loggedFor(session, [log('g', WEEK, 5), log('g', WEEK, 25), log('g', '2026-09-29', 40), log('r', WEEK, 40)])).toBe(30);
+    expect(minutesLeft(session, [log('g', WEEK, 45)])).toBe(15);
+  });
+
+  it('is done at the planned time or more, and nothing is left', () => {
+    expect(isSessionDone(session, [log('g', WEEK, 60)])).toBe(true);
+    expect(isSessionDone(session, [log('g', WEEK, 90)])).toBe(true);
+    expect(minutesLeft(session, [log('g', WEEK, 90)])).toBe(0);
+  });
+
+  it('only counts time on the session\'s own day', () => {
+    expect(isSessionDone(session, [log('g', '2026-09-29', 120)])).toBe(false);
+  });
+});
+
+describe('re-planning with today already partly done', () => {
+  const asset = (id: string, over: Partial<Asset> = {}): Asset => ({
+    id,
+    icon: 'guitar',
+    color: 'magenta',
+    energy: 'creative',
+    rhythm: 'fewPerWeek',
+    startingMinutes: 0,
+    createdAt: '2026-01-01T00:00:00Z',
+    ...over,
+  });
+  const log = (assetId: string, day: string, minutes: number): LogEntry => ({ id: assetId + day, assetId, day, minutes, createdAt: '2026-01-01T00:00:00Z' });
+  const free = [120, 120, 120, 120, 120, 120, 120];
+  const today = parseDay('2026-09-30');
+
+  it('keeps today\'s done session and does not plan the same asset on that day again', () => {
+    const assets = [asset('g', { weeklyGoalMinutes: 180 })];
+    const logs = [log('g', '2026-09-30', 60)];
+    const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: 'today', assetId: 'g', day: '2026-09-30', minutes: 60 }] };
+    const next = replanWeek(plan, assets, logs, free, today);
+    expect(next.sessions[0].id).toBe('today');
+    expect(next.sessions.filter((s) => s.day === '2026-09-30')).toHaveLength(1);
+    expect(next.sessions.reduce((n, s) => n + s.minutes, 0)).toBe(180);
+  });
+
+  it('counts what a kept session used of the day\'s free time', () => {
+    const goals = [goal('a', 2, ALL_DAYS, 30, 120)];
+    const kept: PlannedSession[] = [{ id: 'k', assetId: 'other', day: WEEK, minutes: 90 }];
+    const r = planWeek({ weekFrom: WEEK, goals, free: [100, 0, 0, 0, 0, 0, 0], kept });
+    // 100 free minus 90 kept leaves 10: not enough for a 30-minute session.
+    expect(r.sessions).toEqual([]);
+    expect(r.shortBy).toEqual([{ assetId: 'a', minutes: 120 }]);
+  });
+
+  it('a done session does not reappear once re-planned from a later day', () => {
+    const assets = [asset('g', { weeklyGoalMinutes: 180 })];
+    const logs = [log('g', '2026-09-29', 60)];
+    const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: 'tue', assetId: 'g', day: '2026-09-29', minutes: 60 }] };
+    const next = replanWeek(plan, assets, logs, free, today);
+    expect(next.sessions.filter((s) => s.id === 'tue')).toHaveLength(1);
+    expect(next.sessions.filter((s) => s.day < '2026-09-30')).toHaveLength(1);
+  });
+
+  it('plans a week that has not started whole, without this week\'s logged time counting against it', () => {
+    const assets = [asset('g', { weeklyGoalMinutes: 120 })];
+    // 120 minutes logged this week must not shrink next week's 120-minute goal.
+    const logs = [log('g', '2026-09-29', 120)];
+    const plan: WeekPlan = { weekFrom: '2026-10-05', sessions: [] };
+    const next = replanWeek(plan, assets, logs, free, parseDay('2026-10-04'));
+    expect(next.sessions.reduce((n, s) => n + s.minutes, 0)).toBe(120);
+    expect(next.sessions.every((s) => s.day >= '2026-10-05' && s.day <= '2026-10-11')).toBe(true);
+  });
+});
+
+describe('moving and resizing planned sessions', () => {
+  const s = (id: string, assetId: string, day: string, minutes = 30): PlannedSession => ({ id, assetId, day, minutes });
+  const wed = s('w', 'g', '2026-09-30');
+
+  it('moves a day either way inside the week', () => {
+    expect(moveTarget([wed], WEEK, wed, 1)).toBe('2026-10-01');
+    expect(moveTarget([wed], WEEK, wed, -1)).toBe('2026-09-29');
+  });
+
+  it('stays inside the week', () => {
+    expect(moveTarget([s('m', 'g', WEEK)], WEEK, s('m', 'g', WEEK), -1)).toBeNull();
+    expect(moveTarget([s('u', 'g', '2026-10-04')], WEEK, s('u', 'g', '2026-10-04'), 1)).toBeNull();
+  });
+
+  it('does not go before the first day that can still change', () => {
+    expect(moveTarget([wed], WEEK, wed, -1, '2026-09-30')).toBeNull();
+    expect(moveTarget([wed], WEEK, wed, -1, '2026-09-29')).toBe('2026-09-29');
+  });
+
+  it('jumps over a day that already has the same asset, but not over other assets', () => {
+    const thu = s('t', 'g', '2026-10-01');
+    expect(moveTarget([wed, thu], WEEK, wed, 1)).toBe('2026-10-02');
+    expect(moveTarget([wed, s('t', 'other', '2026-10-01')], WEEK, wed, 1)).toBe('2026-10-01');
+  });
+
+  it('gives up when every day that way is taken or out of the week', () => {
+    const rest = [s('a', 'g', '2026-10-01'), s('b', 'g', '2026-10-02'), s('c', 'g', '2026-10-03'), s('d', 'g', '2026-10-04')];
+    expect(moveTarget([wed, ...rest], WEEK, wed, 1)).toBeNull();
+  });
+
+  it('steps a session by a quarter of an hour, between 15 minutes and 4 hours', () => {
+    expect(resized(30, 1)).toBe(45);
+    expect(resized(30, -1)).toBe(15);
+    expect(resized(15, -1)).toBe(15);
+    expect(resized(240, 1)).toBe(240);
+  });
+
+  it('says how far past the free time a day goes', () => {
+    const sessions = [s('a', 'g', WEEK, 60), s('b', 'r', WEEK, 45)];
+    expect(overFree(sessions, WEEK, [90, 0, 0, 0, 0, 0, 0])).toBe(15);
+    expect(overFree(sessions, WEEK, [120, 0, 0, 0, 0, 0, 0])).toBe(0);
+    expect(overFree(sessions, WEEK, [0, 0, 0, 0, 0, 0, 0])).toBe(105);
+    expect(overFree(sessions, WEEK, undefined)).toBe(0);
+  });
+});
+
+describe('where a plan starts from', () => {
+  const plan = (weekFrom: string, free?: number[], rest?: number): WeekPlan => ({ weekFrom, sessions: [], free, rest });
+
+  it('uses the defaults when there are no plans', () => {
+    expect(previousSetup([], WEEK)).toEqual({ free: DEFAULT_FREE, rest: undefined });
+  });
+
+  it('starts next week from the newest plan\'s free time and rest', () => {
+    const plans = [plan('2026-09-21', [30, 30, 30, 30, 30, 0, 0], 60), plan(WEEK, [90, 90, 90, 90, 90, 120, 120], 120)];
+    expect(previousSetup(plans, '2026-10-05')).toEqual({ free: [90, 90, 90, 90, 90, 120, 120], rest: 120 });
+  });
+
+  it('prefers the week\'s own plan', () => {
+    const plans = [plan(WEEK, [30, 30, 30, 30, 30, 0, 0], 0), plan('2026-10-05', [60, 60, 60, 60, 60, 60, 60], 30)];
+    expect(previousSetup(plans, WEEK)).toEqual({ free: [30, 30, 30, 30, 30, 0, 0], rest: 0 });
+  });
+
+  it('skips plans made before free time was saved', () => {
+    expect(previousSetup([plan('2026-09-21', [45, 45, 45, 45, 45, 0, 0]), plan(WEEK)], '2026-10-05').free).toEqual([45, 45, 45, 45, 45, 0, 0]);
+  });
+});
+
+describe('the order of sessions in a day', () => {
+  it('follows the order the goals were given in, not the asset ids', () => {
+    const goals = [goal('zumba', 1, [0], 60, 60), goal('arts', 1, [0], 60, 60)];
+    const r = planWeek({ weekFrom: WEEK, goals, free: [240, 0, 0, 0, 0, 0, 0] });
+    expect(r.sessions.map((x) => x.assetId)).toEqual(['zumba', 'arts']);
+  });
+
+  it('sorts a day by the portfolio order when given one', () => {
+    const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: '1', assetId: 'b', day: WEEK, minutes: 30 }, { id: '2', assetId: 'a', day: WEEK, minutes: 30 }, { id: '3', assetId: 'x', day: WEEK, minutes: 30 }] };
+    expect(sessionsOn(plan, WEEK, ['a', 'b']).map((x) => x.id)).toEqual(['2', '1', '3']);
+    expect(sessionsOn(plan, WEEK).map((x) => x.id)).toEqual(['1', '2', '3']);
   });
 });

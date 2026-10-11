@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Duration, PrimaryButton, RoundButton, footerPad } from '@/components/ui';
-import { DEFAULT_FREE, useWeekPlan } from '@/components/plan-card';
-import { replanWeek } from '@/domain/plan';
+import { useNextWeek } from '@/components/plan-card';
+import { DEFAULT_FREE, replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
@@ -24,7 +24,9 @@ export default function GoalsEdit() {
   const updateAsset = usePortfolioStore((s) => s.updateAsset);
   const setPlan = usePortfolioStore((s) => s.setPlan);
   const today = useToday();
-  const plan = useWeekPlan();
+  const { shown, next } = useNextWeek();
+  // The weeks with a plan that new goals apply to: the one shown, and next week's if it has one.
+  const weeks = [...new Set([shown?.weekFrom, next?.weekFrom].filter((w): w is string => w !== undefined))];
   // Goals as they were when the screen opened, to tell whether anything changed.
   const before = useRef(new Map(assets.map((a) => [a.id, a.weeklyGoalMinutes ?? 0])));
 
@@ -33,8 +35,8 @@ export default function GoalsEdit() {
   const done = () => {
     const changed = assets.some((a) => (a.weeklyGoalMinutes ?? 0) !== (before.current.get(a.id) ?? 0));
     router.back();
-    if (!changed || !plan) return;
-    // Only the days still ahead are re-planned; sessions already done stay.
+    if (!changed || weeks.length === 0) return;
+    // Only the days still ahead are re-planned (a week that has not started, whole); sessions already done stay.
     Alert.alert(t('goals.replanTitle'), t('goals.replanBody'), [
       { text: t('goals.replanKeep'), style: 'cancel' },
       {
@@ -42,8 +44,10 @@ export default function GoalsEdit() {
         onPress: () => {
           // Read fresh: the plan or logs may have changed while the alert was open.
           const { assets: now, logs: nowLogs, plans } = usePortfolioStore.getState();
-          const current = plans.find((p) => p.weekFrom === plan.weekFrom);
-          if (current) setPlan(replanWeek(current, now, nowLogs, current.free ?? DEFAULT_FREE, today));
+          for (const weekFrom of weeks) {
+            const current = plans.find((p) => p.weekFrom === weekFrom);
+            if (current) setPlan(replanWeek(current, now, nowLogs, current.free ?? DEFAULT_FREE, today));
+          }
         },
       },
     ]);

@@ -1,4 +1,5 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { AppState } from 'react-native';
 import { dayKey, parseDay } from '@/domain/dates';
 import { capitalMinutes, lastLogDay, momentum, trend, type Trend } from '@/domain/growth';
 import { sumMinutes, weeklyMinutes, type Range } from '@/domain/stats';
@@ -42,8 +43,23 @@ export function useHoldings(assets: Asset[], logs: LogEntry[], current: Range, p
   }, [assets, logs, current, previous, today]);
 }
 
-/** Today at local midnight; the same object until the date changes, so memos hold. */
+/**
+ * Today at local midnight; the same object until the date changes, so memos hold.
+ * The date is re-read when the app comes back to the foreground and at midnight,
+ * so an app left open overnight does not go on showing yesterday's plan.
+ */
 export function useToday(): Date {
-  const key = dayKey(new Date());
+  const [key, setKey] = useState(() => dayKey(new Date()));
+  useEffect(() => {
+    const sync = () => setKey(dayKey(new Date()));
+    const now = new Date();
+    const untilMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1).getTime() - now.getTime() + 1000;
+    const timer = setTimeout(sync, untilMidnight);
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && sync());
+    return () => {
+      clearTimeout(timer);
+      sub.remove();
+    };
+  }, [key]);
   return useMemo(() => parseDay(key), [key]);
 }
