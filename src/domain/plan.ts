@@ -1,4 +1,4 @@
-import { addDays, dayKey, parseDay } from './dates';
+import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from './dates';
 import { atMinutes } from './day';
 import { newId } from './ids';
 import { weekRange } from './goals';
@@ -25,6 +25,69 @@ export interface WeekPlan {
   rest?: number;
 }
 
+/** From Friday the next week is worth planning. */
+const PLAN_AHEAD_FROM = 4;
+
+/**
+ * The plans around `today`. `shown` is the one to display: this week's, or on a
+ * Sunday with nothing left to show of it, next week's. `next` is next week's plan
+ * whether or not it is shown, and `askNext` says when to offer planning it.
+ */
+export function plansAround(plans: WeekPlan[], today: Date): { shown?: WeekPlan; next?: WeekPlan; askNext: boolean } {
+  const withSessions = (from: string) => plans.find((p) => p.weekFrom === from && p.sessions.length > 0);
+  const monday = startOfWeek(today);
+  const current = withSessions(dayKey(monday));
+  const next = withSessions(dayKey(addDays(monday, 7)));
+  const day = weekdayMonFirst(today);
+  const shown = current ?? (day === 6 ? next : undefined);
+  return { shown, next, askNext: day >= PLAN_AHEAD_FROM && shown !== undefined && shown !== next };
+}
+
+/** Free minutes per weekday, Monday first, for a first plan: weekdays an hour, weekends off. */
+export const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
+
+/**
+ * What a plan for the week starting `weekFrom` starts from: that week's own free
+ * time and rest if it has a plan, else the newest plan's, else the defaults. So
+ * planning next week begins where this week was left, not back at 60 × 5.
+ */
+export function previousSetup(plans: WeekPlan[], weekFrom: string): { free: number[]; rest?: number } {
+  const own = plans.find((p) => p.weekFrom === weekFrom);
+  const latest = [...plans].reverse().find((p) => p.free);
+  const from = own?.free ? own : latest;
+  return { free: from?.free ?? DEFAULT_FREE, rest: own?.rest ?? latest?.rest };
+}
+
+const SESSION_STEP = 15;
+const MIN_SESSION = 15;
+const MAX_SESSION = 240;
+
+/** A session's length after a step up or down, kept between 15 minutes and 4 hours. */
+export function resized(minutes: number, direction: 1 | -1): number {
+  return Math.min(MAX_SESSION, Math.max(MIN_SESSION, minutes + direction * SESSION_STEP));
+}
+
+/**
+ * The day a session lands on when moved one way: the next day in that direction
+ * that is inside the week, not before `fromDay`, and not already holding the same
+ * asset (it jumps over such a day). Null when there is no such day.
+ */
+export function moveTarget(sessions: PlannedSession[], weekFrom: string, session: PlannedSession, direction: 1 | -1, fromDay?: string): string | null {
+  const last = dayKey(addDays(parseDay(weekFrom), 6));
+  for (let by = direction; ; by += direction) {
+    const day = dayKey(addDays(parseDay(session.day), by));
+    if (day < weekFrom || day > last || (fromDay !== undefined && day < fromDay)) return null;
+    if (!sessions.some((s) => s.id !== session.id && s.assetId === session.assetId && s.day === day)) return day;
+  }
+}
+
+/** Minutes planned on `day` beyond the free time set for that weekday; 0 when it fits or no free time is known. */
+export function overFree(sessions: PlannedSession[], day: string, free?: number[]): number {
+  if (!free) return 0;
+  const planned = sessions.filter((s) => s.day === day).reduce((n, s) => n + s.minutes, 0);
+  return Math.max(0, planned - (free[weekdayMonFirst(parseDay(day))] ?? 0));
+}
+
 /** Shortest and longest a single session of an asset should be, in minutes. */
 export interface SessionRange {
   min: number;
@@ -48,6 +111,8 @@ export interface PlanInput {
   free: number[];
   /** Nothing is planned before this day; for re-planning the rest of a week. */
   fromDay?: string;
+  /** Sessions the week already holds (the done ones): they use up their day's free time and keep their asset off that day. */
+  kept?: PlannedSession[];
 }
 
 export interface PlanResult {
@@ -103,10 +168,14 @@ function split(total: number, caps: number[], min: number): number[] {
  * is not on back-to-back days when it can be avoided, with longer sessions on
  * the days that have more free time.
  */
-export function planWeek({ weekFrom, goals, free, fromDay }: PlanInput): PlanResult {
+export function planWeek({ weekFrom, goals, free, fromDay, kept = [] }: PlanInput): PlanResult {
   const monday = parseDay(weekFrom);
   const dayOf = (i: number) => dayKey(addDays(monday, i));
-  const left = free.map((m, i) => (fromDay && dayOf(i) < fromDay ? 0 : Math.max(0, m)));
+  const left = free.map((m, i) => {
+    if (fromDay && dayOf(i) < fromDay) return 0;
+    const used = kept.filter((k) => k.day === dayOf(i)).reduce((n, k) => n + k.minutes, 0);
+    return Math.max(0, m - used);
+  });
   const load = Array<number>(7).fill(0);
   const sessions: PlannedSession[] = [];
   const shortBy: PlanResult['shortBy'] = [];
@@ -114,7 +183,7 @@ export function planWeek({ weekFrom, goals, free, fromDay }: PlanInput): PlanRes
   // A session is never shorter than the goal still needs (15 minutes left plans
   // 15, not the usual 30), and always a whole number of steps.
   const minOf = (g: PlanGoal) => Math.max(STEP, Math.floor(Math.min(g.session.min, g.minutes) / STEP) * STEP);
-  const openDays = (g: PlanGoal) => g.days.filter((d) => left[d] >= minOf(g));
+  const openDays = (g: PlanGoal) => g.days.filter((d) => left[d] >= minOf(g) && !kept.some((k) => k.assetId === g.assetId && k.day === dayOf(d)));
   const ordered = [...goals]
     .filter((g) => g.minutes > 0)
     .sort((a, b) => openDays(a).length - openDays(b).length || b.minutes - a.minutes);
@@ -164,7 +233,9 @@ export function planWeek({ weekFrom, goals, free, fromDay }: PlanInput): PlanRes
     if (planned < goal.minutes) shortBy.push({ assetId: goal.assetId, minutes: goal.minutes - planned });
   }
 
-  sessions.sort((a, b) => a.day.localeCompare(b.day) || a.assetId.localeCompare(b.assetId));
+  // Within a day, in the order the goals were given (the portfolio's order).
+  const rank = (id: string) => goals.findIndex((g) => g.assetId === id);
+  sessions.sort((a, b) => a.day.localeCompare(b.day) || rank(a.assetId) - rank(b.assetId));
   return { sessions, shortBy };
 }
 
@@ -197,34 +268,56 @@ export function planGoals(assets: Asset[], logs: LogEntry[], base: Date, rest: n
   return goals;
 }
 
-/** What the plan keeps from before `from`: the sessions already done. A missed one just moves on. */
+/** What the plan keeps when planning from `from` on: the sessions already done, today's included. A missed one just moves on. */
 export function keepDone(sessions: PlannedSession[], from: string | undefined, logs: LogEntry[]): PlannedSession[] {
-  return from ? sessions.filter((s) => s.day < from && isSessionDone(s, logs)) : [];
+  return from ? sessions.filter((s) => s.day <= from && isSessionDone(s, logs)) : [];
 }
 
 /**
- * Re-plans the rest of the week from `today` on: sessions already done stay, a
- * missed one just moves on, and what is still missing from each goal (recovery
- * included) is laid out again over the days left.
+ * Re-plans the rest of the week from `today` on: sessions already done stay
+ * (today's too, and they use up that day's free time), a missed one just moves
+ * on, and what is still missing from each goal (recovery included) is laid out
+ * again over the days left. A week that has not started is planned whole, from
+ * its own Monday, so this week's logged time never counts against it.
  */
 export function replanWeek(plan: WeekPlan, assets: Asset[], logs: LogEntry[], free: number[], today: Date): WeekPlan {
-  const from = dayKey(today);
+  const ahead = dayKey(today) < plan.weekFrom;
+  const from = ahead ? undefined : dayKey(today);
   const rest = plan.rest ?? assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0;
-  const { sessions } = planWeek({ weekFrom: plan.weekFrom, goals: planGoals(assets, logs, today, rest), free, fromDay: from });
-  return { weekFrom: plan.weekFrom, free, rest, sessions: [...keepDone(plan.sessions, from, logs), ...sessions] };
+  const kept = keepDone(plan.sessions, from, logs);
+  const goals = planGoals(assets, logs, ahead ? parseDay(plan.weekFrom) : today, rest);
+  const { sessions } = planWeek({ weekFrom: plan.weekFrom, goals, free, fromDay: from, kept });
+  return { weekFrom: plan.weekFrom, free, rest, sessions: [...kept, ...sessions] };
 }
 
-/** A planned session is done once its asset has any time logged on that day. */
+/** Minutes logged for the session's asset on the session's day. */
+export function loggedFor(session: PlannedSession, logs: LogEntry[]): number {
+  return logs.filter((l) => l.assetId === session.assetId && l.day === session.day).reduce((n, l) => n + l.minutes, 0);
+}
+
+/** A planned session is done once its asset has at least the planned time logged on that day. */
 export function isSessionDone(session: PlannedSession, logs: LogEntry[]): boolean {
-  return logs.some((l) => l.assetId === session.assetId && l.day === session.day);
+  return loggedFor(session, logs) >= session.minutes;
 }
 
-export function sessionsOn(plan: WeekPlan | undefined, day: string): PlannedSession[] {
-  return plan?.sessions.filter((s) => s.day === day) ?? [];
+/** What is still to log of a session; 0 once it is done. */
+export function minutesLeft(session: PlannedSession, logs: LogEntry[]): number {
+  return Math.max(0, session.minutes - loggedFor(session, logs));
+}
+
+/** The sessions on a day; with `order` (asset ids in portfolio order) they are sorted that way. */
+export function sessionsOn(plan: WeekPlan | undefined, day: string, order?: string[]): PlannedSession[] {
+  const list = plan?.sessions.filter((s) => s.day === day) ?? [];
+  if (!order) return list;
+  const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length);
+  return [...list].sort((a, b) => rank(a.assetId) - rank(b.assetId));
 }
 
 /** When the planned-session reminder goes out: late afternoon, kept inside the user's waking day. */
 const REMINDER_AT = 17 * 60 + 30;
+
+/** Today and the next few days, so a few days away from the app do not leave a planned day without a reminder. */
+const REMIND_DAYS = 4;
 
 export interface PlanReminder {
   day: string;
@@ -234,14 +327,14 @@ export interface PlanReminder {
 }
 
 /**
- * One reminder per day for today and tomorrow, listing what is planned and not
- * done yet. Days with nothing left, and times already past, get none. Only two
- * days are scheduled, well inside the phone's limit on pending notifications.
+ * One reminder per day for today and the next three, listing what is planned and
+ * not done yet. Days with nothing left, and times already past, get none. Four
+ * days is well inside the phone's limit on pending notifications.
  */
 export function planReminders(plans: WeekPlan[], logs: LogEntry[], now: Date, wake: number, bed: number): PlanReminder[] {
   const time = Math.min(Math.max(REMINDER_AT, wake + 60), Math.max(wake + 60, bed - 90));
   const out: PlanReminder[] = [];
-  for (const offset of [0, 1]) {
+  for (let offset = 0; offset < REMIND_DAYS; offset++) {
     const date = addDays(now, offset);
     const day = dayKey(date);
     const sessions = plans.flatMap((p) => p.sessions).filter((s) => s.day === day && !isSessionDone(s, logs));

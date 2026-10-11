@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView } from 'react-native';
@@ -6,8 +6,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton, footerPad } from '@/components/ui';
-import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
-import { keepDone, planGoals, planWeek, type PlannedSession, type PlanResult } from '@/domain/plan';
+import { addDays, dayKey, startOfWeek, weekdayMonFirst } from '@/domain/dates';
+import { keepDone, moveTarget, overFree, planGoals, planWeek, previousSetup, type PlannedSession, type PlanResult } from '@/domain/plan';
 import { RECOVERY_ID } from '@/domain/types';
 import { durationParts } from '@/domain/format';
 import { useAssetName, weekdayName } from '@/lib/labels';
@@ -18,7 +18,6 @@ const STEP = 30;
 const MAX_FREE = 8 * 60;
 const MAX_REST = 5 * 60;
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
-const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
 const WEEKEND_FREE = 120;
 
 type When = 'this' | 'next';
@@ -50,10 +49,24 @@ export default function PlanWeek() {
   const logs = usePortfolioStore((s) => s.logs);
   const setPlan = usePortfolioStore((s) => s.setPlan);
 
+  const params = useLocalSearchParams<{ when?: string }>();
+  const mondayOf = (w: When) => dayKey(addDays(startOfWeek(today), w === 'next' ? 7 : 0));
+  const recoveryGoal = assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0;
+  // A week that already has a plan, or failing that the newest plan, sets the starting free time and rest.
+  const setupFor = (w: When) => {
+    const setup = previousSetup(usePortfolioStore.getState().plans, mondayOf(w));
+    return { free: setup.free, rest: setup.rest ?? recoveryGoal };
+  };
   // On Sunday there is nothing left of this week to plan.
-  const [when, setWhen] = useState<When>(weekdayMonFirst(today) === 6 ? 'next' : 'this');
-  const [free, setFree] = useState(DEFAULT_FREE);
-  const [rest, setRest] = useState(() => assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0);
+  const first: When = params.when === 'next' || (params.when !== 'this' && weekdayMonFirst(today) === 6) ? 'next' : 'this';
+  const [when, setWhen] = useState<When>(first);
+  const [free, setFree] = useState(() => setupFor(first).free);
+  const [rest, setRest] = useState(() => setupFor(first).rest);
+  const chooseWhen = (w: When) => {
+    setWhen(w);
+    setFree(setupFor(w).free);
+    setRest(setupFor(w).rest);
+  };
   const [result, setResult] = useState<PlanResult | null>(null);
 
   const monday = useMemo(() => addDays(startOfWeek(today), when === 'next' ? 7 : 0), [today, when]);
@@ -67,24 +80,24 @@ export default function PlanWeek() {
   const setDay = (i: number, minutes: number) => setFree((f) => f.map((m, j) => (j === i ? Math.min(MAX_FREE, Math.max(0, minutes)) : m)));
   const setWeekends = (on: boolean) => setFree((f) => f.map((m, i) => (i >= 5 ? (on ? WEEKEND_FREE : 0) : m)));
 
+  // Planning this week again from midway keeps the sessions already done, today's included.
+  const keptNow = () => keepDone(usePortfolioStore.getState().plans.find((p) => p.weekFrom === weekFrom)?.sessions ?? [], fromDay, logs);
+
   const make = () => {
     const base = when === 'this' ? today : monday;
     const goals = planGoals(assets, logs, base, recovery ? rest : 0);
-    setResult(planWeek({ weekFrom, goals, free: free.map((m, i) => (isPast(i) ? 0 : m)), fromDay }));
+    setResult(planWeek({ weekFrom, goals, free: free.map((m, i) => (isPast(i) ? 0 : m)), fromDay, kept: keptNow() }));
   };
 
-  const move = (s: PlannedSession, by: number) => {
-    const day = dayKey(addDays(parseDay(s.day), by));
-    if (day < weekFrom || day > dayKey(addDays(monday, 6)) || (fromDay && day < fromDay)) return;
-    setResult((r) => r && { ...r, sessions: r.sessions.map((x) => (x.id === s.id ? { ...x, day } : x)) });
+  const move = (s: PlannedSession, direction: 1 | -1) => {
+    const day = moveTarget([...keptNow(), ...(result?.sessions ?? [])], weekFrom, s, direction, fromDay);
+    if (day) setResult((r) => r && { ...r, sessions: r.sessions.map((x) => (x.id === s.id ? { ...x, day } : x)) });
   };
   const remove = (s: PlannedSession) => setResult((r) => r && { ...r, sessions: r.sessions.filter((x) => x.id !== s.id) });
 
   const save = () => {
     if (!result) return;
-    // Planning this week again from midway keeps the days already done.
-    const kept = keepDone(usePortfolioStore.getState().plans.find((p) => p.weekFrom === weekFrom)?.sessions ?? [], fromDay, logs);
-    setPlan({ weekFrom, sessions: [...kept, ...result.sessions], free, rest });
+    setPlan({ weekFrom, sessions: [...keptNow(), ...result.sessions], free, rest });
     router.back();
   };
 
@@ -111,7 +124,7 @@ export default function PlanWeek() {
             <Segmented
               label={t('plan.title')}
               value={when}
-              onChange={setWhen}
+              onChange={chooseWhen}
               options={[
                 { value: 'this', label: t('plan.thisWeek') },
                 { value: 'next', label: t('plan.nextWeek') },
@@ -162,6 +175,7 @@ export default function PlanWeek() {
                     {weekdayName(i18n.language, day)}
                   </Text>
                   {sessions.length === 0 ? <Text variant="small">{t('plan.nothing')}</Text> : null}
+                  {overFree([...keptNow(), ...result.sessions], key, free) > 0 ? <Text variant="small">{free[i] === 0 ? t('plan.overOff') : t('plan.over', { time: time(free[i]) })}</Text> : null}
                   {sessions.map((s) => {
                     const asset = assets.find((a) => a.id === s.assetId);
                     if (!asset) return null;

@@ -1,30 +1,42 @@
 import { router } from 'expo-router';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { Pressable } from 'react-native';
+import { useState } from 'react';
+import { Pressable, ScrollView } from 'react-native';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene } from '@/components/scenes';
-import { ActionButton, Card, Duration, PrimaryButton, SectionHeader } from '@/components/ui';
-import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
-import { isSessionDone, replanWeek, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
+import { ActionButton, Card, Duration, PrimaryButton, RoundButton, SectionHeader } from '@/components/ui';
+import { addDays, dayKey, parseDay, startOfWeek } from '@/domain/dates';
+import { DEFAULT_FREE, defaultSessionRange, isSessionDone, loggedFor, minutesLeft, moveTarget, overFree, plansAround, replanWeek, resized, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
+import { durationParts } from '@/domain/format';
 import type { LogEntry } from '@/domain/types';
 import { useAssetName, weekdayName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
 
-export const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
+/** Asset ids in the portfolio's order, which is the order sessions are listed in within a day. */
+function useAssetOrder(): string[] {
+  const assets = usePortfolioStore((s) => s.assets);
+  return assets.map((a) => a.id);
+}
 
-/** The plan for the week `today` is in, or on a Sunday, when this week is over, for the next one. */
+/** The plan to show: this week's, or on a Sunday with none, next week's. */
 export function useWeekPlan(): WeekPlan | undefined {
   const today = useToday();
-  const weekFrom = dayKey(startOfWeek(today));
-  const nextFrom = dayKey(addDays(startOfWeek(today), 7));
   const plans = usePortfolioStore((s) => s.plans);
-  const withSessions = (from: string) => plans.find((p) => p.weekFrom === from && p.sessions.length > 0);
-  return withSessions(weekFrom) ?? (weekdayMonFirst(today) === 6 ? withSessions(nextFrom) : undefined);
+  return plansAround(plans, today).shown;
 }
+
+/** Next week's plan, and whether it is time (Friday on) to offer making one. */
+export function useNextWeek() {
+  const today = useToday();
+  const plans = usePortfolioStore((s) => s.plans);
+  return plansAround(plans, today);
+}
+
+const planNext = () => router.push({ pathname: '/plan-week', params: { when: 'next' } });
 
 /** "45m", "2h" or "1.5h": short enough for a day column. */
 function shortDuration(minutes: number, t: TFunction): string {
@@ -33,19 +45,22 @@ function shortDuration(minutes: number, t: TFunction): string {
   return `${h}${t('units.h')}`;
 }
 
-/** One planned session as a tile in its asset's color: tap to log it. */
-function SessionRow({ session, done }: { session: PlannedSession; done: boolean }) {
+/** One planned session as a tile in its asset's color: tap to log it, for its own day and what is left of it. */
+function SessionRow({ session, logs }: { session: PlannedSession; logs: LogEntry[] }) {
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === session.assetId));
   if (!asset) return null;
   const p = palette[asset.color];
+  const done = isSessionDone(session, logs);
+  const left = minutesLeft(session, logs);
+  const started = !done && left < session.minutes;
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${assetName(asset)}${done ? `, ${t('plan.done')}` : ''}`}
-      onPress={() => router.push({ pathname: '/log', params: { assetId: asset.id } })}
+      onPress={() => router.push({ pathname: '/log', params: done ? { assetId: asset.id, day: session.day } : { assetId: asset.id, day: session.day, minutes: String(left) } })}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: done ? colors.track : p.tint, minHeight: 56, opacity: pressed ? 0.7 : 1 })}
     >
       <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={36} />
@@ -53,7 +68,14 @@ function SessionRow({ session, done }: { session: PlannedSession; done: boolean 
         <Text variant="label" numberOfLines={1} color={done ? 'muted' : 'ink'} style={{ fontFamily: 'Inter_600SemiBold' }}>
           {assetName(asset)}
         </Text>
-        <Duration minutes={session.minutes} size={13} quiet={done} highlight={p.main} />
+        <Box flexDirection="row" alignItems="baseline" gap="xs">
+          <Duration minutes={started ? left : session.minutes} size={13} quiet={done} highlight={p.main} />
+          {started ? (
+            <Text variant="tiny" color="muted">
+              {t('plan.left')}
+            </Text>
+          ) : null}
+        </Box>
       </Box>
       {done ? (
         <Box width={26} height={26} borderRadius="pill" backgroundColor="daysSoft" alignItems="center" justifyContent="center">
@@ -70,6 +92,87 @@ function SessionRow({ session, done }: { session: PlannedSession; done: boolean 
   );
 }
 
+/** A session that can still change: move it a day either way, make it shorter or longer, or take it out. */
+function EditableSession({ session, plan, fromDay }: { session: PlannedSession; plan: WeekPlan; fromDay: string }) {
+  const { t } = useTranslation();
+  const { palette } = useAppTheme();
+  const assetName = useAssetName();
+  const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === session.assetId));
+  const move = usePortfolioStore((s) => s.movePlannedSession);
+  const remove = usePortfolioStore((s) => s.removePlannedSession);
+  const resize = usePortfolioStore((s) => s.resizePlannedSession);
+  if (!asset) return null;
+  const name = assetName(asset);
+  const go = (direction: 1 | -1) => {
+    const day = moveTarget(plan.sessions, plan.weekFrom, session, direction, fromDay);
+    if (day) move(plan.weekFrom, session.id, day);
+  };
+  return (
+    <Box backgroundColor="card" borderRadius="l" borderWidth={1} borderColor="line" padding="s" gap="s">
+      <Box flexDirection="row" alignItems="center" gap="sm">
+        <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={32} />
+        <Box flex={1}>
+          <Text variant="label" numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+            {name}
+          </Text>
+          <Duration minutes={session.minutes} size={13} highlight={palette[asset.color].main} />
+        </Box>
+        <Pressable accessibilityRole="button" accessibilityLabel={`${t('plan.remove')}: ${name}`} onPress={() => remove(plan.weekFrom, session.id)} hitSlop={8} style={{ minWidth: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+          <Text variant="heading">×</Text>
+        </Pressable>
+      </Box>
+      <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+        <Box flexDirection="row" gap="s">
+          <RoundButton accessibilityLabel={`${t('plan.earlier')}: ${name}`} onPress={() => go(-1)} style={{ paddingHorizontal: 0 }}>
+            <Text variant="heading">‹</Text>
+          </RoundButton>
+          <RoundButton accessibilityLabel={`${t('plan.later')}: ${name}`} onPress={() => go(1)} style={{ paddingHorizontal: 0 }}>
+            <Text variant="heading">›</Text>
+          </RoundButton>
+        </Box>
+        <Box flexDirection="row" gap="s">
+          <RoundButton accessibilityLabel={`${t('common.less')}: ${name}`} onPress={() => resize(plan.weekFrom, session.id, resized(session.minutes, -1))} style={{ paddingHorizontal: 0 }}>
+            <Text variant="heading">−</Text>
+          </RoundButton>
+          <RoundButton accessibilityLabel={`${t('common.more')}: ${name}`} onPress={() => resize(plan.weekFrom, session.id, resized(session.minutes, 1))} style={{ paddingHorizontal: 0 }}>
+            <Text variant="heading">+</Text>
+          </RoundButton>
+        </Box>
+      </Box>
+    </Box>
+  );
+}
+
+/** Picks an asset to add to a day; assets already on that day are left out. */
+function AddSession({ plan, day, onDone }: { plan: WeekPlan; day: string; onDone: () => void }) {
+  const { t } = useTranslation();
+  const assetName = useAssetName();
+  const assets = usePortfolioStore((s) => s.assets);
+  const add = usePortfolioStore((s) => s.addPlannedSession);
+  const options = assets.filter((a) => !plan.sessions.some((s) => s.day === day && s.assetId === a.id));
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }} accessibilityLabel={t('plan.add')}>
+      {options.map((a) => (
+        <Pressable
+          key={a.id}
+          accessibilityRole="button"
+          accessibilityLabel={assetName(a)}
+          onPress={() => {
+            add(plan.weekFrom, { assetId: a.id, day, minutes: (a.sessionMinutes ?? defaultSessionRange(a)).min });
+            onDone();
+          }}
+          style={({ pressed }) => ({ alignItems: 'center', gap: 4, width: 72, opacity: pressed ? 0.7 : 1 })}
+        >
+          <AssetIcon icon={a.icon} color={a.color} face={a.face} size={40} />
+          <Text variant="tiny" numberOfLines={1} color="muted">
+            {assetName(a)}
+          </Text>
+        </Pressable>
+      ))}
+    </ScrollView>
+  );
+}
+
 const WEEK = [0, 1, 2, 3, 4, 5, 6];
 
 /** The week as seven days: its name, a circle (ticked when everything planned is done) and a dot per asset. */
@@ -77,12 +180,13 @@ function WeekStrip({ monday, plan, todayKey, logs, onPress }: { monday: Date; pl
   const { t, i18n } = useTranslation();
   const { colors, palette } = useAppTheme();
   const assets = usePortfolioStore((s) => s.assets);
+  const order = useAssetOrder();
   return (
     <Pressable onPress={onPress} accessibilityRole="button" style={{ flexDirection: 'row', gap: 4 }}>
       {WEEK.map((i) => {
         const date = addDays(monday, i);
         const key = dayKey(date);
-        const sessions = sessionsOn(plan, key);
+        const sessions = sessionsOn(plan, key, order);
         const isToday = key === todayKey;
         const past = key < todayKey;
         const allDone = sessions.length > 0 && sessions.every((s) => isSessionDone(s, logs));
@@ -124,6 +228,8 @@ export function TodayPlan() {
   const { colors } = useAppTheme();
   const today = useToday();
   const plan = useWeekPlan();
+  const { next, askNext } = useNextWeek();
+  const order = useAssetOrder();
   const { assets, logs } = usePortfolio();
   const todayKey = dayKey(today);
 
@@ -185,10 +291,10 @@ export function TodayPlan() {
   }
 
   const toGoals = () => router.navigate('/(tabs)/goals');
-  const sessions = sessionsOn(plan, todayKey);
+  const sessions = sessionsOn(plan, todayKey, order);
   const planned = plan.sessions.reduce((sum, s) => sum + s.minutes, 0);
-  const done = plan.sessions.filter((s) => isSessionDone(s, logs)).reduce((sum, s) => sum + s.minutes, 0);
-  const todayLeft = sessions.filter((s) => !isSessionDone(s, logs)).reduce((sum, s) => sum + s.minutes, 0);
+  const done = plan.sessions.reduce((sum, s) => sum + Math.min(s.minutes, loggedFor(s, logs)), 0);
+  const todayLeft = sessions.reduce((sum, s) => sum + minutesLeft(s, logs), 0);
   return (
     <Card gap="sm">
       <Pressable accessibilityRole="button" accessibilityLabel={t('plan.weekTitle')} onPress={toGoals} style={{ gap: 10 }}>
@@ -214,19 +320,28 @@ export function TodayPlan() {
       </Box>
       {sessions.length === 0 ? <Text variant="small">{t('plan.nothingToday')}</Text> : null}
       {sessions.map((s) => (
-        <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
+        <SessionRow key={s.id} session={s} logs={logs} />
       ))}
+      {askNext ? (
+        <Box flexDirection="row" style={{ marginTop: 4 }}>
+          <ActionButton label={next ? t('plan.editNext') : t('plan.planNext')} icon={next ? UI_PATHS.pencil : UI_PATHS.arrowRight} tone={next ? 'outline' : 'soft'} onPress={planNext} />
+        </Box>
+      ) : null}
     </Card>
   );
 }
 
-/** On Goals: the whole week's plan with a way to re-plan what is left, or the button to make one. */
+/** On Goals: the whole week's plan, which can be changed in place, or the button to make one. */
 export function WeekPlanCard() {
   const { t, i18n } = useTranslation();
   const today = useToday();
   const plan = useWeekPlan();
+  const { next } = useNextWeek();
+  const order = useAssetOrder();
   const { assets, logs } = usePortfolio();
   const setPlan = usePortfolioStore((s) => s.setPlan);
+  const [editing, setEditing] = useState(false);
+  const [adding, setAdding] = useState<string | null>(null);
 
   if (!plan || plan.sessions.length === 0) {
     return (
@@ -239,6 +354,9 @@ export function WeekPlanCard() {
   }
 
   const monday = parseDay(plan.weekFrom);
+  const todayKey = dayKey(today);
+  // Days before this can no longer change; a week that has not started can change from its Monday.
+  const editFrom = plan.weekFrom > todayKey ? plan.weekFrom : todayKey;
   const replan = () => setPlan(replanWeek(plan, assets, logs, plan.free ?? DEFAULT_FREE, today));
 
   return (
@@ -246,28 +364,63 @@ export function WeekPlanCard() {
       <SectionHeader title={t('plan.yourPlan')} />
       {[0, 1, 2, 3, 4, 5, 6].map((i) => {
         const day = addDays(monday, i);
-        const sessions = sessionsOn(plan, dayKey(day));
-        if (sessions.length === 0) return null;
+        const key = dayKey(day);
+        const sessions = sessionsOn(plan, key, order);
+        const open = editing && key >= editFrom;
+        if (sessions.length === 0 && !open) return null;
+        const over = open ? overFree(plan.sessions, key, plan.free) : 0;
         return (
           <Box key={i} gap="s">
             <Box flexDirection="row" alignItems="center" justifyContent="space-between">
               <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
-                {weekdayName(i18n.language, parseDay(dayKey(day)))}
+                {weekdayName(i18n.language, parseDay(key))}
               </Text>
-              <Duration minutes={sessions.reduce((sum, s) => sum + s.minutes, 0)} size={12} quiet />
+              <Box flexDirection="row" alignItems="center" gap="s">
+                <Duration minutes={sessions.reduce((sum, s) => sum + s.minutes, 0)} size={12} quiet />
+                {open ? (
+                  <RoundButton accessibilityLabel={`${t('plan.add')}: ${weekdayName(i18n.language, parseDay(key))}`} onPress={() => setAdding(adding === key ? null : key)} style={{ paddingHorizontal: 0 }}>
+                    <Text variant="heading">{adding === key ? '×' : '+'}</Text>
+                  </RoundButton>
+                ) : null}
+              </Box>
             </Box>
-            {sessions.map((s) => (
-              <SessionRow key={s.id} session={s} done={isSessionDone(s, logs)} />
-            ))}
+            {over > 0 ? <Text variant="small">{plan.free?.[i] === 0 ? t('plan.overOff') : t('plan.over', { time: timeText(plan.free?.[i] ?? 0, t) })}</Text> : null}
+            {open && adding === key ? <AddSession plan={plan} day={key} onDone={() => setAdding(null)} /> : null}
+            {sessions.map((s) => (editing && key >= editFrom && !isSessionDone(s, logs) ? <EditableSession key={s.id} session={s} plan={plan} fromDay={editFrom} /> : <SessionRow key={s.id} session={s} logs={logs} />))}
           </Box>
         );
       })}
-      <Box flexDirection="row" gap="s" style={{ marginTop: 4 }}>
-        {plan.weekFrom <= dayKey(today) ? (
-          <ActionButton label={t('plan.replan')} icon={UI_PATHS.refresh} tone="soft" onPress={replan} />
-        ) : null}
-        <ActionButton label={t('plan.edit')} icon={UI_PATHS.pencil} tone="outline" onPress={() => router.push('/plan-week')} />
-      </Box>
+      {editing ? (
+        <Box flexDirection="row" gap="s" style={{ marginTop: 4 }}>
+          <ActionButton
+            label={t('plan.doneEditing')}
+            icon={UI_PATHS.check}
+            tone="soft"
+            onPress={() => {
+              setEditing(false);
+              setAdding(null);
+            }}
+          />
+        </Box>
+      ) : (
+        <>
+          <Box flexDirection="row" gap="s" style={{ marginTop: 4 }}>
+            <ActionButton label={t('plan.edit')} icon={UI_PATHS.pencil} tone="outline" onPress={() => setEditing(true)} />
+            {plan.weekFrom <= todayKey ? <ActionButton label={t('plan.replan')} icon={UI_PATHS.refresh} tone="soft" onPress={replan} /> : null}
+          </Box>
+          <Box flexDirection="row" gap="s">
+            <ActionButton label={t('plan.startOver')} icon={UI_PATHS.refresh} tone="outline" onPress={() => router.push('/plan-week')} />
+            {plan !== next ? <ActionButton label={next ? t('plan.editNext') : t('plan.planNext')} icon={next ? UI_PATHS.pencil : UI_PATHS.arrowRight} tone="outline" onPress={planNext} /> : null}
+          </Box>
+        </>
+      )}
     </Card>
   );
+}
+
+/** "1 h 30 m" for a free-time note. */
+function timeText(minutes: number, t: TFunction): string {
+  return durationParts(minutes)
+    .map((p) => `${p.value} ${t(`units.${p.unit}`)}`)
+    .join(' ');
 }

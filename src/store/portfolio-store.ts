@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { buildDemo } from '@/domain/demo';
 import { newId } from '@/domain/ids';
-import type { WeekPlan } from '@/domain/plan';
+import type { PlannedSession, WeekPlan } from '@/domain/plan';
 import type { Asset, LogEntry } from '@/domain/types';
 import { RECOVERY_ID } from '@/domain/types';
 import { mmkvZustandStorage } from './mmkv-storage';
@@ -38,6 +38,9 @@ interface PortfolioState {
   setPlan: (plan: WeekPlan) => void;
   movePlannedSession: (weekFrom: string, id: string, day: string) => void;
   removePlannedSession: (weekFrom: string, id: string) => void;
+  resizePlannedSession: (weekFrom: string, id: string, minutes: number) => void;
+  /** Adds a session to a week's plan, creating the plan if the week has none. */
+  addPlannedSession: (weekFrom: string, session: Omit<PlannedSession, 'id'>) => void;
   loadDemo: () => void;
   reset: () => void;
 }
@@ -70,6 +73,14 @@ export const usePortfolioStore = create<PortfolioState>()(
         set((s) => ({ plans: s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: p.sessions.map((x) => (x.id === id ? { ...x, day } : x)) } : p)) })),
       removePlannedSession: (weekFrom, id) =>
         set((s) => ({ plans: s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: p.sessions.filter((x) => x.id !== id) } : p)) })),
+      resizePlannedSession: (weekFrom, id, minutes) =>
+        set((s) => ({ plans: s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: p.sessions.map((x) => (x.id === id ? { ...x, minutes } : x)) } : p)) })),
+      addPlannedSession: (weekFrom, session) =>
+        set((s) => {
+          const added = { ...session, id: newId('plan') };
+          const has = s.plans.some((p) => p.weekFrom === weekFrom);
+          return { plans: has ? s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: [...p.sessions, added] } : p)) : [...s.plans, { weekFrom, sessions: [added] }].sort((a, b) => a.weekFrom.localeCompare(b.weekFrom)) };
+        }),
       loadDemo: () => {
         const today = new Date();
         const demo = buildDemo(today);
