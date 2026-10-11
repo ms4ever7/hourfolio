@@ -314,6 +314,23 @@ describe('re-planning with today already partly done', () => {
     expect(r.shortBy).toEqual([{ assetId: 'a', minutes: 120 }]);
   });
 
+  it('re-planned midday, a part-logged session is not kept and only what is missing is planned again', () => {
+    const assets = [asset('g', { weeklyGoalMinutes: 180 })];
+    const logs = [log('g', '2026-09-30', 30)];
+    const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: 'today', assetId: 'g', day: '2026-09-30', minutes: 60 }] };
+    const next = replanWeek(plan, assets, logs, free, today);
+    expect(next.sessions.some((s) => s.id === 'today')).toBe(false);
+    expect(next.sessions.reduce((n, s) => n + s.minutes, 0)).toBe(150);
+  });
+
+  it('re-planned midday, a done session uses up its day\'s free time for other assets', () => {
+    const assets = [asset('g', { weeklyGoalMinutes: 60 }), asset('h', { weeklyGoalMinutes: 60 })];
+    const logs = [log('g', '2026-09-30', 60)];
+    const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: 'today', assetId: 'g', day: '2026-09-30', minutes: 60 }] };
+    const next = replanWeek(plan, assets, logs, [0, 0, 60, 60, 0, 0, 0], today);
+    expect(next.sessions.find((s) => s.assetId === 'h')?.day).toBe('2026-10-01');
+  });
+
   it('a done session does not reappear once re-planned from a later day', () => {
     const assets = [asset('g', { weeklyGoalMinutes: 180 })];
     const logs = [log('g', '2026-09-29', 60)];

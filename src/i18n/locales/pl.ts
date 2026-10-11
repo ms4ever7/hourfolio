@@ -393,7 +393,7 @@ export const pl: Translations = {
     wake: 'Zwykle wstaję',
     bed: 'Zwykle kładę się spać',
     planReminders: 'Zaplanowane sesje',
-    planRemindersSub: 'Przypomnienie po południu o tym, co plan ma na dziś i jutro.',
+    planRemindersSub: 'Przypomnienie po południu o tym, co plan ma na dziś i najbliższe dni.',
     checkIn: 'Wieczorne przypomnienie',
     checkInSub: 'Godzinę przed snem, tylko w dni, gdy nic jeszcze nie zapisano. Odpoczynek też się liczy.',
     open: 'Otwórz mój portfel',

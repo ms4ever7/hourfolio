@@ -60,7 +60,7 @@ function SessionRow({ session, logs }: { session: PlannedSession; logs: LogEntry
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${assetName(asset)}${done ? `, ${t('plan.done')}` : ''}`}
-      onPress={() => router.push({ pathname: '/log', params: { assetId: asset.id, day: session.day, minutes: String(done ? session.minutes : left) } })}
+      onPress={() => router.push({ pathname: '/log', params: done ? { assetId: asset.id, day: session.day } : { assetId: asset.id, day: session.day, minutes: String(left) } })}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: done ? colors.track : p.tint, minHeight: 56, opacity: pressed ? 0.7 : 1 })}
     >
       <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={36} />

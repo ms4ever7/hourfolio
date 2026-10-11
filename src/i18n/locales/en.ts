@@ -373,7 +373,7 @@ export const en = {
     wake: 'I usually wake up',
     bed: 'I usually go to bed',
     planReminders: 'Planned sessions',
-    planRemindersSub: 'A note in the afternoon about what your plan has for today and tomorrow.',
+    planRemindersSub: 'A note in the afternoon about what your plan has for the next few days.',
     checkIn: 'Evening check-in',
     checkInSub: 'An hour before bed, only on days with nothing logged yet. Rest counts too.',
     open: 'Open my portfolio',

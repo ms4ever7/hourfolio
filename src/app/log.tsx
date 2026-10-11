@@ -32,7 +32,7 @@ export default function LogSheet() {
   const assets = usePortfolioStore((s) => s.assets);
   const logTime = usePortfolioStore((s) => s.logTime);
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
-  const [minutes, setMinutes] = useState(plannedMinutes >= 5 && plannedMinutes <= 24 * 60 ? Math.round(plannedMinutes / 5) * 5 : 60);
+  const [minutes, setMinutes] = useState(plannedMinutes > 0 && plannedMinutes <= 24 * 60 ? Math.max(5, Math.ceil(plannedMinutes / 5) * 5) : 60);
   const [when, setWhen] = useState<string>(earlierDay ?? (params.day === dayKey(addDays(today, -1)) ? 'yesterday' : 'today'));
   const [note, setNote] = useState('');
 
