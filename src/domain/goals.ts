@@ -102,3 +102,35 @@ export function weekNudge(assets: Asset[], logs: LogEntry[], now: Date): Nudge |
   }
   return best;
 }
+
+export const WEEK_GOAL_STEP = 30;
+export const WEEK_GOAL_MAX = 40 * 60;
+export const DAY_GOAL_MAX = 8 * 60;
+
+/** Days a per-day goal counts on: the asset's plan days, every day when unset. */
+export const goalDays = (a: Pick<Asset, 'planDays'>): number => a.planDays?.length || 7;
+
+/** One step of a per-day goal: 5 minutes while short, 15 from an hour. Never below 0 or above 8 h. */
+export function stepDayGoal(minutes: number, dir: 1 | -1): number {
+  const step = minutes + (dir < 0 ? -1 : 0) >= 60 ? 15 : 5;
+  return Math.min(DAY_GOAL_MAX, Math.max(0, minutes + dir * step));
+}
+
+/** The per-day goal a weekly one comes to, in 5-minute steps (at least 5). */
+export function dailyFromWeekly(weekly: number, a: Pick<Asset, 'planDays'>): number {
+  return Math.min(DAY_GOAL_MAX, Math.max(5, Math.round(weekly / goalDays(a) / 5) * 5));
+}
+
+type GoalFields = Pick<Asset, 'weeklyGoalMinutes' | 'dailyGoalMinutes' | 'planDays'>;
+
+/**
+ * Applies an edit to an asset (or onboarding draft) and keeps the two goals
+ * consistent: a per-day goal always sets the weekly one, and setting the weekly
+ * goal alone drops the per-day one.
+ */
+export function applyGoalPatch<T extends GoalFields>(a: T, patch: Partial<T>): T {
+  const next = { ...a, ...patch };
+  if ('weeklyGoalMinutes' in patch && !('dailyGoalMinutes' in patch)) next.dailyGoalMinutes = undefined;
+  if (next.dailyGoalMinutes) next.weeklyGoalMinutes = next.dailyGoalMinutes * goalDays(next);
+  return next;
+}

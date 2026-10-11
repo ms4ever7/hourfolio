@@ -3,19 +3,17 @@ import { useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GoalField } from '@/components/goal-field';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Duration, PrimaryButton, RoundButton, footerPad } from '@/components/ui';
+import { PrimaryButton, footerPad } from '@/components/ui';
 import { useNextWeek } from '@/components/plan-card';
 import { DEFAULT_FREE, replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 
-const STEP = 30;
-const MAX = 40 * 60;
-
-/** Weekly goals for every asset, in half-hour steps. Changes save immediately. */
+/** Goals for every asset, by the week or by the day. Changes save immediately. */
 export default function GoalsEdit() {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -29,8 +27,6 @@ export default function GoalsEdit() {
   const weeks = [...new Set([shown?.weekFrom, next?.weekFrom].filter((w): w is string => w !== undefined))];
   // Goals as they were when the screen opened, to tell whether anything changed.
   const before = useRef(new Map(assets.map((a) => [a.id, a.weeklyGoalMinutes ?? 0])));
-
-  const set = (id: string, minutes: number) => updateAsset(id, { weeklyGoalMinutes: minutes > 0 ? minutes : undefined });
 
   const done = () => {
     const changed = assets.some((a) => (a.weeklyGoalMinutes ?? 0) !== (before.current.get(a.id) ?? 0));
@@ -61,30 +57,17 @@ export default function GoalsEdit() {
         </Text>
         <Text variant="body">{t('goals.editSub')}</Text>
         <Box backgroundColor="card" borderRadius="xl" paddingVertical="xs">
-          {assets.map((a, i) => {
-            const goal = a.weeklyGoalMinutes ?? 0;
-            return (
-              <Box key={a.id} flexDirection="row" alignItems="center" gap="sm" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={i === assets.length - 1 ? 0 : 1} borderColor="line">
+          {assets.map((a, i) => (
+            <Box key={a.id} gap="s" paddingVertical="sm" paddingHorizontal="m" borderBottomWidth={i === assets.length - 1 ? 0 : 1} borderColor="line">
+              <Box flexDirection="row" alignItems="center" gap="sm">
                 <AssetIcon icon={a.icon} color={a.color} face={a.face} size={36} />
                 <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
                   {assetName(a)}
                 </Text>
-                <RoundButton accessibilityLabel={`${t('common.less')}: ${assetName(a)}`} onPress={() => set(a.id, Math.max(0, goal - STEP))} style={{ paddingHorizontal: 0 }}>
-                  <Text variant="heading">−</Text>
-                </RoundButton>
-                <Box width={76} alignItems="center">
-                  {goal === 0 ? (
-                    <Text variant="small">{t('setup.goalOff')}</Text>
-                  ) : (
-                    <Duration minutes={goal} size={14} />
-                  )}
-                </Box>
-                <RoundButton accessibilityLabel={`${t('common.more')}: ${assetName(a)}`} onPress={() => set(a.id, Math.min(MAX, goal + STEP))} style={{ paddingHorizontal: 0 }}>
-                  <Text variant="heading">+</Text>
-                </RoundButton>
               </Box>
-            );
-          })}
+              <GoalField asset={a} label={assetName(a)} onChange={(patch) => updateAsset(a.id, patch)} />
+            </Box>
+          ))}
         </Box>
       </ScrollView>
       <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>

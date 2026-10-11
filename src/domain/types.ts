@@ -67,6 +67,8 @@ export interface Asset {
   /** Hours put in before the app, so capital starts where the user really is. */
   startingMinutes: number;
   weeklyGoalMinutes?: number;
+  /** When the goal is per day ("20 min of reading"): minutes on each plan day. `weeklyGoalMinutes` follows from it. */
+  dailyGoalMinutes?: number;
   /** Weekdays the planner may use for it, 0 = Monday … 6 = Sunday. Every day when unset. */
   planDays?: number[];
   /** Shortest and longest planned session, in minutes. Defaults come from the energy type. */

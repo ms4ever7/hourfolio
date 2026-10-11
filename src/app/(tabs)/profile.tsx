@@ -122,7 +122,7 @@ export default function Profile() {
       </Group>
 
       <Group title={t('profile.portfolio')}>
-        <ListRow left={<RowIcon emoji="➕" />} title={t('pick.custom')} sub={t('custom.label')} onPress={() => router.push({ pathname: '/onboarding/custom', params: { mode: 'add' } })} />
+        <ListRow left={<RowIcon emoji="➕" />} title={t('addAsset.title')} sub={t('addAsset.sub')} onPress={() => router.push('/add-asset')} />
         {SHOW_TEST_TOOLS ? (
           <ListRow title={t('settings.demo')} sub={t('settings.demoSub')} onPress={() =>
               confirm(() => {

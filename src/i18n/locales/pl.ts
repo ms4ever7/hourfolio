@@ -95,6 +95,7 @@ export const pl: Translations = {
   },
   setup: {
     step: 'Krok 2 z 2 · aktywo {{current}} z {{total}}',
+    stepAdd: 'Dodawanie · aktywo {{current}} z {{total}}',
     tagline: 'Dopasuj do tego, jak naprawdę to robisz.',
     color: 'Kolor',
     energy: 'Rodzaj energii',
@@ -116,6 +117,21 @@ export const pl: Translations = {
     suggested: 'Proponowane ustawienia',
     iconNote: 'Ikona i kolor dobrane dla ciebie',
     use: 'Pasuje',
+  },
+  goalField: {
+    perWeek: 'Na tydzień',
+    perDay: 'Na dzień',
+    aWeek: 'tygodniowo',
+  },
+  addAsset: {
+    title: 'Dodaj do portfela',
+    sub: 'Wybierz z listy albo dodaj własne.',
+    link: 'Dodaj',
+    added: 'Dodano',
+    add_one: 'Dalej ({{count}})',
+    add_few: 'Dalej ({{count}})',
+    add_many: 'Dalej ({{count}})',
+    add_other: 'Dalej ({{count}})',
   },
   greeting: { morning: 'Dzień dobry', afternoon: 'Dzień dobry', evening: 'Dobry wieczór', named: '{{greeting}}, {{name}}' },
   portfolio: {
@@ -202,9 +218,14 @@ export const pl: Translations = {
     when: 'Kiedy?',
     today: 'Dziś',
     yesterday: 'Wczoraj',
+    chooseDay: 'Wybierz dzień',
     note: 'Notatka',
     notePlaceholder: 'Co dokładnie? Np. akordy barré',
     save: 'Zainwestuj {{duration}}',
+  },
+  dayPicker: {
+    prevMonth: 'Poprzedni miesiąc',
+    nextMonth: 'Następny miesiąc',
   },
   settings: {
     title: 'Ustawienia',

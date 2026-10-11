@@ -1,5 +1,5 @@
 import { addDays, dayKey } from './dates';
-import { allGoalsMet, goalMetBy, nudgeTime, sceneArt, stageIndex, weekNudge, weekRange } from './goals';
+import { allGoalsMet, applyGoalPatch, dailyFromWeekly, goalMetBy, nudgeTime, sceneArt, stageIndex, stepDayGoal, weekNudge, weekRange } from './goals';
 import type { Asset, LogEntry } from './types';
 
 describe('weekly goals', () => {
@@ -102,5 +102,47 @@ describe('end-of-week nudge', () => {
 
   it('never nudges for more than two hours', () => {
     expect(weekNudge([asset('a', 1200)], [log('a', '2026-09-29', 1000)], thursday)).toBeNull();
+  });
+});
+
+describe('per-day goals', () => {
+  const base: Pick<Asset, 'weeklyGoalMinutes' | 'dailyGoalMinutes' | 'planDays'> = {};
+
+  it('turns a daily goal into the weekly one over the plan days', () => {
+    expect(applyGoalPatch(base, { dailyGoalMinutes: 20 }).weeklyGoalMinutes).toBe(140);
+    expect(applyGoalPatch({ ...base, planDays: [0, 2, 4] }, { dailyGoalMinutes: 20 }).weeklyGoalMinutes).toBe(60);
+  });
+
+  it('follows plan day changes while the goal is per day', () => {
+    const a = applyGoalPatch(base, { dailyGoalMinutes: 30 });
+    expect(applyGoalPatch(a, { planDays: [0, 1] }).weeklyGoalMinutes).toBe(60);
+  });
+
+  it('drops the daily goal when the weekly one is set on its own', () => {
+    const a = applyGoalPatch(base, { dailyGoalMinutes: 30 });
+    const b = applyGoalPatch(a, { weeklyGoalMinutes: 300 });
+    expect(b.dailyGoalMinutes).toBeUndefined();
+    expect(b.weeklyGoalMinutes).toBe(300);
+  });
+
+  it('turns a goal off', () => {
+    const a = applyGoalPatch(base, { dailyGoalMinutes: 30 });
+    const b = applyGoalPatch(a, { dailyGoalMinutes: undefined, weeklyGoalMinutes: undefined });
+    expect(b.weeklyGoalMinutes).toBeUndefined();
+  });
+
+  it('steps by 5 minutes, then 15 from an hour, within 0 to 8 h', () => {
+    expect(stepDayGoal(0, 1)).toBe(5);
+    expect(stepDayGoal(55, 1)).toBe(60);
+    expect(stepDayGoal(60, 1)).toBe(75);
+    expect(stepDayGoal(60, -1)).toBe(55);
+    expect(stepDayGoal(5, -1)).toBe(0);
+    expect(stepDayGoal(480, 1)).toBe(480);
+  });
+
+  it('converts a weekly goal to a daily one', () => {
+    expect(dailyFromWeekly(140, {})).toBe(20);
+    expect(dailyFromWeekly(60, { planDays: [0, 1, 2] })).toBe(20);
+    expect(dailyFromWeekly(10, {})).toBe(5);
   });
 });

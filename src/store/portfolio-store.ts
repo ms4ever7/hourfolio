@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { buildDemo } from '@/domain/demo';
+import { applyGoalPatch } from '@/domain/goals';
 import { newId } from '@/domain/ids';
 import type { PlannedSession, WeekPlan } from '@/domain/plan';
 import type { Asset, LogEntry } from '@/domain/types';
@@ -63,7 +64,7 @@ export const usePortfolioStore = create<PortfolioState>()(
         return id;
       },
       updateAsset: (id, patch) =>
-        set((s) => ({ assets: s.assets.map((a) => (a.id === id ? { ...a, ...patch } : a)) })),
+        set((s) => ({ assets: s.assets.map((a) => (a.id === id ? applyGoalPatch<Asset>(a, patch) : a)) })),
       logTime: (entry) =>
         set((s) => ({ logs: [...s.logs, { ...entry, id: newId('l'), createdAt: new Date().toISOString() }] })),
       removeLog: (id) => set((s) => ({ logs: s.logs.filter((l) => l.id !== id) })),

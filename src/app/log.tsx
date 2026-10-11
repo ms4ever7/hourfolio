@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { DayPicker } from '@/components/day-picker';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, RoundButton, Segmented, footerPad } from '@/components/ui';
+import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
 import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
@@ -27,14 +28,19 @@ export default function LogSheet() {
   const today = useToday();
   // A planned session passes its own day and what is left of it, so logging it ticks it off.
   const params = useLocalSearchParams<{ assetId?: string; day?: string; minutes?: string }>();
-  const earlierDay = params.day && /^\d{4}-\d{2}-\d{2}$/.test(params.day) && params.day < dayKey(addDays(today, -1)) && params.day >= dayKey(addDays(today, -6)) ? params.day : null;
+  // Today, yesterday and the days before are labelled by name for a week; the calendar reaches further back.
+  const days = Array.from({ length: 7 }, (_, i) => dayKey(addDays(today, -i)));
   const plannedMinutes = Number(params.minutes);
   const assets = usePortfolioStore((s) => s.assets);
   const logTime = usePortfolioStore((s) => s.logTime);
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
   const [minutes, setMinutes] = useState(plannedMinutes > 0 && plannedMinutes <= 24 * 60 ? Math.max(5, Math.ceil(plannedMinutes / 5) * 5) : 60);
-  const [when, setWhen] = useState<string>(earlierDay ?? (params.day === dayKey(addDays(today, -1)) ? 'yesterday' : 'today'));
+  // null means "today", resolved when saving, so a sheet left open past midnight still logs to the day it is then.
+  const [picked, setPicked] = useState<string | null>(params.day && params.day !== days[0] && days.includes(params.day) ? params.day : null);
+  const when = picked ?? days[0];
+  const [picking, setPicking] = useState(false);
   const [note, setNote] = useState('');
+  const dayLabel = (d: string) => (d === days[1] ? t('log.yesterday') : new Intl.DateTimeFormat(i18n.language, d >= days[6] ? { weekday: 'short', day: 'numeric' } : { day: 'numeric', month: 'short' }).format(parseDay(d)));
 
   const others = assets.filter((a) => a.id !== RECOVERY_ID);
   const restOn = assetId === RECOVERY_ID;
@@ -43,7 +49,7 @@ export default function LogSheet() {
     .join(' ');
 
   const save = () => {
-    const entry = { assetId, minutes, day: when === 'today' ? dayKey(new Date()) : when === 'yesterday' ? dayKey(addDays(new Date(), -1)) : when, note: note.trim() || undefined };
+    const entry = { assetId, minutes, day: picked ?? dayKey(new Date()), note: note.trim() || undefined };
     const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
     logTime(entry);
     if (met) {
@@ -162,16 +168,25 @@ export default function LogSheet() {
 
         <Box gap="s">
           <Text variant="bodyStrong">{t('log.when')}</Text>
-          <Segmented
-            label={t('log.when')}
-            value={when}
-            onChange={setWhen}
-            options={[
-              { value: 'today', label: t('log.today') },
-              { value: 'yesterday', label: t('log.yesterday') },
-              ...(earlierDay ? [{ value: earlierDay, label: new Intl.DateTimeFormat(i18n.language, { weekday: 'short', day: 'numeric' }).format(parseDay(earlierDay)) }] : []),
-            ]}
-          />
+          <Box flexDirection="row" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('log.when')}>
+            {[
+              { key: 'today', label: t('log.today'), on: when === days[0], onPress: () => { setPicked(null); setPicking(false); } },
+              { key: 'other', label: when !== days[0] ? dayLabel(when) : t('log.chooseDay'), on: when !== days[0], onPress: () => setPicking(true) },
+            ].map((o) => (
+              <Pressable
+                key={o.key}
+                accessibilityRole="radio"
+                accessibilityState={{ checked: o.on }}
+                onPress={o.onPress}
+                style={{ flex: 1, height: 44, paddingHorizontal: 14, borderRadius: 22, alignItems: 'center', justifyContent: 'center', backgroundColor: o.on ? colors.inverse : colors.card, borderWidth: 1, borderColor: o.on ? colors.inverse : colors.border }}
+              >
+                <Text variant="label" color={o.on ? 'onInverse' : 'ink'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                  {o.label}
+                </Text>
+              </Pressable>
+            ))}
+          </Box>
+          <DayPicker visible={picking} value={when} max={days[0]} onPick={(d) => { setPicked(d === days[0] ? null : d); setPicking(false); }} onClose={() => setPicking(false)} />
         </Box>
 
         <Box gap="s">
