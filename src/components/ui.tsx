@@ -3,6 +3,7 @@ import { useId, useRef, useState, type ReactNode } from 'react';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 import { Platform, Pressable, ScrollView, Switch, type PressableProps, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { ScrollLockContext } from '@/components/scroll-lock';
 import { useTranslation } from 'react-i18next';
 import { durationParts, formatHours } from '@/domain/format';
 import type { Trend } from '@/domain/growth';
@@ -23,6 +24,7 @@ export function Screen({ children, footer, scroll = true, scrollHint }: { childr
   const insets = useSafeAreaInsets();
   const scrollRef = useRef<ScrollView>(null);
   const [more, setMore] = useState(false);
+  const [locked, setLocked] = useState(false);
   const flashed = useRef(false);
   const metrics = useRef({ offset: 0, content: 0, view: 0 });
   // Tapping the focused tab again scrolls back to the top.
@@ -48,6 +50,7 @@ export function Screen({ children, footer, scroll = true, scrollHint }: { childr
         <Box flex={1}>
           <ScrollView
             ref={scrollRef}
+            scrollEnabled={!locked}
             keyboardShouldPersistTaps="handled"
             automaticallyAdjustKeyboardInsets
             scrollEventThrottle={32}
@@ -76,7 +79,7 @@ export function Screen({ children, footer, scroll = true, scrollHint }: { childr
                 : undefined
             }
           >
-            {content}
+            <ScrollLockContext.Provider value={setLocked}>{content}</ScrollLockContext.Provider>
           </ScrollView>
           {scrollHint && more ? <ScrollFade color={colors.ground} /> : null}
         </Box>

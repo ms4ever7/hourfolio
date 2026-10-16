@@ -1,10 +1,11 @@
-import { useRef, useState, type ReactNode } from 'react';
+import { useContext, useRef, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import Animated, { useAnimatedStyle, useSharedValue, withSpring, withTiming } from 'react-native-reanimated';
 import { scheduleOnRN } from 'react-native-worklets';
 import { Box, Text } from '@/components/primitives';
+import { ScrollLockContext } from '@/components/scroll-lock';
 import type { PlannedSession } from '@/domain/plan';
 import { useAppTheme } from '@/theme/theme';
 
@@ -54,6 +55,11 @@ export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabe
   const rowLayouts = useRef<Record<string, Layout>>({});
   const [hover, setHover] = useState<string | null>(null);
   const [lifted, setLifted] = useState<string | null>(null);
+  const lockScroll = useContext(ScrollLockContext);
+  const dragging = (on: boolean) => {
+    lockScroll(on);
+    onDragChange?.(on);
+  };
 
   const dayOf = (id: string) => days.find((d) => d.sessions.some((s) => s.id === id));
 
@@ -82,7 +88,7 @@ export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabe
 
   const begin = (id: string) => {
     setLifted(id);
-    onDragChange?.(true);
+    dragging(true);
   };
   const over = (id: string, shift: number) => {
     const c = centre(id, shift);
@@ -92,14 +98,14 @@ export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabe
   const cancel = () => {
     setHover(null);
     setLifted(null);
-    onDragChange?.(false);
+    dragging(false);
   };
   const drop = (id: string, shift: number) => {
     const c = centre(id, shift);
     const target = c === null ? null : dayAt(c);
     setHover(null);
     setLifted(null);
-    onDragChange?.(false);
+    dragging(false);
     if (target && target !== dayOf(id)?.key) onMove(id, target);
   };
   /** The next droppable day in a direction, for the screen reader actions. */
