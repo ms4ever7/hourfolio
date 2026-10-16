@@ -15,6 +15,9 @@ export interface BoardDay {
   drop: boolean;
 }
 
+/** How long a session is held before it lifts. Until then a drag scrolls the page. */
+const HOLD_MS = 250;
+
 interface Layout {
   y: number;
   height: number;
@@ -36,14 +39,17 @@ interface Props {
   laterLabel: string;
   /** No card of its own per day, for a board that already sits in a card. */
   plain?: boolean;
+  /** Called when a session is picked up and when it is put down, so the screen can stop scrolling meanwhile. */
+  onDragChange?: (dragging: boolean) => void;
 }
 
 /**
- * The week as day cards. A session is picked up by its grip (⠿) and dropped on
- * another day, which highlights while it is over it. Screen readers get
+ * The week as day cards. A session is picked up by holding it anywhere (the grip ⠿
+ * shows it can be moved) and dropped on another day, which highlights while it is
+ * over it. Buttons inside the row still work on a tap. Screen readers get
  * "earlier" and "later" actions on the grip instead of a drag.
  */
-export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabel, earlierLabel, laterLabel, plain }: Props) {
+export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabel, earlierLabel, laterLabel, plain, onDragChange }: Props) {
   const dayLayouts = useRef<Record<string, Layout>>({});
   const rowLayouts = useRef<Record<string, Layout>>({});
   const [hover, setHover] = useState<string | null>(null);
@@ -74,7 +80,10 @@ export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabe
     return d && r ? d.y + r.y + r.height / 2 + shift : null;
   };
 
-  const begin = (id: string) => setLifted(id);
+  const begin = (id: string) => {
+    setLifted(id);
+    onDragChange?.(true);
+  };
   const over = (id: string, shift: number) => {
     const c = centre(id, shift);
     const next = c === null ? null : dayAt(c);
@@ -83,12 +92,14 @@ export function PlanBoard({ days, onMove, header, row, footer, canDrag, gripLabe
   const cancel = () => {
     setHover(null);
     setLifted(null);
+    onDragChange?.(false);
   };
   const drop = (id: string, shift: number) => {
     const c = centre(id, shift);
     const target = c === null ? null : dayAt(c);
     setHover(null);
     setLifted(null);
+    onDragChange?.(false);
     if (target && target !== dayOf(id)?.key) onMove(id, target);
   };
   /** The next droppable day in a direction, for the screen reader actions. */
@@ -162,7 +173,11 @@ function DraggableRow({ enabled, label, earlierLabel, laterLabel, onLayout, onBe
   const shift = useSharedValue(0);
   const raised = useSharedValue(0);
 
+  // The whole row is the handle, so the pan waits for a hold: a quick tap reaches the buttons in the
+  // row, and a drag that starts moving at once scrolls the page (on Android its ScrollView would
+  // take a vertical drag from the pan after a few dp anyway).
   const pan = Gesture.Pan()
+    .activateAfterLongPress(HOLD_MS)
     .onStart(() => {
       raised.value = withTiming(1, { duration: 120 });
       scheduleOnRN(onBegin);
@@ -190,30 +205,30 @@ function DraggableRow({ enabled, label, earlierLabel, laterLabel, onLayout, onBe
   }));
 
   const handle = enabled ? (
-    <GestureDetector gesture={pan}>
-      <View
-        accessible
-        accessibilityRole="button"
-        accessibilityLabel={label}
-        accessibilityHint={t('plan.dragHint')}
-        accessibilityActions={[
-          { name: 'earlier', label: earlierLabel },
-          { name: 'later', label: laterLabel },
-        ]}
-        onAccessibilityAction={(e) => onStep(e.nativeEvent.actionName === 'later' ? 1 : -1)}
-        hitSlop={6}
-        style={{ width: 28, height: 44, alignItems: 'center', justifyContent: 'center' }}
-      >
-        <Text variant="heading" color="faint" style={{ fontSize: 22, lineHeight: 26 }}>
-          ⠿
-        </Text>
-      </View>
-    </GestureDetector>
+    <View
+      accessible
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      accessibilityHint={t('plan.dragHint')}
+      accessibilityActions={[
+        { name: 'earlier', label: earlierLabel },
+        { name: 'later', label: laterLabel },
+      ]}
+      onAccessibilityAction={(e) => onStep(e.nativeEvent.actionName === 'later' ? 1 : -1)}
+      hitSlop={6}
+      style={{ width: 28, height: 44, alignItems: 'center', justifyContent: 'center' }}
+    >
+      <Text variant="heading" color="faint" style={{ fontSize: 22, lineHeight: 26 }}>
+        ⠿
+      </Text>
+    </View>
   ) : null;
 
-  return (
+  const content = (
     <Animated.View onLayout={(e) => onLayout(e.nativeEvent.layout)} style={style}>
       {render(handle)}
     </Animated.View>
   );
+
+  return enabled ? <GestureDetector gesture={pan}>{content}</GestureDetector> : content;
 }
