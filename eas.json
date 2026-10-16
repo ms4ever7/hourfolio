@@ -21,6 +21,16 @@
       "autoIncrement": true,
       "channel": "production",
       "env": { "APP_VARIANT": "production" }
+    },
+    "staging-android": {
+      "extends": "staging",
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
+    },
+    "production-android": {
+      "extends": "production",
+      "distribution": "internal",
+      "android": { "buildType": "apk" }
     }
   },
   "submit": {
