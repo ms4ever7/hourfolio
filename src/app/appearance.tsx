@@ -1,5 +1,6 @@
 import { Image } from 'expo-image';
 import { router } from 'expo-router';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { Backdrop } from '@/components/backdrop';
@@ -63,6 +64,9 @@ export default function Appearance() {
   const { colors } = useAppTheme();
   const season = useSeason();
   const s = useSettingsStore();
+  /** Four tiles per row: measured, because percentages plus the gaps overflow on narrow phones. */
+  const [gridWidth, setGridWidth] = useState(0);
+  const tile = gridWidth > 0 ? Math.floor((gridWidth - 3 * 10) / 4) : undefined;
   const [icon, setIcon] = useAppIcon();
   const accent = toHex(parseHex(s.accent));
   const custom = !PRESETS.includes(accent);
@@ -162,7 +166,7 @@ export default function Appearance() {
 
       <Box gap="sm">
         <Text variant="bodyStrong">{t('appearance.background')}</Text>
-        <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }} accessibilityRole="radiogroup" accessibilityLabel={t('appearance.background')}>
+        <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)} accessibilityRole="radiogroup" accessibilityLabel={t('appearance.background')}>
           {BACKGROUNDS.map((b) => {
             const on = b === s.background;
             return (
@@ -172,7 +176,7 @@ export default function Appearance() {
                 accessibilityState={{ checked: on }}
                 accessibilityLabel={t(`backgrounds.${b}`)}
                 onPress={() => s.setBackground(b)}
-                style={{ width: '22.8%', gap: 6, alignItems: 'center' }}
+                style={{ width: tile, gap: 6, alignItems: 'center' }}
               >
                 <Box width="100%" height={96} borderRadius="m" overflow="hidden" backgroundColor="ground" style={{ borderWidth: on ? 2 : 1, borderColor: on ? colors.ink : colors.border }}>
                   <Backdrop id={b} width={80} height={96} />
