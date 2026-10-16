@@ -1,14 +1,15 @@
 import { router } from 'expo-router';
 import type { TFunction } from 'i18next';
 import { useTranslation } from 'react-i18next';
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Pressable, ScrollView } from 'react-native';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
+import { PlanBoard } from '@/components/plan-board';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene } from '@/components/scenes';
 import { ActionButton, Card, Duration, PrimaryButton, RoundButton, SectionHeader } from '@/components/ui';
-import { addDays, dayKey, parseDay, startOfWeek } from '@/domain/dates';
-import { DEFAULT_FREE, defaultSessionRange, isSessionDone, loggedFor, minutesLeft, moveTarget, overFree, plansAround, replanWeek, resized, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
+import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
+import { defaultSessionRange, isSessionDone, loggedFor, minutesLeft, dropDays, overFree, plansAround, replanWeek, resized, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
 import { durationParts } from '@/domain/format';
 import type { LogEntry } from '@/domain/types';
 import { useAssetName, weekdayName } from '@/lib/labels';
@@ -46,7 +47,7 @@ function shortDuration(minutes: number, t: TFunction): string {
 }
 
 /** One planned session as a tile in its asset's color: tap to log it, for its own day and what is left of it. */
-function SessionRow({ session, logs }: { session: PlannedSession; logs: LogEntry[] }) {
+export function SessionRow({ session, logs }: { session: PlannedSession; logs: LogEntry[] }) {
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
@@ -92,53 +93,36 @@ function SessionRow({ session, logs }: { session: PlannedSession; logs: LogEntry
   );
 }
 
-/** A session that can still change: move it a day either way, make it shorter or longer, or take it out. */
-function EditableSession({ session, plan, fromDay }: { session: PlannedSession; plan: WeekPlan; fromDay: string }) {
+/** A session that can still change: drag it to another day by its grip, make it shorter or longer, or take it out. */
+function EditableSession({ session, plan, handle }: { session: PlannedSession; plan: WeekPlan; handle: ReactNode }) {
   const { t } = useTranslation();
   const { palette } = useAppTheme();
   const assetName = useAssetName();
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === session.assetId));
-  const move = usePortfolioStore((s) => s.movePlannedSession);
   const remove = usePortfolioStore((s) => s.removePlannedSession);
   const resize = usePortfolioStore((s) => s.resizePlannedSession);
   if (!asset) return null;
   const name = assetName(asset);
-  const go = (direction: 1 | -1) => {
-    const day = moveTarget(plan.sessions, plan.weekFrom, session, direction, fromDay);
-    if (day) move(plan.weekFrom, session.id, day);
-  };
+  const small = { minWidth: 32, width: 32, height: 32, borderRadius: 16, paddingHorizontal: 0 } as const;
   return (
-    <Box backgroundColor="card" borderRadius="l" borderWidth={1} borderColor="line" padding="s" gap="s">
-      <Box flexDirection="row" alignItems="center" gap="sm">
-        <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={32} />
-        <Box flex={1}>
-          <Text variant="label" numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
-            {name}
-          </Text>
-          <Duration minutes={session.minutes} size={13} highlight={palette[asset.color].main} />
-        </Box>
-        <Pressable accessibilityRole="button" accessibilityLabel={`${t('plan.remove')}: ${name}`} onPress={() => remove(plan.weekFrom, session.id)} hitSlop={8} style={{ minWidth: 44, height: 44, alignItems: 'center', justifyContent: 'center' }}>
-          <Text variant="heading">×</Text>
-        </Pressable>
+    <Box flexDirection="row" alignItems="center" gap="s" style={{ minHeight: 48 }}>
+      {handle}
+      <AssetIcon icon={asset.icon} color={asset.color} face={asset.face} size={32} />
+      <Box flex={1}>
+        <Text variant="label" numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+          {name}
+        </Text>
+        <Duration minutes={session.minutes} size={13} highlight={palette[asset.color].main} />
       </Box>
-      <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-        <Box flexDirection="row" gap="s">
-          <RoundButton accessibilityLabel={`${t('plan.earlier')}: ${name}`} onPress={() => go(-1)} style={{ paddingHorizontal: 0 }}>
-            <Text variant="heading">‹</Text>
-          </RoundButton>
-          <RoundButton accessibilityLabel={`${t('plan.later')}: ${name}`} onPress={() => go(1)} style={{ paddingHorizontal: 0 }}>
-            <Text variant="heading">›</Text>
-          </RoundButton>
-        </Box>
-        <Box flexDirection="row" gap="s">
-          <RoundButton accessibilityLabel={`${t('common.less')}: ${name}`} onPress={() => resize(plan.weekFrom, session.id, resized(session.minutes, -1))} style={{ paddingHorizontal: 0 }}>
-            <Text variant="heading">−</Text>
-          </RoundButton>
-          <RoundButton accessibilityLabel={`${t('common.more')}: ${name}`} onPress={() => resize(plan.weekFrom, session.id, resized(session.minutes, 1))} style={{ paddingHorizontal: 0 }}>
-            <Text variant="heading">+</Text>
-          </RoundButton>
-        </Box>
-      </Box>
+      <RoundButton accessibilityLabel={`${t('common.less')}: ${name}`} onPress={() => resize(plan.weekFrom, session.id, resized(session.minutes, -1))} style={small}>
+        <Text variant="bodyStrong">−</Text>
+      </RoundButton>
+      <RoundButton accessibilityLabel={`${t('common.more')}: ${name}`} onPress={() => resize(plan.weekFrom, session.id, resized(session.minutes, 1))} style={small}>
+        <Text variant="bodyStrong">+</Text>
+      </RoundButton>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${t('plan.remove')}: ${name}`} onPress={() => remove(plan.weekFrom, session.id)} hitSlop={8} style={{ width: 32, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+        <Text variant="heading">×</Text>
+      </Pressable>
     </Box>
   );
 }
@@ -190,7 +174,7 @@ function WeekStrip({ monday, plan, todayKey, logs, onPress }: { monday: Date; pl
         const isToday = key === todayKey;
         const past = key < todayKey;
         const allDone = sessions.length > 0 && sessions.every((s) => isSessionDone(s, logs));
-        const ids = [...new Set(sessions.map((s) => s.assetId))].slice(0, 3);
+        const ids = [...new Set(sessions.map((s) => s.assetId))];
         return (
           <Box key={key} flex={1} alignItems="center" gap="s" backgroundColor={isToday ? 'accentSoft' : undefined} style={{ paddingTop: 8, paddingBottom: 6, borderRadius: 14 }}>
             <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
@@ -208,11 +192,11 @@ function WeekStrip({ monday, plan, todayKey, logs, onPress }: { monday: Date; pl
             <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold', opacity: allDone ? 0.5 : 1 }}>
               {sessions.length ? shortDuration(sessions.reduce((sum, s) => sum + s.minutes, 0), t) : ' '}
             </Text>
-            <Box flexDirection="row" height={6} style={{ gap: 3 }}>
+            <Box flexDirection="row" height={5} style={{ gap: 2 }}>
               {ids.map((id) => {
                 const asset = assets.find((a) => a.id === id);
                 const done = sessions.filter((s) => s.assetId === id).every((s) => isSessionDone(s, logs));
-                return asset ? <Box key={id} width={6} height={6} borderRadius="pill" style={{ backgroundColor: palette[asset.color].main, opacity: done ? 0.35 : 1 }} /> : null;
+                return asset ? <Box key={id} width={5} height={5} borderRadius="pill" style={{ backgroundColor: palette[asset.color].main, opacity: done ? 0.35 : 1 }} /> : null;
               })}
             </Box>
           </Box>
@@ -340,8 +324,20 @@ export function WeekPlanCard() {
   const order = useAssetOrder();
   const { assets, logs } = usePortfolio();
   const setPlan = usePortfolioStore((s) => s.setPlan);
+  const move = usePortfolioStore((s) => s.movePlannedSession);
+  const assetName = useAssetName();
   const [editing, setEditing] = useState(false);
   const [adding, setAdding] = useState<string | null>(null);
+  const empty = !plan || plan.sessions.length === 0;
+  // Removing the last session ends editing, so the next plan does not open in edit mode.
+  const [wasEmpty, setWasEmpty] = useState(empty);
+  if (empty !== wasEmpty) {
+    setWasEmpty(empty);
+    if (empty) {
+      setEditing(false);
+      setAdding(null);
+    }
+  }
 
   if (!plan || plan.sessions.length === 0) {
     return (
@@ -357,39 +353,57 @@ export function WeekPlanCard() {
   const todayKey = dayKey(today);
   // Days before this can no longer change; a week that has not started can change from its Monday.
   const editFrom = plan.weekFrom > todayKey ? plan.weekFrom : todayKey;
-  const replan = () => setPlan(replanWeek(plan, assets, logs, plan.free ?? DEFAULT_FREE, today));
+  const replan = () => setPlan(replanWeek(plan, assets, logs, plan.free, today));
+  const assetNameById = (id: string) => {
+    const a = assets.find((x) => x.id === id);
+    return a ? assetName(a) : '';
+  };
+  const open = new Set(dropDays(plan.weekFrom, editFrom));
+  const days = [0, 1, 2, 3, 4, 5, 6]
+    .map((i) => {
+      const key = dayKey(addDays(monday, i));
+      return { key, sessions: sessionsOn(plan, key, order), drop: editing && open.has(key) };
+    })
+    .filter((d) => d.sessions.length > 0 || d.drop);
 
   return (
     <Card gap="sm">
       <SectionHeader title={t('plan.yourPlan')} />
-      {[0, 1, 2, 3, 4, 5, 6].map((i) => {
-        const day = addDays(monday, i);
-        const key = dayKey(day);
-        const sessions = sessionsOn(plan, key, order);
-        const open = editing && key >= editFrom;
-        if (sessions.length === 0 && !open) return null;
-        const over = open ? overFree(plan.sessions, key, plan.free) : 0;
-        return (
-          <Box key={i} gap="s">
-            <Box flexDirection="row" alignItems="center" justifyContent="space-between">
-              <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
-                {weekdayName(i18n.language, parseDay(key))}
-              </Text>
-              <Box flexDirection="row" alignItems="center" gap="s">
-                <Duration minutes={sessions.reduce((sum, s) => sum + s.minutes, 0)} size={12} quiet />
-                {open ? (
-                  <RoundButton accessibilityLabel={`${t('plan.add')}: ${weekdayName(i18n.language, parseDay(key))}`} onPress={() => setAdding(adding === key ? null : key)} style={{ paddingHorizontal: 0 }}>
-                    <Text variant="heading">{adding === key ? '×' : '+'}</Text>
-                  </RoundButton>
-                ) : null}
+      <PlanBoard
+        plain
+        days={days}
+        canDrag={(s) => editing && s.day >= editFrom && !isSessionDone(s, logs)}
+        onMove={(id, day) => move(plan.weekFrom, id, day)}
+        gripLabel={(s) => assetNameById(s.assetId)}
+        earlierLabel={t('plan.earlier')}
+        laterLabel={t('plan.later')}
+        header={(d) => {
+          const day = parseDay(d.key);
+          const over = editing && d.drop ? overFree(plan.sessions, d.key, plan.free) : 0;
+          const free = plan.free?.[weekdayMonFirst(day)] ?? 0;
+          return (
+            <>
+              <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+                <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
+                  {weekdayName(i18n.language, day)}
+                </Text>
+                <Box flexDirection="row" alignItems="center" gap="s">
+                  <Duration minutes={d.sessions.reduce((sum, s) => sum + s.minutes, 0)} size={12} quiet />
+                  {editing && d.drop ? (
+                    <RoundButton accessibilityLabel={`${t('plan.add')}: ${weekdayName(i18n.language, day)}`} onPress={() => setAdding(adding === d.key ? null : d.key)} style={{ minWidth: 32, width: 32, height: 32, borderRadius: 16, paddingHorizontal: 0 }}>
+                      <Text variant="bodyStrong">{adding === d.key ? '×' : '+'}</Text>
+                    </RoundButton>
+                  ) : null}
+                </Box>
               </Box>
-            </Box>
-            {over > 0 ? <Text variant="small">{plan.free?.[i] === 0 ? t('plan.overOff') : t('plan.over', { time: timeText(plan.free?.[i] ?? 0, t) })}</Text> : null}
-            {open && adding === key ? <AddSession plan={plan} day={key} onDone={() => setAdding(null)} /> : null}
-            {sessions.map((s) => (editing && key >= editFrom && !isSessionDone(s, logs) ? <EditableSession key={s.id} session={s} plan={plan} fromDay={editFrom} /> : <SessionRow key={s.id} session={s} logs={logs} />))}
-          </Box>
-        );
-      })}
+              {over > 0 ? <Text variant="small">{free === 0 ? t('plan.overOff') : t('plan.over', { time: timeText(free, t) })}</Text> : null}
+            </>
+          );
+        }}
+        row={(s, handle) => (editing && s.day >= editFrom && !isSessionDone(s, logs) ? <EditableSession session={s} plan={plan} handle={handle} /> : <SessionRow session={s} logs={logs} />)}
+        footer={(d) => (editing && d.drop && adding === d.key ? <AddSession plan={plan} day={d.key} onDone={() => setAdding(null)} /> : null)}
+      />
+      <ShortNote short={plan.short} />
       {editing ? (
         <Box flexDirection="row" gap="s" style={{ marginTop: 4 }}>
           <ActionButton
@@ -423,4 +437,28 @@ function timeText(minutes: number, t: TFunction): string {
   return durationParts(minutes)
     .map((p) => `${p.value} ${t(`units.${p.unit}`)}`)
     .join(' ');
+}
+
+/** What did not fit when the plan was made, said plainly and without blame. */
+export function ShortNote({ short }: { short?: { assetId: string; minutes: number }[] }) {
+  const { t } = useTranslation();
+  const assetName = useAssetName();
+  const assets = usePortfolioStore((s) => s.assets);
+  const items = (short ?? []).flatMap((x) => {
+    const a = assets.find((y) => y.id === x.assetId);
+    return a ? [{ name: assetName(a), minutes: x.minutes }] : [];
+  });
+  if (items.length === 0) return null;
+  return (
+    <Box gap="xs" style={{ marginTop: 4 }}>
+      <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold' }}>
+        {t('plan.shortTitle')}
+      </Text>
+      {items.map((x) => (
+        <Text key={x.name} variant="small">
+          {t('plan.short', { name: x.name, time: timeText(x.minutes, t) })}
+        </Text>
+      ))}
+    </Box>
+  );
 }

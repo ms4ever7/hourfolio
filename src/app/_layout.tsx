@@ -38,6 +38,7 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: theme.colors.ground } }}>
         <Stack.Screen name="log" options={{ presentation: 'modal' }} />
         <Stack.Screen name="plan-week" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="today" options={{ presentation: 'modal' }} />
         <Stack.Screen name="goals-edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="asset-edit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="avatar" options={{ presentation: 'modal' }} />

@@ -2,8 +2,9 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { buildDemo } from '@/domain/demo';
 import { applyGoalPatch } from '@/domain/goals';
+import { dayKey } from '@/domain/dates';
 import { newId } from '@/domain/ids';
-import type { PlannedSession, WeekPlan } from '@/domain/plan';
+import { mergeMove, type PlannedSession, type WeekPlan } from '@/domain/plan';
 import type { Asset, LogEntry } from '@/domain/types';
 import { RECOVERY_ID } from '@/domain/types';
 import { mmkvZustandStorage } from './mmkv-storage';
@@ -33,8 +34,12 @@ interface PortfolioState {
   setUpPortfolio: (assets: NewAsset[]) => void;
   addAsset: (asset: NewAsset) => string;
   updateAsset: (id: string, patch: Partial<NewAsset>) => void;
+  /** Takes an asset out of the portfolio with its sessions and its place in every plan. Recovery stays. */
+  removeAsset: (id: string) => void;
   logTime: (entry: Omit<LogEntry, 'id' | 'createdAt'>) => void;
   removeLog: (id: string) => void;
+  /** Changes how long a log entry was. */
+  updateLog: (id: string, minutes: number) => void;
   /** Saves a week's plan, replacing the one already there. */
   setPlan: (plan: WeekPlan) => void;
   movePlannedSession: (weekFrom: string, id: string, day: string) => void;
@@ -65,13 +70,27 @@ export const usePortfolioStore = create<PortfolioState>()(
       },
       updateAsset: (id, patch) =>
         set((s) => ({ assets: s.assets.map((a) => (a.id === id ? applyGoalPatch<Asset>(a, patch) : a)) })),
+      removeAsset: (id) =>
+        set((s) =>
+          id === RECOVERY_ID
+            ? s
+            : {
+                assets: s.assets.filter((a) => a.id !== id),
+                logs: s.logs.filter((l) => l.assetId !== id),
+                plans: s.plans.map((p) => ({ ...p, sessions: p.sessions.filter((x) => x.assetId !== id), short: p.short?.filter((x) => x.assetId !== id) })),
+              },
+        ),
       logTime: (entry) =>
         set((s) => ({ logs: [...s.logs, { ...entry, id: newId('l'), createdAt: new Date().toISOString() }] })),
       removeLog: (id) => set((s) => ({ logs: s.logs.filter((l) => l.id !== id) })),
+      updateLog: (id, minutes) =>
+        set((s) => (Number.isFinite(minutes) && minutes > 0 ? { logs: s.logs.map((l) => (l.id === id ? { ...l, minutes: Math.round(minutes) } : l)) } : s)),
       setPlan: (plan) =>
         set((s) => ({ plans: [...s.plans.filter((p) => p.weekFrom !== plan.weekFrom), plan].sort((a, b) => a.weekFrom.localeCompare(b.weekFrom)).slice(-MAX_PLANS) })),
+      // A day that is over cannot take a session; the screens only offer today and later, this keeps the store honest too.
       movePlannedSession: (weekFrom, id, day) =>
-        set((s) => ({ plans: s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: p.sessions.map((x) => (x.id === id ? { ...x, day } : x)) } : p)) })),
+        set((s) =>
+          day < dayKey(new Date()) ? s : ({ plans: s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: mergeMove(p.sessions, id, day) } : p)) })),
       removePlannedSession: (weekFrom, id) =>
         set((s) => ({ plans: s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: p.sessions.filter((x) => x.id !== id) } : p)) })),
       resizePlannedSession: (weekFrom, id, minutes) =>

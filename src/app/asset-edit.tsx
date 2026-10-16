@@ -1,15 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView, TextInput } from 'react-native';
+import { Alert, Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FacePicker, ColorPicker } from '@/components/face-picker';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, footerPad } from '@/components/ui';
+import { PrimaryButton, TextButton, footerPad } from '@/components/ui';
 import { addDays, startOfWeek } from '@/domain/dates';
+import { formatHours } from '@/domain/format';
+import { capitalMinutes } from '@/domain/growth';
 import { ALL_DAYS } from '@/domain/plan';
-import type { AssetFace } from '@/domain/types';
+import { RECOVERY_ID, type AssetFace } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
 import { deletePhoto } from '@/lib/photos';
 import { usePortfolioStore } from '@/store/portfolio-store';
@@ -24,6 +26,7 @@ export default function AssetEdit() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === id));
   const updateAsset = usePortfolioStore((s) => s.updateAsset);
+  const removeAsset = usePortfolioStore((s) => s.removeAsset);
   const [name, setName] = useState(asset ? assetName(asset) : '');
 
   if (!asset) return null;
@@ -43,6 +46,25 @@ export default function AssetEdit() {
     // Catalog names follow the app language until the user really renames them.
     const catalogName = asset.catalogId ? t(`catalog.${asset.catalogId}`) : null;
     updateAsset(asset.id, { customName: trimmed === catalogName ? undefined : trimmed });
+  };
+
+  const confirmDelete = () => {
+    // The all-time time is what the hobby screen shows as its capital; it goes with the hobby.
+    const capital = capitalMinutes(asset, usePortfolioStore.getState().logs);
+    const time = `${formatHours(capital, i18n.language)}\u00A0${t('units.h')}`;
+    Alert.alert(t('assetEdit.deleteConfirm', { name: assetName(asset) }), capital > 0 ? t('assetEdit.deleteSub', { time }) : t('assetEdit.deleteSubEmpty'), [
+      { text: t('common.cancel'), style: 'cancel' },
+      {
+        text: t('common.delete'),
+        style: 'destructive',
+        onPress: () => {
+          if (asset.face?.kind === 'photo') deletePhoto(asset.face.file);
+          router.dismissAll();
+          router.navigate('/(tabs)');
+          removeAsset(asset.id);
+        },
+      },
+    ]);
   };
 
   const planDays = asset.planDays ?? ALL_DAYS;
@@ -116,6 +138,8 @@ export default function AssetEdit() {
             })}
           </Box>
         </Box>
+
+        {asset.id !== RECOVERY_ID ? <TextButton label={t('assetEdit.delete')} onPress={confirmDelete} /> : null}
       </ScrollView>
       <Box paddingHorizontal="l" style={{ paddingBottom: footerPad(insets.bottom), paddingTop: 8 }}>
         <PrimaryButton

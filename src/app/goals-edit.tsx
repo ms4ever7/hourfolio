@@ -8,7 +8,7 @@ import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { PrimaryButton, footerPad } from '@/components/ui';
 import { useNextWeek } from '@/components/plan-card';
-import { DEFAULT_FREE, replanWeek } from '@/domain/plan';
+import { replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
@@ -42,7 +42,7 @@ export default function GoalsEdit() {
           const { assets: now, logs: nowLogs, plans } = usePortfolioStore.getState();
           for (const weekFrom of weeks) {
             const current = plans.find((p) => p.weekFrom === weekFrom);
-            if (current) setPlan(replanWeek(current, now, nowLogs, current.free ?? DEFAULT_FREE, today));
+            if (current) setPlan(replanWeek(current, now, nowLogs, current.free, today));
           }
         },
       },

@@ -23,6 +23,8 @@ export interface WeekPlan {
   free?: number[];
   /** Minutes of recovery wanted that week, so re-planning keeps them. */
   rest?: number;
+  /** Goals that did not fit when the plan was made, with the minutes left over; shown so they do not just vanish. */
+  short?: { assetId: string; minutes: number }[];
 }
 
 /** From Friday the next week is worth planning. */
@@ -79,6 +81,25 @@ export function moveTarget(sessions: PlannedSession[], weekFrom: string, session
     if (day < weekFrom || day > last || (fromDay !== undefined && day < fromDay)) return null;
     if (!sessions.some((s) => s.id !== session.id && s.assetId === session.assetId && s.day === day)) return day;
   }
+}
+
+/**
+ * Moves a session to another day. When that day already holds the same asset the
+ * two become one session with the minutes added up (30 + 30 = 60), rather than
+ * two rows of the same hobby.
+ */
+export function mergeMove(sessions: PlannedSession[], id: string, toDay: string): PlannedSession[] {
+  const moved = sessions.find((s) => s.id === id);
+  if (!moved || moved.day === toDay) return sessions;
+  const twin = sessions.find((s) => s.id !== id && s.assetId === moved.assetId && s.day === toDay);
+  if (!twin) return sessions.map((s) => (s.id === id ? { ...s, day: toDay } : s));
+  return sessions.filter((s) => s.id !== id).map((s) => (s.id === twin.id ? { ...s, minutes: s.minutes + moved.minutes } : s));
+}
+
+/** The days a session can be dropped on: from `editFrom` to the end of the week. */
+export function dropDays(weekFrom: string, editFrom: string): string[] {
+  const monday = parseDay(weekFrom);
+  return [0, 1, 2, 3, 4, 5, 6].map((i) => dayKey(addDays(monday, i))).filter((d) => d >= editFrom);
 }
 
 /** Minutes planned on `day` beyond the free time set for that weekday; 0 when it fits or no free time is known. */
@@ -239,6 +260,29 @@ export function planWeek({ weekFrom, goals, free, fromDay, kept = [] }: PlanInpu
   return { sessions, shortBy };
 }
 
+const AUTO_STEP = 30;
+const AUTO_MAX = 8 * 60;
+
+/**
+ * A plan for goals without asking when the user is free: every open day gets the
+ * same room (weekends half of it) and the room grows until everything fits, so
+ * nothing silently drops out. Returns the plan and the `free` it used.
+ */
+export function autoPlan({ weekFrom, goals, fromDay, kept = [] }: Omit<PlanInput, 'free'>): PlanResult & { free: number[] } {
+  const monday = parseDay(weekFrom);
+  const open: number[] = ALL_DAYS.map((i) => (fromDay && dayKey(addDays(monday, i)) < fromDay ? 0 : i >= 5 ? 0.5 : 1));
+  const weight = open.reduce((n, w) => n + w, 0);
+  // Goals already have the logged (kept) time taken off, so only what is left to plan counts.
+  const needed = goals.reduce((n, g) => n + g.minutes, 0);
+  let room = Math.max(AUTO_STEP * 2, Math.ceil(needed / Math.max(weight, 1) / AUTO_STEP) * AUTO_STEP);
+  for (;;) {
+    const free = open.map((w) => Math.round((room * w) / AUTO_STEP) * AUTO_STEP);
+    const result = planWeek({ weekFrom, goals, free, fromDay, kept });
+    if (result.shortBy.length === 0 || room >= AUTO_MAX) return { ...result, free };
+    room += AUTO_STEP;
+  }
+}
+
 /** The weekly goals of the portfolio as planner input, minus what is already logged this week. A per-day goal plans one session of that length on each day. */
 export function goalsFromAssets(assets: Asset[], logs: LogEntry[], today: Date): PlanGoal[] {
   const week = weekRange(today);
@@ -280,14 +324,15 @@ export function keepDone(sessions: PlannedSession[], from: string | undefined, l
  * again over the days left. A week that has not started is planned whole, from
  * its own Monday, so this week's logged time never counts against it.
  */
-export function replanWeek(plan: WeekPlan, assets: Asset[], logs: LogEntry[], free: number[], today: Date): WeekPlan {
+export function replanWeek(plan: WeekPlan, assets: Asset[], logs: LogEntry[], free: number[] | undefined, today: Date): WeekPlan {
   const ahead = dayKey(today) < plan.weekFrom;
   const from = ahead ? undefined : dayKey(today);
   const rest = plan.rest ?? assets.find((a) => a.id === RECOVERY_ID)?.weeklyGoalMinutes ?? 0;
   const kept = keepDone(plan.sessions, from, logs);
   const goals = planGoals(assets, logs, ahead ? parseDay(plan.weekFrom) : today, rest);
-  const { sessions } = planWeek({ weekFrom: plan.weekFrom, goals, free, fromDay: from, kept });
-  return { weekFrom: plan.weekFrom, free, rest, sessions: [...kept, ...sessions] };
+  // Without free time of its own (an automatic plan) the room is worked out again for the days left.
+  const made = free ? planWeek({ weekFrom: plan.weekFrom, goals, free, fromDay: from, kept }) : autoPlan({ weekFrom: plan.weekFrom, goals, fromDay: from, kept });
+  return { weekFrom: plan.weekFrom, free, rest, short: made.shortBy, sessions: [...kept, ...made.sessions] };
 }
 
 /** Minutes logged for the session's asset on the session's day. */
@@ -311,6 +356,30 @@ export function sessionsOn(plan: WeekPlan | undefined, day: string, order?: stri
   if (!order) return list;
   const rank = (id: string) => (order.includes(id) ? order.indexOf(id) : order.length);
   return [...list].sort((a, b) => rank(a.assetId) - rank(b.assetId));
+}
+
+/**
+ * What a day's plan asks for and how much of the day is logged. Time logged for
+ * an asset beyond its plan, or for one that was not planned that day, counts on
+ * both sides, so the plan grows to cover it and the bar always matches the totals
+ * shown next to it. A day without a plan has nothing to measure against: 0 and 0.
+ */
+export function dayProgress(plan: WeekPlan | undefined, day: string, logs: LogEntry[]): { planned: number; done: number } {
+  const sessions = sessionsOn(plan, day);
+  if (sessions.length === 0) return { planned: 0, done: 0 };
+  const planned = new Map<string, number>();
+  for (const s of sessions) planned.set(s.assetId, (planned.get(s.assetId) ?? 0) + s.minutes);
+  const logged = new Map<string, number>();
+  for (const l of logs) if (l.day === day) logged.set(l.assetId, (logged.get(l.assetId) ?? 0) + l.minutes);
+  let total = 0;
+  let done = 0;
+  for (const id of new Set([...planned.keys(), ...logged.keys()])) {
+    const p = planned.get(id) ?? 0;
+    const l = logged.get(id) ?? 0;
+    total += Math.max(p, l);
+    done += l;
+  }
+  return { planned: total, done };
 }
 
 /** When the planned-session reminder goes out: late afternoon, kept inside the user's waking day. */

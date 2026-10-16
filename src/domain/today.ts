@@ -27,9 +27,25 @@ export function todaysSessions(logs: LogEntry[], today: Date): LogEntry[] {
   return logs.filter((l) => l.day === key).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
-/** Today's minutes per asset, the most recently logged asset first. */
-export function minutesByAsset(sessions: LogEntry[]): { assetId: string; minutes: number }[] {
-  const out = new Map<string, number>();
-  for (const l of sessions) out.set(l.assetId, (out.get(l.assetId) ?? 0) + l.minutes);
-  return [...out].map(([assetId, minutes]) => ({ assetId, minutes }));
+/** Today's minutes per asset, the most recently logged asset first, with each entry's minutes oldest first (20 then 10). */
+export function minutesByAsset(sessions: LogEntry[]): { assetId: string; minutes: number; parts: number[] }[] {
+  const out = new Map<string, number[]>();
+  // `sessions` is newest first, so walking it backwards gives each asset's entries oldest first.
+  for (const l of [...sessions].reverse()) out.set(l.assetId, [...(out.get(l.assetId) ?? []), l.minutes]);
+  return sessions
+    .map((l) => l.assetId)
+    .filter((id, i, all) => all.indexOf(id) === i)
+    .map((assetId) => {
+      const parts = out.get(assetId) ?? [];
+      return { assetId, minutes: parts.reduce((n, m) => n + m, 0), parts };
+    });
+}
+
+const LOG_STEP = 15;
+const MIN_LOG = 5;
+const MAX_LOG = 24 * 60;
+
+/** A log entry's length after a step up or down: quarter-hour steps, never under 5 minutes (a 5 or 10 minute entry can be logged) and never cut short by a cap. */
+export function logResized(minutes: number, direction: 1 | -1): number {
+  return Math.min(Math.max(MAX_LOG, minutes), Math.max(MIN_LOG, minutes + direction * LOG_STEP));
 }
