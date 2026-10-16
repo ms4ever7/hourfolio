@@ -12,6 +12,7 @@ import { useAppTheme } from '@/theme/theme';
 
 type Filter = 'all' | Exclude<EnergyType, 'recovery'>;
 const FILTERS: Filter[] = ['all', 'body', 'creative', 'mind'];
+const TILE_GAP = 10;
 
 export default function Pick() {
   const { t } = useTranslation();
@@ -23,6 +24,9 @@ export default function Pick() {
   );
   const [filter, setFilter] = useState<Filter>('all');
   const [query, setQuery] = useState('');
+  /** Three tiles per row: measured, because percentages plus the gaps overflow on narrow phones. */
+  const [gridWidth, setGridWidth] = useState(0);
+  const tile = gridWidth > 0 ? Math.floor((gridWidth - 2 * TILE_GAP) / 3) : undefined;
 
   const items = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -133,11 +137,11 @@ export default function Pick() {
         </Box>
       </Box>
 
-      <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }}>
+      <Box flexDirection="row" flexWrap="wrap" style={{ gap: TILE_GAP }} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
         <Pressable
           accessibilityRole="button"
           onPress={() => router.push({ pathname: '/onboarding/custom', params: { name: query } })}
-          style={{ width: '31.4%', height: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center', gap: 8 }}
+          style={{ width: tile, height: 104, borderRadius: 16, borderWidth: 1.5, borderStyle: 'dashed', borderColor: colors.dashed, alignItems: 'center', justifyContent: 'center', gap: 8 }}
         >
           <Box width={44} height={44} alignItems="center" justifyContent="center" style={{ borderRadius: 14, backgroundColor: colors.track }}>
             <Glyph d={UI_PATHS.plus} size={22} color={colors.ink} strokeWidth={2} />
@@ -149,7 +153,7 @@ export default function Pick() {
         {drafts
           .filter((d) => d.customName)
           .map((d) => (
-            <Box key={d.customName} width="31.4%" height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
+            <Box key={d.customName} height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ width: tile, borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
               <AssetIcon icon={d.icon} color={d.color} size={44} />
               <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {d.customName}
@@ -167,7 +171,7 @@ export default function Pick() {
               accessibilityLabel={t(`catalog.${c.id}`)}
               onPress={() => toggle(c.id)}
               style={{
-                width: '31.4%',
+                width: tile,
                 height: 104,
                 borderRadius: 16,
                 backgroundColor: colors.card,

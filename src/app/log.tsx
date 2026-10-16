@@ -33,6 +33,9 @@ export default function LogSheet() {
   const plannedMinutes = Number(params.minutes);
   const assets = usePortfolioStore((s) => s.assets);
   const logTime = usePortfolioStore((s) => s.logTime);
+  /** Four tiles per row: measured, because percentages plus the gaps overflow on narrow phones. */
+  const [gridWidth, setGridWidth] = useState(0);
+  const tile = gridWidth > 0 ? Math.floor((gridWidth - 3 * 10) / 4) : undefined;
   const [assetId, setAssetId] = useState(params.assetId ?? assets.find((a) => a.id !== RECOVERY_ID)?.id ?? RECOVERY_ID);
   const [minutes, setMinutes] = useState(plannedMinutes > 0 && plannedMinutes <= 24 * 60 ? Math.max(5, Math.ceil(plannedMinutes / 5) * 5) : 60);
   // null means "today", resolved when saving, so a sheet left open past midnight still logs to the day it is then.
@@ -103,7 +106,7 @@ export default function LogSheet() {
 
         <Box gap="s">
           <Text variant="bodyStrong">{t('log.asset')}</Text>
-          <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }} accessibilityRole="radiogroup" accessibilityLabel={t('log.asset')}>
+          <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)} accessibilityRole="radiogroup" accessibilityLabel={t('log.asset')}>
             {others.map((a) => {
               const on = a.id === assetId;
               return (
@@ -113,7 +116,7 @@ export default function LogSheet() {
                   accessibilityState={{ checked: on }}
                   accessibilityLabel={assetName(a)}
                   onPress={() => setAssetId(a.id)}
-                  style={{ width: '22.7%', alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.card, borderWidth: on ? 2 : 1, borderColor: on ? palette[a.color].main : colors.track }}
+                  style={{ width: tile, alignItems: 'center', gap: 6, paddingVertical: 10, borderRadius: 14, backgroundColor: colors.card, borderWidth: on ? 2 : 1, borderColor: on ? palette[a.color].main : colors.track }}
                 >
                   <AssetIcon icon={a.icon} color={a.color} face={a.face} size={40} />
                   <Text variant="tiny" color="ink" numberOfLines={1} style={{ maxWidth: '90%' }}>
