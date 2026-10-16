@@ -366,7 +366,8 @@ export const pl: Translations = {
   assetEdit: {
     delete: 'Usuń to hobby',
     deleteConfirm: 'Usunąć „{{name}}”?',
-    deleteSub: 'Wszystkie jego sesje i wpisy w planie też znikną. Tego nie można cofnąć.',
+    deleteSub: 'Czas zainwestowany w to hobby ({{time}}) zniknie z historii i podsumowań. Hobby zniknie też z planu. Tego nie można cofnąć.',
+    deleteSubEmpty: 'Nic jeszcze nie zapisano. Hobby zniknie z planu. Tego nie można cofnąć.',
     planDays: 'Dni dla planera',
     planDaysSub: 'Planuj ten zasób tylko w wybrane dni.',
     title: 'Edytuj aktywo',

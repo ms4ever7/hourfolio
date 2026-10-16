@@ -346,7 +346,8 @@ export const en = {
   assetEdit: {
     delete: 'Delete this hobby',
     deleteConfirm: 'Delete {{name}}?',
-    deleteSub: "Its sessions and its place in the plan go too. This can't be undone.",
+    deleteSub: "The time you invested in this hobby ({{time}}) will disappear from your history and totals. It also leaves your plan. This can't be undone.",
+    deleteSubEmpty: "Nothing is logged for it yet. It will leave your plan. This can't be undone.",
     planDays: 'Days for the planner',
     planDaysSub: 'Plan this asset only on the days you pick.',
     title: 'Edit asset',

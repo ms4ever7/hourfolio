@@ -8,6 +8,8 @@ import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { PrimaryButton, TextButton, footerPad } from '@/components/ui';
 import { addDays, startOfWeek } from '@/domain/dates';
+import { formatHours } from '@/domain/format';
+import { capitalMinutes } from '@/domain/growth';
 import { ALL_DAYS } from '@/domain/plan';
 import { RECOVERY_ID, type AssetFace } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
@@ -46,8 +48,11 @@ export default function AssetEdit() {
     updateAsset(asset.id, { customName: trimmed === catalogName ? undefined : trimmed });
   };
 
-  const confirmDelete = () =>
-    Alert.alert(t('assetEdit.deleteConfirm', { name: assetName(asset) }), t('assetEdit.deleteSub'), [
+  const confirmDelete = () => {
+    // The all-time time is what the hobby screen shows as its capital; it goes with the hobby.
+    const capital = capitalMinutes(asset, usePortfolioStore.getState().logs);
+    const time = `${formatHours(capital, i18n.language)}\u00A0${t('units.h')}`;
+    Alert.alert(t('assetEdit.deleteConfirm', { name: assetName(asset) }), capital > 0 ? t('assetEdit.deleteSub', { time }) : t('assetEdit.deleteSubEmpty'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('common.delete'),
@@ -60,6 +65,7 @@ export default function AssetEdit() {
         },
       },
     ]);
+  };
 
   const planDays = asset.planDays ?? ALL_DAYS;
   const monday = startOfWeek(new Date());
