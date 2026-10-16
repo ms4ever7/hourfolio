@@ -101,6 +101,7 @@ export default function PlanWeek() {
   };
   // Rebuilding the proposal throws away what was moved, resized or removed, so ask first.
   const [edited, setEdited] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const guard = (go: () => void) => {
     if (!edited) return go();
     Alert.alert(t('plan.discardTitle'), t('plan.discardSub'), [
@@ -148,7 +149,7 @@ export default function PlanWeek() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 16 }}>
+      <ScrollView style={{ flex: 1 }} scrollEnabled={!dragging} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 16 }}>
         <Text variant="title" accessibilityRole="header">
           {t('plan.result')}
         </Text>
@@ -174,6 +175,7 @@ export default function PlanWeek() {
               days={days}
               canDrag={() => true}
               onMove={move}
+              onDragChange={setDragging}
               gripLabel={(s) => nameOf(s.assetId)}
               earlierLabel={t('plan.earlier')}
               laterLabel={t('plan.later')}
