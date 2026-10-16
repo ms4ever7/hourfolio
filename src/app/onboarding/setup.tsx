@@ -4,21 +4,18 @@ import { useTranslation } from 'react-i18next';
 import { FacePicker, ColorPicker } from '@/components/face-picker';
 import { AssetIcon, UI_PATHS } from '@/components/icons';
 import { GoalField } from '@/components/goal-field';
-import { GoalScene, ScenePicker } from '@/components/scenes';
 import { Box, Text } from '@/components/primitives';
 import { BackButton, Card, LanguageButton, OnboardingFooter, OptionButton, PrimaryButton, Screen, Segmented, TextButton } from '@/components/ui';
 import { ENERGY_TYPES, RHYTHMS, type AssetFace } from '@/domain/types';
-import { useSeason } from '@/lib/appearance';
 import { useAssetName } from '@/lib/labels';
 import { deletePhoto } from '@/lib/photos';
 import { usePortfolioStore } from '@/store/portfolio-store';
-import { useSettingsStore } from '@/store/settings-store';
 import { useOnboardingStore } from '@/store/onboarding-store';
 import { useAppTheme } from '@/theme/theme';
 
 export default function Setup() {
   const { t } = useTranslation();
-  const { colors, palette } = useAppTheme();
+  const { colors } = useAppTheme();
   const assetName = useAssetName();
   const params = useLocalSearchParams<{ step: string; mode?: string }>();
   const step = Number(params.step ?? 0);
@@ -27,8 +24,6 @@ export default function Setup() {
   const drafts = useOnboardingStore((s) => s.drafts);
   const updateDraft = useOnboardingStore((s) => s.updateDraft);
   const draft = drafts[step];
-  const scene = useSettingsStore((s) => s.goalScene);
-  const season = useSeason();
 
   const finished = useRef(false);
   const finish = () => {
@@ -48,7 +43,6 @@ export default function Setup() {
 
   if (!draft) return null;
   const isLast = step >= drafts.length - 1;
-  const goalMinutes = draft.weeklyGoalMinutes ?? 0;
   const setFace = (face: AssetFace | undefined) => {
     const old = draft.face;
     if (old?.kind === 'photo' && (face?.kind !== 'photo' || face.file !== old.file)) deletePhoto(old.file);
@@ -104,17 +98,6 @@ export default function Setup() {
         </Box>
         <GoalField asset={draft} label={t('setup.goal')} onChange={(patch) => updateDraft(step, patch)} />
       </Card>
-
-      {goalMinutes > 0 ? (
-        <Card gap="sm">
-          <Box gap="xs">
-            <Text variant="bodyStrong">{t('setup.sceneTitle')}</Text>
-            <Text variant="small">{t('setup.sceneSub')}</Text>
-          </Box>
-          <GoalScene scene={scene} progress={0.6} color={palette[draft.color].main} tint={palette[draft.color].tint} season={season?.id ?? null} height={48} />
-          <ScenePicker />
-        </Card>
-      ) : null}
 
       <FacePicker
         icon={draft.icon}

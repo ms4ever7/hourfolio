@@ -214,6 +214,9 @@ export default function AssetScreen() {
                   <Text variant="small">{capitalize(sessionDate(locale, parseDay(l.day)))}</Text>
                 </Box>
                 <Duration minutes={l.minutes} size={14} prefix="+" />
+                <Pressable accessibilityRole="button" accessibilityLabel={`${t('common.delete')}: ${l.note || capitalize(relDay(l.day))}`} onPress={() => confirmRemove(l.id)} hitSlop={8} style={{ width: 32, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+                  <Text variant="heading">×</Text>
+                </Pressable>
               </Pressable>
             ))
           )}

@@ -4,15 +4,14 @@ import { useTranslation } from 'react-i18next';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { WeekPlanCard } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
-import { GoalScene, ScenePicker } from '@/components/scenes';
+import { PaceBar, PaceDays } from '@/components/pace-bar';
+import { GoalScene } from '@/components/scenes';
 import { ActionButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { capitalMinutes, nextMilestone, weeksTo } from '@/domain/growth';
 import { sumMinutes, weeklyMinutes } from '@/domain/stats';
 import { useAssetName } from '@/lib/labels';
-import { useSeason } from '@/lib/appearance';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
-import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
 
 export default function Goals() {
@@ -21,8 +20,6 @@ export default function Goals() {
   const assetName = useAssetName();
   const today = useToday();
   const { assets, logs } = usePortfolio();
-  const scene = useSettingsStore((st) => st.goalScene);
-  const season = useSeason();
 
   const week = useMemo(() => {
     const from = startOfWeek(today);
@@ -102,16 +99,11 @@ export default function Goals() {
                       </Box>
                     ) : null}
                   </Box>
-                  <GoalScene scene={scene} progress={done / goal} color={met ? colors.days : p.main} tint={met ? colors.daysSoft : p.tint} season={season?.id ?? null} accessibilityLabel={assetName(asset)} />
+                  <PaceBar progress={done / goal} color={met ? colors.days : p.main} tint={met ? colors.daysSoft : p.tint} today={today} accessibilityLabel={assetName(asset)} />
                 </Box>
               );
             })}
-            <Box gap="s">
-              <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold' }}>
-                {t('goals.scene')}
-              </Text>
-              <ScenePicker />
-            </Box>
+            <PaceDays today={today} />
             <Box flexDirection="row">
               <ActionButton label={t('goals.edit')} icon={UI_PATHS.pencil} tone="outline" onPress={() => router.push('/goals-edit')} />
             </Box>

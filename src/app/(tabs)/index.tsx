@@ -3,13 +3,16 @@ import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { ProfileAvatar } from '@/components/avatar';
-import { AssetIcon } from '@/components/icons';
+import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
+import { GoalScene } from '@/components/scenes';
 import { Box, Text } from '@/components/primitives';
-import { TodayPlan } from '@/components/plan-card';
+import { TodayPlan, useWeekPlan } from '@/components/plan-card';
 import { Card, Duration, Hours, Screen, SectionHeader, TrendChip } from '@/components/ui';
-import { daysBetween, parseDay } from '@/domain/dates';
+import { dayKey, daysBetween, parseDay } from '@/domain/dates';
 import { restingAsset } from '@/domain/day';
+import { durationParts } from '@/domain/format';
 import { capitalMinutes, lastLogDay, trend } from '@/domain/growth';
+import { dayProgress } from '@/domain/plan';
 import { minutesByAsset, quickAssets, todaysSessions } from '@/domain/today';
 import type { Asset } from '@/domain/types';
 import { RECOVERY_ID } from '@/domain/types';
@@ -55,12 +58,16 @@ export default function Today() {
   const season = useSeason();
   const byId = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
 
+  const plan = useWeekPlan();
   const d = useMemo(() => {
     const sessions = todaysSessions(logs, today);
+    const progress = dayProgress(plan, dayKey(today), logs);
     const resting = restingAsset(assets, logs, today);
     return {
       sessions,
       todayMinutes: sessions.reduce((s, l) => s + l.minutes, 0),
+      planned: progress.planned,
+      done: progress.done,
       byAsset: minutesByAsset(sessions),
       quick: quickAssets(assets, logs, today, 3),
       // Only a gentle word about an asset that is actually paused, never about one that is just a bit quiet.
@@ -69,8 +76,12 @@ export default function Today() {
         .map((a) => ({ asset: a, capital: capitalMinutes(a, logs), trend: trend(a, logs, today), last: lastLogDay(a.id, logs) }))
         .sort((x, y) => (y.last ?? '').localeCompare(x.last ?? '') || y.capital - x.capital),
     };
-  }, [assets, logs, today]);
+  }, [assets, logs, today, plan]);
 
+  const shortTime = (minutes: number) =>
+    durationParts(minutes)
+      .map((p) => `${p.value}${t(`units.${p.unit}`)}`)
+      .join(' ');
   const recovery = byId.get(RECOVERY_ID);
   const greeting = t(`greeting.${greetingKey(new Date().getHours())}`);
   const relDay = (day: string) => {
@@ -94,37 +105,57 @@ export default function Today() {
       </Box>
 
       <Card gap="sm">
-        <Text variant="label" color="muted">
-          {t('today.label')}
-        </Text>
-        {d.byAsset.length === 0 ? (
-          <Box gap="xs">
-            <Text variant="heading" style={{ fontSize: 19 }}>
-              {t('today.empty')}
+        <Pressable accessibilityRole="button" accessibilityLabel={t('today.label')} onPress={() => router.push('/today')} style={({ pressed }) => ({ gap: 12, opacity: pressed ? 0.8 : 1 })}>
+          <Box flexDirection="row" alignItems="center" justifyContent="space-between">
+            <Text variant="label" color="muted">
+              {t('today.label')}
             </Text>
-            <Text variant="caption">{t('today.emptySub')}</Text>
+            <Glyph d={UI_PATHS.chevronRight} size={16} color={colors.faint} strokeWidth={2} />
           </Box>
-        ) : (
-          <Box gap="s">
-            <Duration minutes={d.todayMinutes} size={32} />
-            <Box>
-              {d.byAsset.slice(0, 3).map(({ assetId, minutes }) => {
-                const a = byId.get(assetId);
-                if (!a) return null;
-                return (
-                  <Box key={assetId} flexDirection="row" alignItems="center" gap="sm" paddingVertical="xs">
-                    <AssetIcon icon={a.icon} color={a.color} face={a.face} size={28} />
-                    <Text variant="label" numberOfLines={1} style={{ flex: 1 }}>
-                      {assetName(a)}
-                    </Text>
-                    <Duration minutes={minutes} size={14} prefix="+" highlight={palette[a.color].main} />
-                  </Box>
-                );
-              })}
-              {d.byAsset.length > 3 ? <Text variant="small">{t('today.more', { count: d.byAsset.length - 3 })}</Text> : null}
+          {d.byAsset.length === 0 ? (
+            <Box gap="xs">
+              <Text variant="heading" style={{ fontSize: 19 }}>
+                {t('today.empty')}
+              </Text>
+              <Text variant="caption">{t('today.emptySub')}</Text>
             </Box>
-          </Box>
-        )}
+          ) : (
+            <Box gap="s">
+              <Box flexDirection="row" alignItems="baseline" gap="xs">
+                <Duration minutes={d.todayMinutes} size={32} />
+                {d.planned > 0 ? (
+                  <>
+                    <Text variant="small">/</Text>
+                    <Duration minutes={d.planned} size={15} quiet />
+                  </>
+                ) : null}
+              </Box>
+              {d.planned > 0 ? <GoalScene scene="bar" progress={d.done / d.planned} color={colors.accent} tint={colors.accentSoft} season={null} height={8} /> : null}
+              <Box>
+                {d.byAsset.map(({ assetId, minutes, parts }) => {
+                  const a = byId.get(assetId);
+                  if (!a) return null;
+                  return (
+                    <Box key={assetId} flexDirection="row" alignItems="center" gap="sm" paddingVertical="xs">
+                      <AssetIcon icon={a.icon} color={a.color} face={a.face} size={28} />
+                      <Box flex={1}>
+                        <Text variant="label" numberOfLines={1}>
+                          {assetName(a)}
+                        </Text>
+                        {parts.length > 1 ? (
+                          <Text variant="tiny" color="muted" numberOfLines={1}>
+                            {parts.map(shortTime).join(' + ')}
+                          </Text>
+                        ) : null}
+                      </Box>
+                      <Duration minutes={minutes} size={14} prefix="+" highlight={palette[a.color].main} />
+                    </Box>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
+        </Pressable>
         <Box height={1} backgroundColor="line" />
         <Box gap="s">
           <Text variant="small" style={{ fontFamily: 'Inter_600SemiBold' }}>
