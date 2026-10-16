@@ -1,5 +1,5 @@
 import { daysBetween, parseDay } from './dates';
-import { ALL_DAYS, DEFAULT_FREE, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, loggedFor, minutesLeft, moveTarget, overFree, planGoals, planReminders, plansAround, planWeek, previousSetup, replanWeek, resized, sessionsOn, type PlanGoal, type PlannedSession, type WeekPlan } from './plan';
+import { ALL_DAYS, DEFAULT_FREE, autoPlan, dayProgress, dropDays, mergeMove, defaultSessionRange, goalsFromAssets, isSessionDone, keepDone, loggedFor, minutesLeft, moveTarget, overFree, planGoals, planReminders, plansAround, planWeek, previousSetup, replanWeek, resized, sessionsOn, type PlanGoal, type PlannedSession, type WeekPlan } from './plan';
 import type { Asset, LogEntry } from './types';
 
 const WEEK = '2026-09-28'; // a Monday
@@ -438,5 +438,71 @@ describe('the order of sessions in a day', () => {
     const plan: WeekPlan = { weekFrom: WEEK, sessions: [{ id: '1', assetId: 'b', day: WEEK, minutes: 30 }, { id: '2', assetId: 'a', day: WEEK, minutes: 30 }, { id: '3', assetId: 'x', day: WEEK, minutes: 30 }] };
     expect(sessionsOn(plan, WEEK, ['a', 'b']).map((x) => x.id)).toEqual(['2', '1', '3']);
     expect(sessionsOn(plan, WEEK).map((x) => x.id)).toEqual(['1', '2', '3']);
+  });
+});
+
+describe('mergeMove', () => {
+  const s = (id: string, assetId: string, day: string, minutes: number): PlannedSession => ({ id, assetId, day, minutes });
+
+  it('moves a session to an empty day', () => {
+    const out = mergeMove([s('a', 'guitar', '2026-09-28', 30)], 'a', '2026-09-29');
+    expect(out).toEqual([s('a', 'guitar', '2026-09-29', 30)]);
+  });
+
+  it('adds the minutes when the day already holds the same asset', () => {
+    const out = mergeMove([s('a', 'guitar', '2026-09-28', 30), s('b', 'guitar', '2026-09-29', 30), s('c', 'reading', '2026-09-29', 20)], 'a', '2026-09-29');
+    expect(out).toHaveLength(2);
+    expect(out.find((x) => x.id === 'b')?.minutes).toBe(60);
+    expect(out.find((x) => x.id === 'c')?.minutes).toBe(20);
+  });
+
+  it('leaves everything alone when dropped on its own day', () => {
+    const list = [s('a', 'guitar', '2026-09-28', 30)];
+    expect(mergeMove(list, 'a', '2026-09-28')).toBe(list);
+  });
+});
+
+describe('dropDays', () => {
+  it('lists the days from the first editable one to Sunday', () => {
+    expect(dropDays(WEEK, '2026-10-01')).toEqual(['2026-10-01', '2026-10-02', '2026-10-03', '2026-10-04']);
+  });
+});
+
+describe('autoPlan', () => {
+  it('fits goals the default free time would drop', () => {
+    const goals = [goal('a', 3), goal('b', 3), goal('c', 3), goal('d', 3), goal('e', 3), goal('f', 3)];
+    const r = autoPlan({ weekFrom: WEEK, goals });
+    expect(r.shortBy).toEqual([]);
+    for (const g of goals) expect(total(r, g.assetId)).toBe(g.minutes);
+  });
+
+  it('plans only the days left when starting midweek', () => {
+    const r = autoPlan({ weekFrom: WEEK, goals: [goal('a', 2)], fromDay: '2026-10-01' });
+    expect(r.sessions.every((x) => x.day >= '2026-10-01')).toBe(true);
+    expect(r.shortBy).toEqual([]);
+  });
+});
+
+describe('dayProgress', () => {
+  const plan: WeekPlan = {
+    weekFrom: WEEK,
+    sessions: [
+      { id: 'a', assetId: 'guitar', day: '2026-09-28', minutes: 30 },
+      { id: 'b', assetId: 'reading', day: '2026-09-28', minutes: 20 },
+    ],
+  };
+  const log = (assetId: string, minutes: number): LogEntry => ({ id: assetId, assetId, day: '2026-09-28', minutes, createdAt: '2026-09-28T10:00:00Z' });
+
+  it('lets time beyond a session grow the plan, so the bar matches the totals', () => {
+    expect(dayProgress(plan, '2026-09-28', [log('guitar', 45), log('reading', 5)])).toEqual({ planned: 65, done: 50 });
+  });
+
+  it('counts an asset that was not planned that day on both sides', () => {
+    expect(dayProgress(plan, '2026-09-28', [log('anime', 60)])).toEqual({ planned: 110, done: 60 });
+  });
+
+  it('is empty for a day without a plan', () => {
+    expect(dayProgress(plan, '2026-09-29', [])).toEqual({ planned: 0, done: 0 });
+    expect(dayProgress(undefined, '2026-09-28', [])).toEqual({ planned: 0, done: 0 });
   });
 });
