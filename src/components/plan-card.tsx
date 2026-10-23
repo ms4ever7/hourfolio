@@ -218,8 +218,10 @@ export function AddSession({ sessions, day, onAdd }: { sessions: PlannedSession[
 }
 
 const WEEK = [0, 1, 2, 3, 4, 5, 6];
+/** Dots wrap into rows inside the day column (about five per row); beyond two rows they stop. */
+const MAX_DOTS = 10;
 
-/** The week as seven days: its name, a circle (ticked when everything planned is done) and a dot per asset. */
+/** The week as seven days: its name, a circle (ticked when everything planned is done) and a dot per asset, wrapping when a day holds many. */
 function WeekStrip({ monday, plan, todayKey, selectedKey, logs, onSelect }: { monday: Date; plan?: WeekPlan; todayKey: string; selectedKey: string; logs: LogEntry[]; onSelect: (day: string) => void }) {
   const { t, i18n } = useTranslation();
   const { colors, palette } = useAppTheme();
@@ -260,8 +262,8 @@ function WeekStrip({ monday, plan, todayKey, selectedKey, logs, onSelect }: { mo
             <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold', opacity: allDone ? 0.5 : 1 }}>
               {sessions.length ? shortDuration(sessions.reduce((sum, s) => sum + s.minutes, 0), t) : ' '}
             </Text>
-            <Box flexDirection="row" height={5} style={{ gap: 2 }}>
-              {ids.map((id) => {
+            <Box flexDirection="row" flexWrap="wrap" justifyContent="center" style={{ alignSelf: 'stretch', paddingHorizontal: 3, columnGap: 2, rowGap: 2, minHeight: 5 }}>
+              {ids.slice(0, MAX_DOTS).map((id) => {
                 const asset = assets.find((a) => a.id === id);
                 const done = sessions.filter((s) => s.assetId === id).every((s) => isSessionDone(s, logs));
                 return asset ? <Box key={id} width={5} height={5} borderRadius="pill" style={{ backgroundColor: palette[asset.color].main, opacity: done ? 0.35 : 1 }} /> : null;
