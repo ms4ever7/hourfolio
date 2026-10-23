@@ -55,9 +55,11 @@ export const DEFAULT_FREE = [60, 60, 60, 60, 60, 0, 0];
  */
 export function previousSetup(plans: WeekPlan[], weekFrom: string): { free: number[]; rest?: number } {
   const own = plans.find((p) => p.weekFrom === weekFrom);
-  const latest = [...plans].reverse().find((p) => p.free);
+  const newest = [...plans].reverse();
+  const latest = newest.find((p) => p.free);
   const from = own?.free ? own : latest;
-  return { free: from?.free ?? DEFAULT_FREE, rest: own?.rest ?? latest?.rest };
+  // Automatic plans save no free time but do save their rest, so rest is looked up on its own.
+  return { free: from?.free ?? DEFAULT_FREE, rest: own?.rest ?? newest.find((p) => p.rest !== undefined)?.rest };
 }
 
 const SESSION_STEP = 15;
@@ -167,7 +169,8 @@ function split(total: number, caps: number[], min: number): number[] {
   const room = caps.reduce((n, c) => n + c, 0);
   const sizes = caps.map((c) => Math.min(c, Math.max(min, Math.floor((total * c) / room / STEP) * STEP)));
   let diff = total - sizes.reduce((n, s) => n + s, 0);
-  while (diff !== 0) {
+  // `total` is a whole number of steps (`planWeek` rounds goals first); the guard keeps a stray odd minute from looping forever.
+  for (let guard = 0; diff !== 0 && guard < 1000; guard++) {
     const step = diff > 0 ? STEP : -STEP;
     let pick = -1;
     for (let i = 0; i < sizes.length; i++) {
@@ -205,7 +208,9 @@ export function planWeek({ weekFrom, goals, free, fromDay, kept = [] }: PlanInpu
   // 15, not the usual 30), and always a whole number of steps.
   const minOf = (g: PlanGoal) => Math.max(STEP, Math.floor(Math.min(g.session.min, g.minutes) / STEP) * STEP);
   const openDays = (g: PlanGoal) => g.days.filter((d) => left[d] >= minOf(g) && !kept.some((k) => k.assetId === g.assetId && k.day === dayOf(d)));
-  const ordered = [...goals]
+  // Sessions come in whole steps, so a remainder is rounded to one first (127 minutes left plans 125): `split` cannot settle on an odd minute.
+  const ordered = goals
+    .map((g) => ({ ...g, minutes: Math.round(g.minutes / STEP) * STEP }))
     .filter((g) => g.minutes > 0)
     .sort((a, b) => openDays(a).length - openDays(b).length || b.minutes - a.minutes);
 
@@ -274,7 +279,8 @@ export function autoPlan({ weekFrom, goals, fromDay, kept = [] }: Omit<PlanInput
   const weight = open.reduce((n, w) => n + w, 0);
   // Goals already have the logged (kept) time taken off, so only what is left to plan counts.
   const needed = goals.reduce((n, g) => n + g.minutes, 0);
-  let room = Math.max(AUTO_STEP * 2, Math.ceil(needed / Math.max(weight, 1) / AUTO_STEP) * AUTO_STEP);
+  // Capped from the start: a plan made on Saturday must not put ten hours on each weekend day. What does not fit is reported instead.
+  let room = Math.min(AUTO_MAX, Math.max(AUTO_STEP * 2, Math.ceil(needed / Math.max(weight, 1) / AUTO_STEP) * AUTO_STEP));
   for (;;) {
     const free = open.map((w) => Math.round((room * w) / AUTO_STEP) * AUTO_STEP);
     const result = planWeek({ weekFrom, goals, free, fromDay, kept });
@@ -401,7 +407,9 @@ export interface PlanReminder {
  * days is well inside the phone's limit on pending notifications.
  */
 export function planReminders(plans: WeekPlan[], logs: LogEntry[], now: Date, wake: number, bed: number): PlanReminder[] {
-  const time = Math.min(Math.max(REMINDER_AT, wake + 60), Math.max(wake + 60, bed - 90));
+  // A bedtime at or after midnight is a small number of minutes; it belongs to the end of the waking day, not its start.
+  const bedEnd = bed <= wake ? bed + 24 * 60 : bed;
+  const time = Math.min(Math.max(REMINDER_AT, wake + 60), Math.max(wake + 60, bedEnd - 90));
   const out: PlanReminder[] = [];
   for (let offset = 0; offset < REMIND_DAYS; offset++) {
     const date = addDays(now, offset);
