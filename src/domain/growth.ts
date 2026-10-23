@@ -67,24 +67,3 @@ export function lastLogDay(assetId: string, logs: LogEntry[]): string | null {
   for (const l of logs) if (l.assetId === assetId && (last === null || l.day > last)) last = l.day;
   return last;
 }
-
-const MILESTONES_H = [10, 25, 50, 100, 150, 200, 250, 300, 400, 500, 750, 1000, 1500, 2000, 3000, 5000, 7500, 10000];
-
-export interface Milestone {
-  /** Next milestone, in hours. */
-  next: number;
-  /** 0–1 from the previous milestone to the next. */
-  progress: number;
-  toGoMinutes: number;
-}
-
-export function nextMilestone(capital: number): Milestone {
-  const next = MILESTONES_H.find((m) => m * 60 > capital) ?? (Math.floor(capital / 60 / 10000) + 1) * 10000;
-  const prev = [...MILESTONES_H].reverse().find((m) => m * 60 <= capital && m < next) ?? 0;
-  return { next, progress: (capital - prev * 60) / ((next - prev) * 60), toGoMinutes: next * 60 - capital };
-}
-
-/** Weeks to the milestone at the given weekly pace; null when there is no pace yet. */
-export function weeksTo(toGoMinutes: number, weeklyMinutes: number): number | null {
-  return weeklyMinutes > 0 ? Math.ceil(toGoMinutes / weeklyMinutes) : null;
-}

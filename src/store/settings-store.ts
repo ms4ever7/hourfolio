@@ -86,7 +86,7 @@ export const useSettingsStore = create<SettingsState>()(
       bedTime: DEFAULT_BED,
       eveningCheckIn: false,
       planReminders: false,
-      seasonal: true,
+      seasonal: false,
       autoSeasonIcon: false,
       goalScene: 'tree',
       recentEmoji: [],
@@ -96,7 +96,8 @@ export const useSettingsStore = create<SettingsState>()(
       setName: (name) => set({ name }),
       setAvatar: (avatar) => set({ avatar }),
       setThemeMode: (themeMode) => set({ themeMode }),
-      setAccent: (accent) => set({ accent }),
+      // Picking a color by hand means the holiday accent must not cover it.
+      setAccent: (accent) => set({ accent, seasonal: false }),
       setBackground: (background) => set({ background }),
       setPageColor: (pageColor) => set({ pageColor }),
       setNudges: (nudges) => set({ nudges }),

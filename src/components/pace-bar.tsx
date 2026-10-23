@@ -10,7 +10,7 @@ const DAYS = [0, 1, 2, 3, 4, 5, 6];
  * neutral marker where an even pace would be today. Ahead or behind shows without
  * any red: the marker is only a reference.
  */
-export function PaceBar({ progress, color, tint, today, accessibilityLabel }: { progress: number; color: string; tint: string; today: Date; accessibilityLabel?: string }) {
+export function PaceBar({ progress, color, tint, today, accessibilityLabel, marker = true }: { progress: number; color: string; tint: string; today: Date; accessibilityLabel?: string; marker?: boolean }) {
   const { colors } = useAppTheme();
   const clamped = Math.min(1, Math.max(0, progress));
   const pace = (weekdayMonFirst(today) + 1) / 7;
@@ -27,7 +27,7 @@ export function PaceBar({ progress, color, tint, today, accessibilityLabel }: { 
           );
         })}
       </Box>
-      <Box pointerEvents="none" style={{ position: 'absolute', top: -4, bottom: -4, left: `${pace * 100}%`, width: 2, marginLeft: -1, borderRadius: 1, backgroundColor: colors.ink, opacity: 0.5 }} />
+      {marker ? <Box pointerEvents="none" style={{ position: 'absolute', top: -4, bottom: -4, left: `${pace * 100}%`, width: 2, marginLeft: -1, borderRadius: 1, backgroundColor: colors.ink, opacity: 0.5 }} /> : null}
     </Box>
   );
 }

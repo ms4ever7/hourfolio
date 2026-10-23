@@ -1,15 +1,16 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AchievementsEntry } from '@/components/achievements-entry';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { WeekPlanCard } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
 import { PaceBar, PaceDays } from '@/components/pace-bar';
-import { GoalScene } from '@/components/scenes';
-import { ActionButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader } from '@/components/ui';
+import { ActionButton, Card, Duration, PrimaryButton, RoundButton, Screen, SectionHeader } from '@/components/ui';
+import { weekHistory } from '@/domain/achievements';
 import { addDays, dayKey, startOfWeek, weekdayMonFirst } from '@/domain/dates';
-import { capitalMinutes, nextMilestone, weeksTo } from '@/domain/growth';
-import { sumMinutes, weeklyMinutes } from '@/domain/stats';
+import { sumMinutes } from '@/domain/stats';
+import { useBadges } from '@/lib/badges';
 import { useAssetName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { useAppTheme } from '@/theme/theme';
@@ -30,20 +31,10 @@ export default function Goals() {
       .sort((x, y) => y.done / y.goal - x.done / x.goal);
   }, [assets, logs, today]);
 
-  const milestones = useMemo(
-    () =>
-      assets
-        .map((a) => {
-          const m = nextMilestone(capitalMinutes(a, logs));
-          const pace = weeklyMinutes(logs, a.id, 12, today).reduce((s, v) => s + v, 0) / 12;
-          const capital = capitalMinutes(a, logs);
-          return { asset: a, capital, ...m, weeks: weeksTo(m.toGoMinutes, pace) };
-        })
-        .sort((x, y) => y.progress - x.progress),
-    [assets, logs, today],
-  );
-
   const daysLeft = 7 - weekdayMonFirst(today);
+  // The way into Achievements, once there is a finished week or a badge to show.
+  const history = useMemo(() => weekHistory(assets, logs, today), [assets, logs, today]);
+  const { earned } = useBadges();
 
   return (
     <Screen>
@@ -111,40 +102,9 @@ export default function Goals() {
         )}
       </Card>
 
-      {week.length > 0 ? <WeekPlanCard /> : null}
+      {history.length > 0 || earned.length > 0 ? <AchievementsEntry history={history} earned={earned} /> : null}
 
-      <Box gap="sm">
-        <SectionHeader title={t('goals.milestones')} />
-        <Box gap="sm">
-          {milestones.map((m) => {
-            const p = palette[m.asset.color];
-            return (
-              <Box key={m.asset.id} backgroundColor="card" borderRadius="xl" padding="m" gap="s" accessible accessibilityLabel={`${assetName(m.asset)}, ${Math.floor(m.capital / 60)} / ${m.next} ${t('units.h')}`}>
-                <Box flexDirection="row" alignItems="center" gap="sm">
-                  <AssetIcon icon={m.asset.icon} color={m.asset.color} face={m.asset.face} size={36} />
-                  <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
-                    {assetName(m.asset)}
-                  </Text>
-                  <Box flexDirection="row" alignItems="baseline" gap="xs">
-                    <Duration minutes={m.capital} size={15} highlight={p.main} />
-                    <Text variant="small">/</Text>
-                    <Hours minutes={m.next * 60} variant="bodyStrong" />
-                  </Box>
-                </Box>
-                <GoalScene scene="bar" progress={m.progress} color={p.main} tint={p.tint} season={null} />
-                {m.weeks !== null || m.asset.startingMinutes > 0 ? (
-                  <Box flexDirection="row" justifyContent="space-between" gap="s">
-                    <Text variant="small" numberOfLines={1} style={{ flexShrink: 1 }}>
-                      {m.asset.startingMinutes > 0 ? t('goals.milestoneBefore', { hours: Math.round(m.asset.startingMinutes / 60) }) : ' '}
-                    </Text>
-                    {m.weeks !== null ? <Text variant="small">{t('asset.milestoneEta', { count: m.weeks })}</Text> : null}
-                  </Box>
-                ) : null}
-              </Box>
-            );
-          })}
-        </Box>
-      </Box>
+      {week.length > 0 ? <WeekPlanCard /> : null}
     </Screen>
   );
 }

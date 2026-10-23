@@ -1,5 +1,5 @@
 import { addDays, dayKey } from './dates';
-import { capitalMinutes, momentum, MOMENTUM_FLOOR, nextMilestone, trend, weeksTo } from './growth';
+import { capitalMinutes, momentum, MOMENTUM_FLOOR, trend } from './growth';
 import type { Asset, LogEntry } from './types';
 
 const today = new Date(2026, 8, 28);
@@ -78,24 +78,5 @@ describe('trend', () => {
 
   it('is growing when this week lifted momentum', () => {
     expect(trend(asset(), [log(1, 90), log(3, 90), log(5, 60)], today)).toBe('growing');
-  });
-});
-
-describe('milestones', () => {
-  it('points at the next milestone with progress from the last one', () => {
-    expect(nextMilestone(0)).toEqual({ next: 10, progress: 0, toGoMinutes: 600 });
-    const m = nextMilestone(220 * 60);
-    expect(m.next).toBe(250);
-    expect(m.progress).toBeCloseTo(0.4);
-    expect(m.toGoMinutes).toBe(30 * 60);
-  });
-
-  it('keeps going past the table', () => {
-    expect(nextMilestone(12000 * 60).next).toBe(20000);
-  });
-
-  it('estimates weeks only when there is a pace', () => {
-    expect(weeksTo(600, 200)).toBe(3);
-    expect(weeksTo(600, 0)).toBeNull();
   });
 });

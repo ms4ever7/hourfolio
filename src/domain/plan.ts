@@ -61,8 +61,8 @@ export function previousSetup(plans: WeekPlan[], weekFrom: string): { free: numb
 }
 
 const SESSION_STEP = 15;
-const MIN_SESSION = 15;
-const MAX_SESSION = 240;
+export const MIN_SESSION = 15;
+export const MAX_SESSION = 240;
 
 /** A session's length after a step up or down, kept between 15 minutes and 4 hours. */
 export function resized(minutes: number, direction: 1 | -1): number {

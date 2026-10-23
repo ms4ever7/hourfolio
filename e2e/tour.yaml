@@ -36,11 +36,21 @@ appId: com.ms4ever7.hourfolio
     element: 'Good (morning|afternoon|evening).*'
     direction: UP
 - takeScreenshot: e2e/screenshots/10-today
+# Scroll so the plan card, with today's sessions, fills the screen.
 - scrollUntilVisible:
-    element: 'Your plan for the week'
+    element: 'Your hobbies'
     direction: DOWN
-    centerElement: true
 - takeScreenshot: e2e/screenshots/22-today-plan
+# The Today card opens the day's entries (same as tapping it).
+- openLink: hourfolio:///today
+- runFlow:
+    when:
+      visible: 'Open'
+    commands:
+      - tapOn: 'Open'
+- assertVisible: 'Add an entry'
+- takeScreenshot: e2e/screenshots/26-today-modal
+- tapOn: 'Done'
 - scrollUntilVisible:
     element: 'Good (morning|afternoon|evening).*'
     direction: UP
@@ -56,55 +66,62 @@ appId: com.ms4ever7.hourfolio
     direction: DOWN
     centerElement: true
 - takeScreenshot: e2e/screenshots/19-goals-plan
-- tapOn: 'Edit plan'
-- assertVisible: 'When are you free?'
-- takeScreenshot: e2e/screenshots/20-plan-free
-# The sample goals add up to 13 hours, so give the weekdays a realistic evening each.
-# Days already past this week have no buttons, so each day is only touched when it can be.
+# "Edit plan" on Goals edits in place, so open the planner itself: it proposes the week straight away.
+# Next week shows all seven days; free time is an option below the plan.
+- openLink: hourfolio:///plan-week
 - runFlow:
     when:
-      visible: 'More: Monday'
+      visible: 'Open'
     commands:
-      - repeat:
-          times: 3
-          commands:
-            - tapOn: 'More: Monday'
-- runFlow:
-    when:
-      visible: 'More: Tuesday'
-    commands:
-      - repeat:
-          times: 3
-          commands:
-            - tapOn: 'More: Tuesday'
-- runFlow:
-    when:
-      visible: 'More: Wednesday'
-    commands:
-      - repeat:
-          times: 3
-          commands:
-            - tapOn: 'More: Wednesday'
-- runFlow:
-    when:
-      visible: 'More: Thursday'
-    commands:
-      - repeat:
-          times: 3
-          commands:
-            - tapOn: 'More: Thursday'
-- runFlow:
-    when:
-      visible: 'More: Friday'
-    commands:
-      - repeat:
-          times: 3
-          commands:
-            - tapOn: 'More: Friday'
-- tapOn: 'Make a plan'
+      - tapOn: 'Open'
 - assertVisible: 'Your week'
+- tapOn: 'Next week'
+- waitForAnimationToEnd
 - takeScreenshot: e2e/screenshots/21-plan-result
+- scrollUntilVisible:
+    element: 'Adjust free time'
+    direction: DOWN
+- tapOn: 'Adjust free time'
+- scrollUntilVisible:
+    element: 'Free on weekends'
+    direction: DOWN
+    centerElement: true
+- takeScreenshot: e2e/screenshots/20-plan-free
 - tapOn: 'Save plan'
+# Achievements: the shelf, one badge and the week it was earned in. The card sits between the goals and the plan.
+- scrollUntilVisible:
+    element: 'This week'
+    direction: UP
+- scrollUntilVisible:
+    element:
+      id: goals-achievements
+    direction: DOWN
+    centerElement: true
+- tapOn:
+    id: goals-achievements
+- assertVisible: 'Badges'
+- takeScreenshot: e2e/screenshots/23-achievements
+# An earned badge: "Rest counts" when the sample weeks earned it, else the first badge, which every history has.
+- runFlow:
+    when:
+      visible: 'Rest counts'
+    commands:
+      - tapOn: 'Rest counts'
+- runFlow:
+    when:
+      notVisible: 'Badge · .*'
+    commands:
+      - tapOn: 'First hour logged'
+- assertVisible: 'Badge · earned.*'
+- takeScreenshot: e2e/screenshots/25-badge
+- tapOn: 'Open that week'
+- assertVisible: 'goals met'
+- takeScreenshot: e2e/screenshots/24-week
+- tapOn: 'Done'
+- waitForAnimationToEnd
+- tapOn: 'Done'
+- waitForAnimationToEnd
+- tapOn: 'Back'
 - tapOn:
     id: tab-analytics
 - assertVisible: 'Time allocation'

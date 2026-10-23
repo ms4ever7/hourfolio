@@ -1,4 +1,4 @@
-import { accentTokens, contrast, ensureContrast, isHex, mix, parseHex, toHex } from './color';
+import { accentTokens, contrast, ensureContrast, hsvToRgb, isHex, mix, parseHex, rgbToHsv, toHex } from './color';
 
 describe('color', () => {
   it('round-trips hex and drops alpha', () => {
@@ -29,5 +29,19 @@ describe('color', () => {
       expect(contrast(t.onAccent, t.accent)).toBeGreaterThanOrEqual(3);
       expect(contrast(t.accent, card)).toBeGreaterThanOrEqual(1.9);
     }
+  });
+});
+
+describe('hsv', () => {
+  it('round-trips a color through hsv', () => {
+    for (const hex of ['#E8741C', '#2747D6', '#FFFFFF', '#000000', '#1F8A5B']) {
+      expect(toHex(hsvToRgb(rgbToHsv(parseHex(hex))))).toBe(hex);
+    }
+  });
+
+  it('puts the primaries on their hues', () => {
+    expect(rgbToHsv({ r: 255, g: 0, b: 0 }).h).toBe(0);
+    expect(rgbToHsv({ r: 0, g: 255, b: 0 }).h).toBe(120);
+    expect(rgbToHsv({ r: 0, g: 0, b: 255 }).h).toBe(240);
   });
 });

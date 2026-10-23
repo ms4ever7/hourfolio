@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, View } from 'react-native';
@@ -20,11 +20,13 @@ export default function ShareWeek() {
   const { colors } = useAppTheme();
   const insets = useSafeAreaInsets();
   const today = useToday();
+  // A past week can be shared from its recap; without one it is this week.
+  const { week } = useLocalSearchParams<{ week?: string }>();
   const { assets, logs } = usePortfolio();
   const cardRef = useRef<View>(null);
 
   const d = useMemo(() => {
-    const range = weekRange(today);
+    const range = weekRange(week ? parseDay(week) : today);
     const from = parseDay(range.from);
     const rows = assets
       .map((asset) => ({ asset, minutes: sumMinutes(logs, range, asset.id) }))
@@ -39,7 +41,7 @@ export default function ShareWeek() {
       goalsMet: withGoals.filter((a) => sumMinutes(logs, range, a.id) >= a.weeklyGoalMinutes!).length,
       label: `${shortDate(i18n.language, from)} – ${shortDate(i18n.language, addDays(from, 6))}`,
     };
-  }, [assets, logs, today, i18n.language]);
+  }, [assets, logs, today, week, i18n.language]);
 
   const share = async () => {
     if (!(await shareView(cardRef))) Alert.alert(t('share.unavailable'));
