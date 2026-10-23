@@ -12,10 +12,16 @@ export async function pickSquarePhoto(): Promise<string | null> {
   const result = await ImagePicker.launchImageLibraryAsync({ mediaTypes: 'images', allowsEditing: true, aspect: [1, 1], quality: 0.8 });
   if (result.canceled || !result.assets?.[0]) return null;
   const dir = folder();
-  dir.create({ idempotent: true });
   const name = `${newId('p')}.jpg`;
-  new File(result.assets[0].uri).copy(new File(dir, name));
-  return name;
+  try {
+    dir.create({ idempotent: true });
+    // `copy` is asynchronous: the name goes back only once the file is really there.
+    await new File(result.assets[0].uri).copy(new File(dir, name));
+    return name;
+  } catch {
+    // No room, or the picked file is gone: better no photo than one that points at nothing.
+    return null;
+  }
 }
 
 /** The current URI of a stored photo. The document folder can move between app updates. */

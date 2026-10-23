@@ -1,6 +1,6 @@
 import { getAppIconName, setAlternateAppIcon, supportsAlternateIcons } from 'expo-alternate-app-icons';
 import { useEffect, useMemo, useState } from 'react';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import { activeSeason, type AppIconName, type Season } from '@/domain/seasons';
 import { useSettingsStore } from '@/store/settings-store';
 import { buildTheme, type Mode } from '@/theme/theme';
@@ -30,16 +30,21 @@ export function useAppearance() {
   return { theme, mode: theme.mode };
 }
 
-export const canChangeIcon = supportsAlternateIcons;
+/**
+ * iOS only for now. Android swaps launcher aliases: the running activity keeps reporting the alias it was started
+ * through until a relaunch, so a second switch in one session can leave two icons in the launcher or do nothing, and
+ * `hourfolio://` links stop working while a holiday alias is active. Until that is handled, the icon stays put there.
+ */
+export const canChangeIcon = Platform.OS === 'ios' && supportsAlternateIcons;
 
 export function currentAppIcon(): AppIconName | null {
-  if (!supportsAlternateIcons) return null;
+  if (!canChangeIcon) return null;
   return getAppIconName() as AppIconName | null;
 }
 
 /** iOS shows its own alert after every change; that is the system, not an error. */
 export async function changeAppIcon(name: AppIconName | null): Promise<boolean> {
-  if (!supportsAlternateIcons || currentAppIcon() === name) return false;
+  if (!canChangeIcon || currentAppIcon() === name) return false;
   try {
     await setAlternateAppIcon(name);
     return true;
@@ -65,7 +70,7 @@ export function useSeasonIconSync() {
   const auto = useSettingsStore((s) => s.autoSeasonIcon);
   const today = useToday();
   useEffect(() => {
-    if (!auto || !supportsAlternateIcons) return;
+    if (!auto || !canChangeIcon) return;
     const season = activeSeason(today);
     const current = currentAppIcon();
     if (season && current !== season.icon) void changeAppIcon(season.icon);

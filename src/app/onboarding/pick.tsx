@@ -44,7 +44,8 @@ export default function Pick() {
     const picks = selected
       .map((id) => CATALOG.find((c) => c.id === id))
       .filter((c): c is CatalogItem => Boolean(c))
-      .map((c) => ({ catalogId: c.id, icon: c.icon, color: c.color, energy: c.energy, rhythm: c.rhythm, startingMinutes: 0 }));
+      // Coming back from setup: keep what was already set for this pick (goal, colour, face).
+      .map((c) => drafts.find((d) => d.catalogId === c.id) ?? { catalogId: c.id, icon: c.icon, color: c.color, energy: c.energy, rhythm: c.rhythm, startingMinutes: 0 });
     setDrafts([...picks, ...customs]);
     router.push({ pathname: '/onboarding/setup', params: { step: '0' } });
   };
@@ -152,8 +153,8 @@ export default function Pick() {
         </Pressable>
         {drafts
           .filter((d) => d.customName)
-          .map((d) => (
-            <Box key={d.customName} height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ width: tile, borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
+          .map((d, i) => (
+            <Box key={`custom-${i}`} height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ width: tile, borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
               <AssetIcon icon={d.icon} color={d.color} size={44} />
               <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
                 {d.customName}

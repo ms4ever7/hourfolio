@@ -1,10 +1,9 @@
 import { router } from 'expo-router';
 import { useTranslation } from 'react-i18next';
-import { Alert } from 'react-native';
 import { DayTimes } from '@/components/day-form';
 import { Box, Text } from '@/components/primitives';
 import { BackButton, Group, Screen, SwitchRow } from '@/components/ui';
-import { allowNotifications } from '@/lib/notifications';
+import { alertNotificationsOff, allowNotifications } from '@/lib/notifications';
 import { useSettingsStore } from '@/store/settings-store';
 
 /** Profile → Your day: the same times as in onboarding, plus the evening check-in. */
@@ -31,7 +30,7 @@ export default function DaySettings() {
           value={checkIn}
           onChange={async (on) => {
             if (on && !(await allowNotifications())) {
-              Alert.alert(t('profile.nudgesDenied'));
+              alertNotificationsOff(t);
               return;
             }
             setCheckIn(on);
@@ -43,7 +42,7 @@ export default function DaySettings() {
           value={planReminders}
           onChange={async (on) => {
             if (on && !(await allowNotifications())) {
-              Alert.alert(t('profile.nudgesDenied'));
+              alertNotificationsOff(t);
               return;
             }
             setPlanReminders(on);

@@ -196,9 +196,9 @@ export default function Appearance() {
         <SwitchRow title={t('appearance.seasonal')} sub={t('appearance.seasonalSub')} value={s.seasonal} onChange={s.setSeasonal} last />
       </Group>
 
-      <Box gap="sm">
-        <Text variant="bodyStrong">{t('appearance.icon')}</Text>
-        {canChangeIcon ? (
+      {canChangeIcon ? (
+        <Box gap="sm">
+          <Text variant="bodyStrong">{t('appearance.icon')}</Text>
           <>
             <Box flexDirection="row" gap="sm" accessibilityRole="radiogroup" accessibilityLabel={t('appearance.icon')}>
               {ICONS.map((i) => {
@@ -224,10 +224,8 @@ export default function Appearance() {
               <SwitchRow title={t('appearance.autoIcon')} sub={t('appearance.autoIconSub')} value={s.autoSeasonIcon} onChange={s.setAutoSeasonIcon} last />
             </Group>
           </>
-        ) : (
-          <Text variant="small">{t('appearance.iconUnsupported')}</Text>
-        )}
-      </Box>
+        </Box>
+      ) : null}
     </Screen>
   );
 }

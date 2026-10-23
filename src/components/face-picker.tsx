@@ -31,10 +31,8 @@ export function FacePicker({ icon, color, face, emojiParams, onIcon, onFace }: P
   const [kind, setKind] = useState<FaceKind>(face?.kind ?? 'icon');
   const emoji = face?.kind === 'emoji' ? face.emoji : null;
 
-  const selectKind = (k: FaceKind) => {
-    setKind(k);
-    if (k === 'icon') onFace(undefined);
-  };
+  // Switching the tab only changes what is shown; the face changes when something is picked. Clearing it here deleted the photo on a look.
+  const selectKind = (k: FaceKind) => setKind(k);
 
   const pickPhoto = async () => {
     const file = await pickSquarePhoto();

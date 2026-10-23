@@ -125,8 +125,8 @@ export default function AddAsset() {
             {t('pick.custom')}
           </Text>
         </Pressable>
-        {customs.map((d) => (
-          <Box key={d.customName} height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ width: tile, borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
+        {customs.map((d, i) => (
+          <Box key={`custom-${i}`} height={104} backgroundColor="card" alignItems="center" justifyContent="center" gap="s" style={{ width: tile, borderRadius: 16, borderWidth: 2, borderColor: palette[d.color].main }}>
             <AssetIcon icon={d.icon} color={d.color} size={44} />
             <Text variant="small" color="ink" textAlign="center" numberOfLines={2} style={{ fontFamily: 'Inter_600SemiBold' }}>
               {d.customName}
