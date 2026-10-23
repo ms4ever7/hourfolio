@@ -13,7 +13,7 @@ Every file in `src/app/` is a route. Keep everything else out of it. Components 
 |---|---|---|
 | Tab | `src/app/(tabs)/<name>.tsx` | A `Tabs.Screen` and an icon in `TAB_ICONS` in `src/app/(tabs)/_layout.tsx`, plus `tabs.<name>` copy |
 | Pushed screen (has a back button) | `src/app/<name>.tsx` | Nothing |
-| Modal | `src/app/<name>.tsx` | `<Stack.Screen name="<name>" options={{ presentation: 'modal' }} />` in `src/app/_layout.tsx` |
+| Modal | `src/app/<name>.tsx` | `<Stack.Screen name="<name>" options={{ presentation: 'modal' }} />` in `src/app/_layout.tsx`. Top padding is `modalTop(insets.top)` from `ui.tsx`: a sheet on iOS, edge to edge under the status bar on Android |
 | Small sheet | `src/app/<name>.tsx` | `presentation: 'formSheet', sheetAllowedDetents: 'fitToContents', sheetGrabberVisible: true`. Bottom padding is `sheetPad(insets.bottom)` from `ui.tsx`: on iOS the sheet already keeps the home-indicator area, so don't add the inset again |
 | Onboarding step | `src/app/onboarding/<name>.tsx` | Link to it from the previous step |
 

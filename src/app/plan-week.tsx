@@ -8,7 +8,7 @@ import { PlanBoard } from '@/components/plan-board';
 import { AddSession, ShortNote } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
 import { DurationPicker } from '@/components/duration-picker';
-import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton, footerPad } from '@/components/ui';
+import { Duration, footerPad, Group, modalTop, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { DEFAULT_FREE, autoPlan, keepDone, mergeMove, overFree, planGoals, planWeek, previousSetup, MAX_SESSION, MIN_SESSION, type PlanResult, type PlannedSession } from '@/domain/plan';
 import { newId } from '@/domain/ids';
@@ -149,7 +149,7 @@ export default function PlanWeek() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView style={{ flex: 1 }} scrollEnabled={!dragging} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 16 }}>
+      <ScrollView style={{ flex: 1 }} scrollEnabled={!dragging} contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 16 }}>
         <Text variant="title" accessibilityRole="header">
           {t('plan.result')}
         </Text>

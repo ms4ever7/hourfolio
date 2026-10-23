@@ -7,7 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DayPicker } from '@/components/day-picker';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
+import { footerPad, modalTop, PrimaryButton, RoundButton } from '@/components/ui';
 import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { allGoalsMet, celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
@@ -81,7 +81,7 @@ export default function LogSheet() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 22 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 22 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Text variant="title" accessibilityRole="header">
           {t('log.title')}
         </Text>

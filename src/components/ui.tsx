@@ -18,6 +18,12 @@ import { Box, Text } from './primitives';
 // On Android the bottom inset is a real navigation bar (the 3-button bar is ~48 pt), so keep all of it.
 export const footerPad = (insetBottom: number) => (Platform.OS === 'ios' ? Math.max(insetBottom - 12, 8) : insetBottom + 12);
 
+/** Space above the title of a modal (`presentation: 'modal'`). */
+// On iOS the modal is a sheet that already sits below the status bar, and the inset it reports is the window's
+// (about 60 pt), so a fixed value is right. On Android the modal fills the screen edge to edge, so the status bar
+// inset is needed, or the title runs into the clock and the camera cutout.
+export const modalTop = (insetTop: number) => (Platform.OS === 'ios' ? 32 : insetTop + 20);
+
 /** Space under the last button of a form sheet (`presentation: 'formSheet'`, fit to contents). */
 // On iOS the sheet itself already keeps the home-indicator area below its content, so adding the inset again left
 // a large empty band under the button. Android has no such sheet inset, so the navigation bar is kept there.
