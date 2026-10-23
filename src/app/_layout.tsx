@@ -7,12 +7,16 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { useAppearance, useSeasonIconSync } from '@/lib/appearance';
 import { useBadgeSync } from '@/lib/badges';
+import { useGoalHistorySync } from '@/lib/goal-history';
 import { useEveningCheckIn, useNotificationTaps, usePlanReminders, useWeekNudge } from '@/lib/notifications';
 
 void SplashScreen.preventAutoHideAsync();
 
+/** A link straight to a modal (`hourfolio://log`) still gets the tabs underneath, so closing it has somewhere to go. */
+export const unstable_settings = { anchor: '(tabs)' };
+
 export default function RootLayout() {
-  const [fontsLoaded] = useFonts({
+  const [fontsLoaded, fontError] = useFonts({
     Inter_400Regular,
     Inter_500Medium,
     Inter_600SemiBold,
@@ -20,19 +24,22 @@ export default function RootLayout() {
   });
   const { theme, mode } = useAppearance();
   useSeasonIconSync();
+  useGoalHistorySync();
   useBadgeSync();
   useWeekNudge();
   useEveningCheckIn();
   usePlanReminders();
   // Routing from a notification needs the navigator itself, not only the first render.
   const navReady = Boolean(useRootNavigationState()?.key);
-  useNotificationTaps(fontsLoaded && navReady);
+  // A font that fails to load must not leave the splash screen up for good; the system font steps in.
+  const ready = fontsLoaded || fontError !== null;
+  useNotificationTaps(ready && navReady);
 
   useEffect(() => {
-    if (fontsLoaded) void SplashScreen.hideAsync();
-  }, [fontsLoaded]);
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
 
-  if (!fontsLoaded) return null;
+  if (!ready) return null;
 
   return (
     <ThemeProvider theme={theme}>

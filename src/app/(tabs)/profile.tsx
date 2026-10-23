@@ -10,8 +10,10 @@ import { formatClock } from '@/domain/day';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
 import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
-import { allowNotifications } from '@/lib/notifications';
+import { alertNotificationsOff, allowNotifications } from '@/lib/notifications';
+import { deletePhoto } from '@/lib/photos';
 import { usePortfolio } from '@/lib/usePortfolio';
+import { useOnboardingStore } from '@/store/onboarding-store';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { SHOW_TEST_TOOLS } from '@/lib/variant';
 import { useSettingsStore } from '@/store/settings-store';
@@ -112,7 +114,7 @@ export default function Profile() {
           value={s.nudges}
           onChange={async (on) => {
             if (on && !(await allowNotifications())) {
-              Alert.alert(t('profile.nudgesDenied'));
+              alertNotificationsOff(t);
               return;
             }
             s.setNudges(on);
@@ -139,6 +141,12 @@ export default function Profile() {
           sub={t('settings.resetSub')}
           onPress={() =>
             confirm(() => {
+              // The hobbies' photos go with them, their reminders stop (onboarding asks about reminders again), and no old picks wait in the drafts.
+              for (const a of usePortfolioStore.getState().assets) if (a.face?.kind === 'photo') deletePhoto(a.face.file);
+              useOnboardingStore.setState({ drafts: [] });
+              s.setNudges(false);
+              s.setEveningCheckIn(false);
+              s.setPlanReminders(false);
               reset();
               s.clearCelebrated();
               s.setOnboarded(false);

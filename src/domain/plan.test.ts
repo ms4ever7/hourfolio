@@ -238,6 +238,12 @@ describe('planReminders', () => {
     const r = planReminders([plan], [], morning, 6 * 60, 18 * 60);
     expect(r[0].at).toEqual(new Date(2026, 8, 29, 16, 30));
   });
+
+  it('keeps the afternoon time when bedtime is at or after midnight', () => {
+    expect(planReminders([plan], [], morning, wake, 0)[0].at).toEqual(new Date(2026, 8, 29, 17, 30));
+    expect(planReminders([plan], [], morning, wake, 30)[0].at).toEqual(new Date(2026, 8, 29, 17, 30));
+    expect(planReminders([plan], [], morning, wake, 2 * 60)[0].at).toEqual(new Date(2026, 8, 29, 17, 30));
+  });
 });
 
 describe('plansAround', () => {
@@ -425,6 +431,10 @@ describe('where a plan starts from', () => {
   it('skips plans made before free time was saved', () => {
     expect(previousSetup([plan('2026-09-21', [45, 45, 45, 45, 45, 0, 0]), plan(WEEK)], '2026-10-05').free).toEqual([45, 45, 45, 45, 45, 0, 0]);
   });
+
+  it('carries the rest of an automatic plan, which saves no free time, into the next week', () => {
+    expect(previousSetup([plan('2026-09-21', [45, 45, 45, 45, 45, 0, 0], 60), plan(WEEK, undefined, 120)], '2026-10-05')).toEqual({ free: [45, 45, 45, 45, 45, 0, 0], rest: 120 });
+  });
 });
 
 describe('the order of sessions in a day', () => {
@@ -468,7 +478,36 @@ describe('dropDays', () => {
   });
 });
 
+describe('odd remainders', () => {
+  const free = [120, 120, 120, 120, 120, 120, 120];
+
+  it('rounds a remainder that is not a whole number of steps instead of looping forever', () => {
+    const r = planWeek({ weekFrom: WEEK, goals: [{ assetId: 'rest', minutes: 127, session: { min: 20, max: 60 }, days: ALL_DAYS }], free });
+    expect(r.sessions.reduce((n, s) => n + s.minutes, 0)).toBe(125);
+    expect(r.shortBy).toEqual([]);
+    expect(planWeek({ weekFrom: WEEK, goals: [{ assetId: 'g', minutes: 2, session: { min: 20, max: 60 }, days: ALL_DAYS }], free })).toEqual({ sessions: [], shortBy: [] });
+  });
+
+  it('plans what sample rest logs leave over (their minutes are not multiples of five)', () => {
+    const recovery: Asset = { id: 'recovery', icon: 'moon', color: 'sky', energy: 'recovery', rhythm: 'fewPerWeek', startingMinutes: 0, createdAt: '' };
+    const goals = planGoals([recovery], [{ id: 'l', assetId: 'recovery', day: WEEK, minutes: 173, createdAt: '' }], parseDay('2026-09-29'), 300);
+    expect(goals[0].minutes).toBe(127);
+    const r = autoPlan({ weekFrom: WEEK, goals, fromDay: '2026-09-29' });
+    expect(r.sessions.reduce((n, s) => n + s.minutes, 0)).toBe(125);
+  });
+});
+
 describe('autoPlan', () => {
+  it('never puts more than the daily maximum on a day, even when planned at the weekend', () => {
+    const goals = [goal('a', 8, ALL_DAYS, 30, 120), goal('b', 6, ALL_DAYS, 30, 120), goal('c', 6, ALL_DAYS, 30, 120)];
+    const r = autoPlan({ weekFrom: WEEK, goals, fromDay: '2026-10-03' });
+    const perDay = new Map<string, number>();
+    for (const s of r.sessions) perDay.set(s.day, (perDay.get(s.day) ?? 0) + s.minutes);
+    expect(perDay.size).toBe(2);
+    for (const m of perDay.values()) expect(m).toBeLessThanOrEqual(240);
+    expect(r.shortBy.length).toBeGreaterThan(0);
+  });
+
   it('fits goals the default free time would drop', () => {
     const goals = [goal('a', 3), goal('b', 3), goal('c', 3), goal('d', 3), goal('e', 3), goal('f', 3)];
     const r = autoPlan({ weekFrom: WEEK, goals });

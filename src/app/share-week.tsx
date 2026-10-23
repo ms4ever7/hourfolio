@@ -8,10 +8,12 @@ import { Box, Text } from '@/components/primitives';
 import { CARD_WIDTH, shareView, WeekCard, weekCardHeight } from '@/components/share';
 import { modalTop, PrimaryButton, TextButton } from '@/components/ui';
 import { addDays, parseDay } from '@/domain/dates';
+import { goalsForWeek } from '@/domain/goal-history';
 import { weekRange } from '@/domain/goals';
 import { sumMinutes } from '@/domain/stats';
 import { shortDate } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
+import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
 
 /** This week as a card to post: total hours, every hobby with time in it, goals met. */
@@ -23,6 +25,7 @@ export default function ShareWeek() {
   // A past week can be shared from its recap; without one it is this week.
   const { week } = useLocalSearchParams<{ week?: string }>();
   const { assets, logs } = usePortfolio();
+  const weekGoals = usePortfolioStore((s) => s.weekGoals);
   const cardRef = useRef<View>(null);
 
   const d = useMemo(() => {
@@ -32,15 +35,16 @@ export default function ShareWeek() {
       .map((asset) => ({ asset, minutes: sumMinutes(logs, range, asset.id) }))
       .filter((r) => r.minutes > 0)
       .sort((a, b) => b.minutes - a.minutes);
-    const withGoals = assets.filter((a) => a.weeklyGoalMinutes);
+    // A past week is judged by the goals it had then.
+    const goals = goalsForWeek(weekGoals, assets, range.from);
     return {
       total: sumMinutes(logs, range),
       rows,
-      goalsTotal: withGoals.length,
-      goalsMet: withGoals.filter((a) => sumMinutes(logs, range, a.id) >= a.weeklyGoalMinutes!).length,
+      goalsTotal: goals.length,
+      goalsMet: goals.filter(({ asset, minutes }) => sumMinutes(logs, range, asset.id) >= minutes).length,
       label: `${shortDate(i18n.language, from)} – ${shortDate(i18n.language, addDays(from, 6))}`,
     };
-  }, [assets, logs, today, week, i18n.language]);
+  }, [assets, logs, today, week, weekGoals, i18n.language]);
 
   // With many hobbies the card grows; the preview shrinks to fit the screen, the PNG keeps full size.
   const cardHeight = weekCardHeight(d.rows.length);
@@ -48,7 +52,11 @@ export default function ShareWeek() {
   const scale = room ? Math.min(1, (room - 16) / cardHeight) : 1;
 
   const share = async () => {
-    if (!(await shareView(cardRef, cardHeight))) Alert.alert(t('share.unavailable'));
+    try {
+      if (!(await shareView(cardRef, cardHeight))) Alert.alert(t('share.title'), t('share.unavailable'));
+    } catch {
+      Alert.alert(t('share.title'), t('share.unavailable'));
+    }
   };
 
   return (

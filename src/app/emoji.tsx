@@ -2,8 +2,10 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Pressable, SectionList, TextInput, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
+import { footerPad, modalTop } from '@/components/ui';
 import { EMOJI_GROUPS, emojiInGroup, searchEmoji } from '@/domain/emoji';
 import { deletePhoto } from '@/lib/photos';
 import { usePortfolioStore } from '@/store/portfolio-store';
@@ -26,6 +28,7 @@ export default function EmojiPicker() {
   const { t, i18n } = useTranslation();
   const { colors } = useAppTheme();
   const { width } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { assetId, draft: draftParam } = useLocalSearchParams<{ assetId?: string; draft?: string }>();
   const draftIndex = draftParam === undefined ? undefined : Number(draftParam);
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === assetId));
@@ -102,7 +105,7 @@ export default function EmojiPicker() {
   };
 
   return (
-    <Box flex={1} backgroundColor="ground" style={{ paddingTop: 20 }}>
+    <Box flex={1} backgroundColor="ground" style={{ paddingTop: modalTop(insets.top) }}>
       <Box paddingHorizontal="m" gap="sm" paddingBottom="s">
         <Text variant="title" style={{ fontSize: 24 }} accessibilityRole="header">
           {t('emoji.title')}
@@ -159,7 +162,7 @@ export default function EmojiPicker() {
             stickySectionHeadersEnabled
             keyboardShouldPersistTaps="handled"
           />
-          <Box flexDirection="row" justifyContent="space-around" backgroundColor="card" borderTopWidth={1} borderColor="line" style={{ paddingTop: 6, paddingBottom: 28 }}>
+          <Box flexDirection="row" justifyContent="space-around" backgroundColor="card" borderTopWidth={1} borderColor="line" style={{ paddingTop: 6, paddingBottom: footerPad(insets.bottom) + 12 }}>
             {EMOJI_GROUPS.map((g, i) => (
               <Pressable
                 key={g.key}

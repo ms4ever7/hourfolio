@@ -26,6 +26,8 @@ export default function YouStep() {
   const finish = () => {
     s.setName(s.name.trim());
     setUpPortfolio(drafts);
+    // The picks now belong to the portfolio, photos included: clear the drafts without `setDrafts`, which deletes unreferenced photos.
+    useOnboardingStore.setState({ drafts: [] });
     s.setOnboarded(true);
     router.replace('/(tabs)');
   };

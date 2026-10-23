@@ -1,5 +1,6 @@
 import { assetBadgeId, badgesAhead, detectBadges, historySummary, loggedMinutes, parseBadge, sortEarned, weekHistory } from './achievements';
 import { addDays, dayKey } from './dates';
+import type { WeekGoals } from './goal-history';
 import type { WeekPlan } from './plan';
 import { RECOVERY_ID, type Asset, type LogEntry } from './types';
 
@@ -29,6 +30,13 @@ describe('weekHistory', () => {
     expect(history[1]).toMatchObject({ total: 30, goalsMet: 0, allMet: false, best: false });
   });
 
+  it('keeps a finished week as it was judged then, whatever the goals are now', () => {
+    const then: WeekGoals[] = [{ weekFrom: day(-7), goals: [{ assetId: 'a', minutes: 60 }], hobbies: ['a'] }];
+    const now = [asset('a', 600)];
+    expect(weekHistory(now, [log('a', -7, 60)], addDays(monday, 1), then)[0]).toMatchObject({ goalsMet: 1, goalsTotal: 1, allMet: true });
+    expect(weekHistory(now, [log('a', -7, 60)], addDays(monday, 1))[0]).toMatchObject({ goalsMet: 0, goalsTotal: 1, allMet: false });
+  });
+
   it('is never all met without a goal, and sums up', () => {
     const history = weekHistory([asset('c')], [log('c', 0, 50), log('c', -7, 70)], addDays(monday, 7));
     expect(history.every((r) => !r.allMet && r.goalsTotal === 0)).toBe(true);
@@ -38,7 +46,20 @@ describe('weekHistory', () => {
 });
 
 describe('detectBadges', () => {
-  const ids = (assets: Asset[], logs: LogEntry[], plans: WeekPlan[] = []) => Object.fromEntries(detectBadges(assets, logs, plans).map((b) => [b.id, b]));
+  const ids = (assets: Asset[], logs: LogEntry[], plans: WeekPlan[] = [], history: WeekGoals[] = []) => Object.fromEntries(detectBadges(assets, logs, plans, history).map((b) => [b.id, b]));
+
+  it('judges the week badges by the goals and hobbies the week had, not by today’s', () => {
+    const assets = [asset('a', 300), asset('b', 60)];
+    const logs = [log('a', 0, 60), log('b', 0, 60)];
+    const then: WeekGoals[] = [{ weekFrom: day(0), goals: [{ assetId: 'a', minutes: 60 }, { assetId: 'b', minutes: 60 }], hobbies: ['a', 'b'] }];
+    expect(ids(assets, logs, [], then).firstFullWeek).toMatchObject({ day: day(0) });
+    expect(ids(assets, logs).firstFullWeek).toBeUndefined();
+    const three = [asset('a'), asset('b'), asset('c')];
+    const twoThen: WeekGoals[] = [{ weekFrom: day(0), goals: [], hobbies: ['a', 'b'] }];
+    expect(ids(three, [log('a', 0, 30), log('b', 1, 30)], [], twoThen).allHobbiesWeek).toBeUndefined();
+    expect(ids(three, [log('a', 0, 30), log('b', 1, 30), log('c', 2, 30)], [], twoThen).allHobbiesWeek).toBeUndefined();
+    expect(ids(three, [log('a', 0, 30), log('b', 1, 30), log('c', 2, 30)]).allHobbiesWeek).toMatchObject({ day: day(2) });
+  });
 
   it('dates the first hour and the hundredth to the day the total got there', () => {
     const logs = [log('a', 0, 30), log('a', 1, 30), ...Array.from({ length: 20 }, (_, i) => log('a', 2 + i, 300))];

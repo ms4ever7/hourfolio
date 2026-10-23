@@ -1,4 +1,5 @@
 import { dayKey, parseDay, startOfWeek } from './dates';
+import { goalsForWeek, hobbiesForWeek, type WeekGoals } from './goal-history';
 import { isSessionDone, type WeekPlan } from './plan';
 import { RECOVERY_ID, type Asset, type LogEntry } from './types';
 
@@ -32,16 +33,16 @@ function byWeek(logs: LogEntry[]): Map<string, LogEntry[]> {
 /**
  * Finished weeks with something logged, newest first. The current week is left out
  * because it is still being written, and empty weeks are skipped rather than shown as gaps.
- * Goals are the assets' current weekly goals, as everywhere else in the app.
+ * Each week is judged by the goals it had (`history`); weeks from before snapshots were kept use today's.
  */
-export function weekHistory(assets: Asset[], logs: LogEntry[], today: Date): WeekRecord[] {
+export function weekHistory(assets: Asset[], logs: LogEntry[], today: Date, history: WeekGoals[] = []): WeekRecord[] {
   const thisWeek = dayKey(startOfWeek(today));
-  const goals = assets.filter((a) => a.weeklyGoalMinutes);
   const records: WeekRecord[] = [];
   for (const [weekFrom, list] of byWeek(logs)) {
     if (weekFrom >= thisWeek) continue;
+    const goals = goalsForWeek(history, assets, weekFrom);
     const total = list.reduce((s, l) => s + l.minutes, 0);
-    const goalsMet = goals.filter((a) => list.filter((l) => l.assetId === a.id).reduce((s, l) => s + l.minutes, 0) >= a.weeklyGoalMinutes!).length;
+    const goalsMet = goals.filter(({ asset, minutes }) => list.filter((l) => l.assetId === asset.id).reduce((s, l) => s + l.minutes, 0) >= minutes).length;
     records.push({ weekFrom, total, goalsMet, goalsTotal: goals.length, allMet: goals.length > 0 && goalsMet === goals.length, best: false });
   }
   records.sort((a, b) => b.weekFrom.localeCompare(a.weekFrom));
@@ -122,11 +123,10 @@ const earned = (id: string, day: string): EarnedBadge => ({ id, day, weekFrom: w
  * Every badge the data supports right now, with the day it was earned. The store keeps
  * what this finds, so a badge stays even when the logs behind it change.
  */
-export function detectBadges(assets: Asset[], logs: LogEntry[], plans: WeekPlan[]): EarnedBadge[] {
+export function detectBadges(assets: Asset[], logs: LogEntry[], plans: WeekPlan[], history: WeekGoals[] = []): EarnedBadge[] {
   const sorted = logs.filter((l) => l.minutes > 0).sort((a, b) => a.day.localeCompare(b.day));
   const weeks = [...byWeek(sorted).entries()].sort(([a], [b]) => a.localeCompare(b));
   const hobbies = assets.filter((a) => a.id !== RECOVERY_ID);
-  const goals = assets.filter((a) => a.weeklyGoalMinutes);
   const found: EarnedBadge[] = [];
 
   const firstHour = dayReaching(sorted, 60);
@@ -155,27 +155,28 @@ export function detectBadges(assets: Asset[], logs: LogEntry[], plans: WeekPlan[
     }
   }
 
-  if (hobbies.length >= 3) {
-    for (const [, list] of weeks) {
-      const seen = new Set<string>();
-      const day = list.find((l) => {
-        if (hobbies.some((a) => a.id === l.assetId)) seen.add(l.assetId);
-        return seen.size === hobbies.length;
-      })?.day;
-      if (day) {
-        found.push(earned('allHobbiesWeek', day));
-        break;
-      }
+  // Both week badges are judged by the hobbies and goals the week had, so a hobby added or a goal raised later changes nothing.
+  for (const [weekFrom, list] of weeks) {
+    const ids = hobbiesForWeek(history, assets, weekFrom);
+    if (ids.length < 3) continue;
+    const seen = new Set<string>();
+    const day = list.find((l) => {
+      if (ids.includes(l.assetId)) seen.add(l.assetId);
+      return seen.size === ids.length;
+    })?.day;
+    if (day) {
+      found.push(earned('allHobbiesWeek', day));
+      break;
     }
   }
 
-  if (goals.length > 0) {
-    for (const [, list] of weeks) {
-      const days = goals.map((a) => dayReaching(list.filter((l) => l.assetId === a.id), a.weeklyGoalMinutes!));
-      if (days.every((d) => d !== null)) {
-        found.push(earned('firstFullWeek', days.sort()[days.length - 1]!));
-        break;
-      }
+  for (const [weekFrom, list] of weeks) {
+    const goals = goalsForWeek(history, assets, weekFrom);
+    if (goals.length === 0) continue;
+    const days = goals.map(({ asset, minutes }) => dayReaching(list.filter((l) => l.assetId === asset.id), minutes));
+    if (days.every((d) => d !== null)) {
+      found.push(earned('firstFullWeek', days.sort()[days.length - 1]!));
+      break;
     }
   }
 

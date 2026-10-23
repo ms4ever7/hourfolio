@@ -1,8 +1,11 @@
 import * as Notifications from 'expo-notifications';
 import { router } from 'expo-router';
+import type { TFunction } from 'i18next';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { checkInTimes, restingAsset } from '@/domain/day';
+import { Alert, Linking } from 'react-native';
+import { checkIns, restingAsset } from '@/domain/day';
+import { trend } from '@/domain/growth';
 import { planReminders } from '@/domain/plan';
 import { durationParts } from '@/domain/format';
 import { weekNudge } from '@/domain/goals';
@@ -34,6 +37,14 @@ export async function allowNotifications(): Promise<boolean> {
   if (current.granted) return true;
   if (!current.canAskAgain) return false;
   return (await Notifications.requestPermissionsAsync()).granted;
+}
+
+/** Reminders cannot be turned on while the system has notifications off: say so, with a way to the settings. */
+export function alertNotificationsOff(t: TFunction) {
+  Alert.alert(t('profile.nudgesDeniedTitle'), t('profile.nudgesDenied'), [
+    { text: t('common.cancel'), style: 'cancel' },
+    { text: t('profile.openSettings'), onPress: () => void Linking.openSettings() },
+  ]);
 }
 
 /**
@@ -93,8 +104,10 @@ export function useEveningCheckIn() {
       await Promise.all(scheduled.filter((n) => n.identifier.startsWith(CHECK_IN_PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)));
       if (!on || cancelled) return;
       const now = new Date();
-      const resting = restingAsset(assets, logs, now);
-      for (const [i, when] of checkInTimes(now, bed, logs).entries()) {
+      // Only a hobby that is really paused is worth naming, the same rule as the card on Home; a quiet one is left alone.
+      const rested = restingAsset(assets, logs, now);
+      const resting = rested && trend(rested, logs, now) === 'paused' ? rested : null;
+      for (const [i, { when, day }] of checkIns(now, bed, logs).entries()) {
         if (cancelled) return;
         const suggest = resting !== null && i % 2 === 1;
         await Notifications.scheduleNotificationAsync({
@@ -102,7 +115,8 @@ export function useEveningCheckIn() {
           content: {
             title: suggest ? t('checkIn.restingTitle', { name: assetName(resting) }) : t('checkIn.title'),
             body: suggest ? t('checkIn.restingBody', { minutes: 20 }) : t('checkIn.body'),
-            data: { url: '/log' },
+            // The note is about that evening: tapped after midnight, the sheet opens on the day before.
+            data: { url: `/log?day=${day}` },
           },
           trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when },
         });
@@ -167,7 +181,10 @@ export function useNotificationTaps(ready: boolean) {
       const url = response?.notification.request.content.data?.url;
       if (typeof url !== 'string' || !useSettingsStore.getState().onboarded) return;
       try {
-        router.push(url as never);
+        // Whatever is open (a hobby screen, a sheet) closes first; `push`/`navigate` reuse only the current screen and would stack a second tabs screen.
+        if (router.canDismiss()) router.dismissAll();
+        if (url.startsWith('/(tabs)')) router.navigate(url as never);
+        else router.push(url as never);
         // Handled once: without this, the same tap would reopen the screen on the next launch.
         Notifications.clearLastNotificationResponse();
       } catch {

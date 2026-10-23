@@ -38,7 +38,9 @@ export default function Setup() {
     for (const d of drafts) addAsset(d);
     // Not setDrafts: it deletes photos no draft references, and these now belong to the portfolio.
     useOnboardingStore.setState({ drafts: [] });
-    router.navigate('/(tabs)');
+    // Back down the root stack to the tabs, which is where "Add" started. `navigate` and `dismissTo` reuse only the screen
+    // that is current and would push a second tabs screen on top (checked on the simulator).
+    router.dismissAll();
   };
 
   if (!draft) return null;

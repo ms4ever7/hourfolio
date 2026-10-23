@@ -13,6 +13,7 @@ import { sumMinutes } from '@/domain/stats';
 import { useBadges } from '@/lib/badges';
 import { useAssetName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
+import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
 
 export default function Goals() {
@@ -33,7 +34,8 @@ export default function Goals() {
 
   const daysLeft = 7 - weekdayMonFirst(today);
   // The way into Achievements, once there is a finished week or a badge to show.
-  const history = useMemo(() => weekHistory(assets, logs, today), [assets, logs, today]);
+  const weekGoals = usePortfolioStore((s) => s.weekGoals);
+  const history = useMemo(() => weekHistory(assets, logs, today, weekGoals), [assets, logs, today, weekGoals]);
   const { earned } = useBadges();
 
   return (

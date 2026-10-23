@@ -12,7 +12,7 @@ import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
 import { ALL_DAYS } from '@/domain/plan';
 import { RECOVERY_ID, type AssetFace } from '@/domain/types';
-import { useAssetName } from '@/lib/labels';
+import { useAssetName, weekdayShort } from '@/lib/labels';
 import { deletePhoto } from '@/lib/photos';
 import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
@@ -131,7 +131,7 @@ export default function AssetEdit() {
                   style={{ flex: 1, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center', backgroundColor: on ? colors.accentSoft : colors.card, borderWidth: on ? 2 : 1, borderColor: on ? colors.accent : colors.border }}
                 >
                   <Text variant="label" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
-                    {new Intl.DateTimeFormat(i18n.language, { weekday: 'narrow' }).format(addDays(monday, d))}
+                    {weekdayShort(i18n.language, addDays(monday, d))}
                   </Text>
                 </Pressable>
               );

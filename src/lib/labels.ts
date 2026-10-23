@@ -43,6 +43,11 @@ export function capitalize(s: string): string {
   return s.charAt(0).toLocaleUpperCase() + s.slice(1);
 }
 
+/** Two letters for a weekday ("Mo", "Пн", "Po"). The narrow form repeats letters in Ukrainian and Polish (П for Monday and Friday). */
+export function weekdayShort(locale: string, date: Date): string {
+  return capitalize(new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(date)).replace(/\./g, '').slice(0, 2);
+}
+
 export function weekdayName(locale: string, date: Date): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(date);
 }

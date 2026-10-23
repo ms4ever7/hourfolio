@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { addDays, dayKey, daysInMonth, parseDay, startOfMonth, weekdayMonFirst } from '@/domain/dates';
+import { weekdayShort } from '@/lib/labels';
 import { useAppTheme } from '@/theme/theme';
 
 /** A month calendar in a bottom sheet. Days after `max` can't be picked. All JS, so it ships over the air. */
@@ -21,7 +22,7 @@ export function DayPicker({ visible, value, max, onPick, onClose }: { visible: b
   const cells = [...Array<null>(lead).fill(null), ...Array.from({ length: daysInMonth(month) }, (_, i) => dayKey(new Date(month.getFullYear(), month.getMonth(), i + 1)))];
   // Weekday names from a known Monday.
   const monday = addDays(new Date(2024, 0, 1), 0);
-  const names = Array.from({ length: 7 }, (_, i) => new Intl.DateTimeFormat(i18n.language, { weekday: 'narrow' }).format(addDays(monday, i)));
+  const names = Array.from({ length: 7 }, (_, i) => weekdayShort(i18n.language, addDays(monday, i)));
   const title = new Intl.DateTimeFormat(i18n.language, { month: 'long', year: 'numeric' }).format(month);
 
   return (

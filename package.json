@@ -68,7 +68,7 @@
     "start": "expo start",
     "ios": "expo run:ios",
     "android": "expo run:android",
-    "test": "jest",
+    "test": "TZ=Europe/Kyiv jest",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "update:staging": "APP_VARIANT=staging bunx eas-cli update --channel staging --environment preview --auto",

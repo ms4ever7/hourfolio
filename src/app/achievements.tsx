@@ -10,6 +10,7 @@ import { addDays, parseDay } from '@/domain/dates';
 import { useBadgeName, useBadges } from '@/lib/badges';
 import { capitalize, monthName, shortDate } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
+import { usePortfolioStore } from '@/store/portfolio-store';
 import { useAppTheme } from '@/theme/theme';
 
 /** A small uppercase heading with something on the right, the way the Weekly Wins recap labels its parts. */
@@ -115,7 +116,8 @@ export default function Achievements() {
   const today = useToday();
   const { assets, logs } = usePortfolio();
   const { earned, ahead } = useBadges();
-  const history = useMemo(() => weekHistory(assets, logs, today), [assets, logs, today]);
+  const weekGoals = usePortfolioStore((s) => s.weekGoals);
+  const history = useMemo(() => weekHistory(assets, logs, today, weekGoals), [assets, logs, today, weekGoals]);
   const summary = historySummary(history);
   const total = earned.length + ahead.length;
   const earnedDefs = earned.map((b) => parseBadge(b.id)).filter((d) => d !== null);

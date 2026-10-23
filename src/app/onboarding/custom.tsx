@@ -60,6 +60,7 @@ export default function Custom() {
           placeholder={t('custom.placeholder')}
           placeholderTextColor={colors.faint}
           accessibilityLabel={t('custom.label')}
+          maxLength={40}
           autoFocus
           style={{ height: 52, paddingHorizontal: 16, borderRadius: 14, borderWidth: 2, borderColor: colors.ink, backgroundColor: colors.card, fontFamily: 'Inter_400Regular', fontSize: 17, color: colors.ink }}
         />

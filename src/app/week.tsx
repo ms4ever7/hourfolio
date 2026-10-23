@@ -10,7 +10,7 @@ import { AssetIcon, UI_PATHS } from '@/components/icons';
 import { PaceBar } from '@/components/pace-bar';
 import { Box, Text } from '@/components/primitives';
 import { Duration, footerPad, modalTop, PrimaryButton, TextButton } from '@/components/ui';
-import { addDays, parseDay } from '@/domain/dates';
+import { addDays, isDayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { shortDate, useAssetName } from '@/lib/labels';
@@ -29,6 +29,9 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
+/** Closes a screen that has nothing to show; from a cold deep link there may be nothing behind it. */
+const leave = () => (router.canGoBack() ? router.back() : router.replace('/'));
+
 /**
  * A week in numbers. `celebrate` (set when logging completes the last goal) turns it into
  * the "week complete" moment; otherwise it is a calm recap, softer when few goals were met.
@@ -39,17 +42,26 @@ export default function Week() {
   const insets = useSafeAreaInsets();
   const assetName = useAssetName();
   const today = useToday();
-  const { week, celebrate } = useLocalSearchParams<{ week: string; celebrate?: string }>();
+  const { week: weekParam, celebrate } = useLocalSearchParams<{ week: string; celebrate?: string }>();
+  // Only a real day key is a week; a stray link (`hourfolio://week`) just closes the sheet instead of crashing.
+  const week = typeof weekParam === 'string' && isDayKey(weekParam) ? weekParam : null;
   const { assets, logs } = usePortfolio();
   const plans = usePortfolioStore((s) => s.plans);
   const badges = usePortfolioStore((s) => s.badges);
+  const weekGoals = usePortfolioStore((s) => s.weekGoals);
   const earnedHere = badges.filter((b) => b.weekFrom === week);
-  const s = useMemo(() => weekSummary(assets, logs, plans.find((p) => p.weekFrom === week), week), [assets, logs, plans, week]);
-  const complete = celebrate === '1' && s.allMet;
+  const s = useMemo(() => (week ? weekSummary(assets, logs, plans.find((p) => p.weekFrom === week), week, weekGoals) : null), [assets, logs, plans, week, weekGoals]);
+  const complete = celebrate === '1' && s?.allMet === true;
+
+  useEffect(() => {
+    if (!week) leave();
+  }, [week]);
 
   useEffect(() => {
     if (complete) void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
   }, [complete]);
+
+  if (!week || !s) return null;
 
   const time = (minutes: number) =>
     durationParts(minutes)

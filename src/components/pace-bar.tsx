@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next';
 import { Box, Text } from '@/components/primitives';
 import { addDays, startOfWeek, weekdayMonFirst } from '@/domain/dates';
+import { weekdayShort } from '@/lib/labels';
 import { useAppTheme } from '@/theme/theme';
 
 const DAYS = [0, 1, 2, 3, 4, 5, 6];
@@ -44,7 +45,7 @@ export function PaceDays({ today }: { today: Date }) {
         {DAYS.map((i) => (
           <Box key={i} flex={1} alignItems="center">
             <Text variant="tiny" color={i === now ? 'accentInk' : 'muted'} style={{ fontFamily: i === now ? 'Inter_700Bold' : 'Inter_500Medium', textTransform: 'uppercase' }}>
-              {new Intl.DateTimeFormat(i18n.language, { weekday: 'narrow' }).format(addDays(monday, i))}
+              {weekdayShort(i18n.language, addDays(monday, i))}
             </Text>
           </Box>
         ))}
