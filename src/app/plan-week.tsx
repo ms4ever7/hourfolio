@@ -5,40 +5,31 @@ import { Alert, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { PlanBoard } from '@/components/plan-board';
-import { ShortNote } from '@/components/plan-card';
+import { AddSession, ShortNote } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
+import { DurationPicker } from '@/components/duration-picker';
 import { Duration, Group, PrimaryButton, RoundButton, Segmented, SwitchRow, TextButton, footerPad } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
-import { DEFAULT_FREE, autoPlan, keepDone, mergeMove, overFree, planGoals, planWeek, previousSetup, resized, type PlanResult } from '@/domain/plan';
+import { DEFAULT_FREE, autoPlan, keepDone, mergeMove, overFree, planGoals, planWeek, previousSetup, MAX_SESSION, MIN_SESSION, type PlanResult, type PlannedSession } from '@/domain/plan';
+import { newId } from '@/domain/ids';
 import { RECOVERY_ID } from '@/domain/types';
 import { durationParts } from '@/domain/format';
 import { useAssetName, weekdayName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
 import { usePortfolioStore } from '@/store/portfolio-store';
 
-const STEP = 30;
 const MAX_FREE = 8 * 60;
 const MAX_REST = 5 * 60;
 const WEEKDAYS = [0, 1, 2, 3, 4, 5, 6];
 const WEEKEND_FREE = 120;
-const small = { minWidth: 32, width: 32, height: 32, borderRadius: 16, paddingHorizontal: 0 } as const;
 
 type When = 'this' | 'next';
 
-function Stepper({ value, onChange, label, off }: { value: number; onChange: (minutes: number) => void; label: string; off: string }) {
-  const { t } = useTranslation();
+function TimeChip({ value, onChange, label, off, max }: { value: number; onChange: (minutes: number) => void; label: string; off: string; max: number }) {
   return (
-    <Box flexDirection="row" alignItems="center" gap="sm">
-      <RoundButton accessibilityLabel={`${t('common.less')}: ${label}`} onPress={() => onChange(value - STEP)} style={{ paddingHorizontal: 0 }}>
-        <Text variant="heading">−</Text>
-      </RoundButton>
-      <Box width={76} alignItems="center">
-        {value === 0 ? <Text variant="small">{off}</Text> : <Duration minutes={value} size={14} />}
-      </Box>
-      <RoundButton accessibilityLabel={`${t('common.more')}: ${label}`} onPress={() => onChange(value + STEP)} style={{ paddingHorizontal: 0 }}>
-        <Text variant="heading">+</Text>
-      </RoundButton>
-    </Box>
+    <DurationPicker minutes={value} onChange={onChange} max={max} label={label} minWidth={96}>
+      {value === 0 ? <Text variant="small">{off}</Text> : <Duration minutes={value} size={14} />}
+    </DurationPicker>
   );
 }
 
@@ -84,6 +75,8 @@ export default function PlanWeek() {
   const [custom, setCustom] = useState<number[] | null>(null);
   const [result, setResult] = useState(() => (hasGoals ? propose(first, restFor(first), null) : null));
   const [options, setOptions] = useState(false);
+  // The day whose "add a session" row is open.
+  const [adding, setAdding] = useState<string | null>(null);
 
   const monday = mondayOf(when);
   const weekFrom = dayKey(monday);
@@ -97,6 +90,7 @@ export default function PlanWeek() {
     setRest(restMinutes);
     setCustom(next);
     setEdited(false);
+    setAdding(null);
     setResult(propose(w, restMinutes, next));
   };
   // Rebuilding the proposal throws away what was moved, resized or removed, so ask first.
@@ -118,13 +112,19 @@ export default function PlanWeek() {
     setEdited(true);
     setResult((r) => r && { ...r, sessions: mergeMove(r.sessions, id, day) });
   };
-  const resize = (id: string, direction: 1 | -1) => {
+  const resizeTo = (id: string, minutes: number) => {
     setEdited(true);
-    setResult((r) => r && { ...r, sessions: r.sessions.map((x) => (x.id === id ? { ...x, minutes: resized(x.minutes, direction) } : x)) });
+    setResult((r) => r && { ...r, sessions: r.sessions.map((x) => (x.id === id ? { ...x, minutes } : x)) });
   };
   const remove = (id: string) => {
     setEdited(true);
     setResult((r) => r && { ...r, sessions: r.sessions.filter((x) => x.id !== id) });
+  };
+  // The way back after a merge or a removal: put a hobby on a day again, at its shortest length.
+  const add = (session: Omit<PlannedSession, 'id'>) => {
+    setEdited(true);
+    setAdding(null);
+    setResult((r) => r && { ...r, sessions: [...r.sessions, { ...session, id: newId('plan') }] });
   };
 
   const save = () => {
@@ -188,7 +188,12 @@ export default function PlanWeek() {
                       <Text variant="bodyStrong" style={{ textTransform: 'capitalize' }}>
                         {weekdayName(i18n.language, parseDay(d.key))}
                       </Text>
-                      {d.sessions.length > 0 ? <Duration minutes={d.sessions.reduce((n, s) => n + s.minutes, 0)} size={12} quiet /> : null}
+                      <Box flexDirection="row" alignItems="center" gap="s">
+                        {d.sessions.length > 0 ? <Duration minutes={d.sessions.reduce((n, s) => n + s.minutes, 0)} size={12} quiet /> : null}
+                        <RoundButton accessibilityLabel={`${t('plan.add')}: ${weekdayName(i18n.language, parseDay(d.key))}`} onPress={() => setAdding(adding === d.key ? null : d.key)} style={{ minWidth: 32, width: 32, height: 32, borderRadius: 16, paddingHorizontal: 0 }}>
+                          <Text variant="bodyStrong">{adding === d.key ? '×' : '+'}</Text>
+                        </RoundButton>
+                      </Box>
                     </Box>
                     {over > 0 ? <Text variant="small">{free[i] === 0 ? t('plan.overOff') : t('plan.over', { time: time(free[i]) })}</Text> : null}
                     {d.sessions.length === 0 ? <Text variant="small">{t('plan.nothing')}</Text> : null}
@@ -206,20 +211,17 @@ export default function PlanWeek() {
                       <Text variant="label" numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
                         {assetName(asset)}
                       </Text>
-                      <Duration minutes={s.minutes} size={13} />
                     </Box>
-                    <RoundButton accessibilityLabel={`${t('common.less')}: ${assetName(asset)}`} onPress={() => resize(s.id, -1)} style={small}>
-                      <Text variant="bodyStrong">−</Text>
-                    </RoundButton>
-                    <RoundButton accessibilityLabel={`${t('common.more')}: ${assetName(asset)}`} onPress={() => resize(s.id, 1)} style={small}>
-                      <Text variant="bodyStrong">+</Text>
-                    </RoundButton>
+                    <DurationPicker compact minutes={s.minutes} onChange={(m) => resizeTo(s.id, m)} min={MIN_SESSION} max={MAX_SESSION} label={assetName(asset)}>
+                      <Duration minutes={s.minutes} size={13} />
+                    </DurationPicker>
                     <Pressable accessibilityRole="button" accessibilityLabel={`${t('plan.remove')}: ${assetName(asset)}`} onPress={() => remove(s.id)} hitSlop={8} style={{ width: 32, height: 44, alignItems: 'center', justifyContent: 'center' }}>
                       <Text variant="heading">×</Text>
                     </Pressable>
                   </Box>
                 );
               }}
+              footer={(d) => (adding === d.key ? <AddSession sessions={result.sessions} day={d.key} onAdd={add} /> : null)}
             />
             <ShortNote short={result.shortBy} />
 
@@ -238,7 +240,7 @@ export default function PlanWeek() {
                         <Text variant="label" style={{ flex: 1, fontFamily: 'Inter_600SemiBold', textTransform: 'capitalize' }}>
                           {name}
                         </Text>
-                        {isPast(i) ? null : <Stepper value={free[i]} label={name} off={t('setup.goalOff')} onChange={(m) => setDay(i, m)} />}
+                        {isPast(i) ? null : <TimeChip value={free[i]} label={name} off={t('setup.goalOff')} max={MAX_FREE} onChange={(m) => setDay(i, m)} />}
                       </Box>
                     );
                   })}
@@ -253,7 +255,7 @@ export default function PlanWeek() {
                       </Box>
                     </Box>
                     <Box alignItems="flex-end">
-                      <Stepper value={rest} label={t('plan.recovery')} off={t('setup.goalOff')} onChange={setRestMinutes} />
+                      <TimeChip value={rest} label={t('plan.recovery')} off={t('setup.goalOff')} max={MAX_REST} onChange={setRestMinutes} />
                     </Box>
                   </Box>
                 ) : null}

@@ -1,8 +1,9 @@
 import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Box, Text } from '@/components/primitives';
-import { Duration, RoundButton, Segmented } from '@/components/ui';
-import { WEEK_GOAL_MAX, WEEK_GOAL_STEP, dailyFromWeekly, stepDayGoal } from '@/domain/goals';
+import { DurationPicker } from '@/components/duration-picker';
+import { Duration, Segmented } from '@/components/ui';
+import { DAY_GOAL_MAX, WEEK_GOAL_MAX, dailyFromWeekly } from '@/domain/goals';
 import type { Asset } from '@/domain/types';
 
 type GoalAsset = Pick<Asset, 'weeklyGoalMinutes' | 'dailyGoalMinutes' | 'planDays'>;
@@ -26,8 +27,6 @@ export function GoalField({ asset, onChange, label }: { asset: GoalAsset; onChan
     if (unit === 'day') onChange(minutes > 0 ? { dailyGoalMinutes: minutes } : { dailyGoalMinutes: undefined, weeklyGoalMinutes: undefined });
     else onChange({ weeklyGoalMinutes: minutes > 0 ? minutes : undefined });
   };
-  const less = () => set(unit === 'day' ? stepDayGoal(daily, -1) : Math.max(0, weekly - WEEK_GOAL_STEP));
-  const more = () => set(unit === 'day' ? stepDayGoal(daily, 1) : Math.min(WEEK_GOAL_MAX, weekly + WEEK_GOAL_STEP));
   const switchTo = (next: Unit) => {
     if (next === unit) return;
     setUnit(next);
@@ -53,21 +52,15 @@ export function GoalField({ asset, onChange, label }: { asset: GoalAsset; onChan
         ]}
       />
       <Box flexDirection="row" alignItems="center" justifyContent="center" gap="sm">
-        <RoundButton accessibilityLabel={`${t('common.less')}: ${label}`} onPress={less} style={{ paddingHorizontal: 0 }}>
-          <Text variant="heading">−</Text>
-        </RoundButton>
-        <Box minWidth={96} alignItems="center">
+        <DurationPicker minutes={value} onChange={set} max={unit === 'day' ? DAY_GOAL_MAX : WEEK_GOAL_MAX} label={label} minWidth={140} testID="goal-time">
           {value === 0 ? (
             <Text variant="label" color="muted">
-              {t('setup.goalOff')}
+              {t('durationPicker.choose')}
             </Text>
           ) : (
             <Duration minutes={value} size={18} />
           )}
-        </Box>
-        <RoundButton accessibilityLabel={`${t('common.more')}: ${label}`} onPress={more} style={{ paddingHorizontal: 0 }}>
-          <Text variant="heading">+</Text>
-        </RoundButton>
+        </DurationPicker>
       </Box>
       {unit === 'day' && weekly > 0 ? (
         <Box flexDirection="row" alignItems="center" justifyContent="center" gap="xs">
