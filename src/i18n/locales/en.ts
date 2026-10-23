@@ -265,6 +265,10 @@ export const en = {
     discardTitle: 'Rebuild the plan?',
     discardSub: 'Your moves and changes to this plan will be lost.',
     discardGo: 'Rebuild',
+    leaveTitle: 'Leave without saving?',
+    leaveSub: 'Your moves and changes to this plan will be lost.',
+    leaveStay: 'Keep editing',
+    leaveGo: 'Leave',
     shortTitle: 'Did not fit yet',
     dragHint: 'Drag to another day',
     options: 'Adjust free time',
@@ -334,6 +338,7 @@ export const en = {
     autoIcon: 'Holiday icon automatically',
     autoIconSub: 'Switches the icon for holidays and back. iOS shows a notice each time.',
     iconUnsupported: 'The icon can’t be changed on this device.',
+    colorN: 'Colour {{n}}',
   },
   avatar: {
     title: 'Profile picture',
@@ -495,6 +500,7 @@ export const en = {
     },
   },
   tabs: { goals: 'Goals', today: 'Today', analytics: 'Analytics', profile: 'Profile', invest: 'Invest time' },
+  notifications: { channel: 'Reminders' },
 };
 
 // Other locales must have every English key. Extra keys are allowed for plural

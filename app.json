@@ -40,13 +40,24 @@
           "imageWidth": 160
         }
       ],
-      "expo-localization",
+      [
+        "expo-localization",
+        {
+          "supportedLocales": [
+            "en",
+            "uk",
+            "pl"
+          ]
+        }
+      ],
       "./plugins/with-scene-lifecycle",
       "expo-sharing",
       [
         "expo-image-picker",
         {
-          "photosPermission": "Hourfolio uses your photos only for the pictures you pick for your profile and assets. They stay on this device."
+          "photosPermission": "Hourfolio uses your photos only for the pictures you pick for your profile and assets. They stay on this device.",
+          "cameraPermission": false,
+          "microphonePermission": false
         }
       ],
       [
@@ -70,7 +81,14 @@
           }
         ]
       ],
-      "./plugins/without-push-entitlement"
+      "./plugins/without-push-entitlement",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/android-icon-monochrome.png",
+          "color": "#6558F5"
+        }
+      ]
     ],
     "runtimeVersion": {
       "policy": "fingerprint"
@@ -88,6 +106,10 @@
         "projectId": "b8387471-8b97-49e7-baf3-32d6ce840a91"
       }
     },
-    "owner": "mszorro"
+    "owner": "mszorro",
+    "locales": {
+      "uk": "./assets/locales/uk.json",
+      "pl": "./assets/locales/pl.json"
+    }
   }
 }
