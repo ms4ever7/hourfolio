@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PresetTile, ProfileAvatar } from '@/components/avatar';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
+import { footerPad, modalTop, PrimaryButton, RoundButton } from '@/components/ui';
 import { AVATAR_GROUPS, type Avatar } from '@/domain/avatars';
 import { deletePhoto, pickSquarePhoto } from '@/lib/photos';
 import { useSettingsStore } from '@/store/settings-store';
@@ -32,7 +32,7 @@ export default function AvatarPicker() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 22 }}>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 22 }}>
         <Text variant="title" accessibilityRole="header">
           {t('avatar.title')}
         </Text>

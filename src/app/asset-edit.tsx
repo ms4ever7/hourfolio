@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { FacePicker, ColorPicker } from '@/components/face-picker';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, TextButton, footerPad } from '@/components/ui';
+import { footerPad, modalTop, PrimaryButton, TextButton } from '@/components/ui';
 import { addDays, startOfWeek } from '@/domain/dates';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
@@ -78,7 +78,7 @@ export default function AssetEdit() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 22 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
+      <ScrollView contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 22 }} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets>
         <Text variant="title" accessibilityRole="header">
           {t('assetEdit.title')}
         </Text>

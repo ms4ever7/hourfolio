@@ -9,7 +9,7 @@ import { Confetti } from '@/components/confetti';
 import { AssetIcon, UI_PATHS } from '@/components/icons';
 import { PaceBar } from '@/components/pace-bar';
 import { Box, Text } from '@/components/primitives';
-import { Duration, PrimaryButton, TextButton, footerPad } from '@/components/ui';
+import { Duration, footerPad, modalTop, PrimaryButton, TextButton } from '@/components/ui';
 import { addDays, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
@@ -62,7 +62,7 @@ export default function Week() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 16 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 16 }}>
         <Box gap="xs" alignItems={complete ? 'center' : 'flex-start'}>
           {complete ? (
             <Box width={84} height={84} borderRadius="xl" backgroundColor="daysSoft" alignItems="center" justifyContent="center" style={{ marginBottom: 8 }}>

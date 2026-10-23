@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { GoalField } from '@/components/goal-field';
 import { AssetIcon } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { PrimaryButton, footerPad } from '@/components/ui';
+import { footerPad, modalTop, PrimaryButton } from '@/components/ui';
 import { useNextWeek } from '@/components/plan-card';
 import { replanWeek } from '@/domain/plan';
 import { useAssetName } from '@/lib/labels';
@@ -51,7 +51,7 @@ export default function GoalsEdit() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 16 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 16 }}>
         <Text variant="title" accessibilityRole="header">
           {t('goals.editTitle')}
         </Text>

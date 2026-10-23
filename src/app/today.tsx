@@ -7,7 +7,7 @@ import { AssetIcon } from '@/components/icons';
 import { SessionRow, useWeekPlan } from '@/components/plan-card';
 import { Box, Text } from '@/components/primitives';
 import { GoalScene } from '@/components/scenes';
-import { ActionButton, Duration, PrimaryButton, RoundButton, footerPad } from '@/components/ui';
+import { ActionButton, Duration, footerPad, modalTop, PrimaryButton, RoundButton } from '@/components/ui';
 import { dayKey } from '@/domain/dates';
 import { dayProgress, isSessionDone, sessionsOn } from '@/domain/plan';
 import { logResized, todaysSessions } from '@/domain/today';
@@ -39,7 +39,7 @@ export default function TodaySheet() {
 
   return (
     <Box flex={1} backgroundColor="ground">
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: 28, gap: 16 }}>
+      <ScrollView style={{ flex: 1 }} contentContainerStyle={{ padding: 24, paddingTop: modalTop(insets.top), gap: 16 }}>
         <Box gap="xs">
           <Text variant="caption">{capitalize(longDate(i18n.language, today))}</Text>
           <Text variant="title" accessibilityRole="header">

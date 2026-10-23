@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { CARD_WIDTH, shareView, WeekCard, weekCardHeight } from '@/components/share';
-import { PrimaryButton, TextButton } from '@/components/ui';
+import { modalTop, PrimaryButton, TextButton } from '@/components/ui';
 import { addDays, parseDay } from '@/domain/dates';
 import { weekRange } from '@/domain/goals';
 import { sumMinutes } from '@/domain/stats';
@@ -52,7 +52,7 @@ export default function ShareWeek() {
   };
 
   return (
-    <Box flex={1} backgroundColor="ground" style={{ paddingTop: 28, paddingBottom: insets.bottom + 12 }}>
+    <Box flex={1} backgroundColor="ground" style={{ paddingTop: modalTop(insets.top), paddingBottom: insets.bottom + 12 }}>
       <Box paddingHorizontal="l" gap="xs">
         <Text variant="title" accessibilityRole="header">
           {t('share.title')}
