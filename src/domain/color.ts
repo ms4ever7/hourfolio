@@ -90,3 +90,33 @@ export function accentTokens(picked: string, mode: Mode, card: string): AccentTo
   const accentSoft = mix(card, base, mode === 'light' ? 0.14 : 0.24);
   return { accent, onAccent, accentInk, accentSoft };
 }
+
+export interface Hsv {
+  /** Degrees, 0–360. */
+  h: number;
+  /** 0–1. */
+  s: number;
+  /** 0–1. */
+  v: number;
+}
+
+export function rgbToHsv({ r, g, b }: Rgb): Hsv {
+  const [x, y, z] = [r / 255, g / 255, b / 255];
+  const max = Math.max(x, y, z);
+  const d = max - Math.min(x, y, z);
+  let h = 0;
+  if (d > 0) {
+    if (max === x) h = ((y - z) / d) % 6;
+    else if (max === y) h = (z - x) / d + 2;
+    else h = (x - y) / d + 4;
+  }
+  return { h: (h * 60 + 360) % 360, s: max === 0 ? 0 : d / max, v: max };
+}
+
+export function hsvToRgb({ h, s, v }: Hsv): Rgb {
+  const f = (n: number) => {
+    const k = (n + h / 60) % 6;
+    return (v - v * s * Math.max(0, Math.min(k, 4 - k, 1))) * 255;
+  };
+  return { r: f(5), g: f(3), b: f(1) };
+}
