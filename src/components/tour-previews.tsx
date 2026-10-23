@@ -1,10 +1,14 @@
 import { useTranslation } from 'react-i18next';
+import { useWindowDimensions } from 'react-native';
+import { CumulativeChart } from '@/components/charts';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
+import { PaceBar, PaceDays } from '@/components/pace-bar';
 import { GoalScene } from '@/components/scenes';
 import { Card, Duration, Hours } from '@/components/ui';
 import { addDays, startOfWeek } from '@/domain/dates';
 import type { IconKey, PaletteKey } from '@/domain/types';
+import { shortDate } from '@/lib/labels';
 import { useAppTheme } from '@/theme/theme';
 
 /** Sample hobbies for the welcome tour. Static: nothing here reads or writes the user's data. */
@@ -109,93 +113,99 @@ export function ProgressPreview() {
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
   const name = useDemoName();
-  const goals: { id: DemoId; done: number; goal: number; scene: 'tree' | 'dog' | 'rocket' }[] = [
-    { id: 'guitar', done: 150, goal: 180, scene: 'tree' },
-    { id: 'running', done: 60, goal: 120, scene: 'dog' },
-    { id: 'coding', done: 210, goal: 210, scene: 'rocket' },
+  const today = new Date();
+  const goals: { id: DemoId; done: number; goal: number }[] = [
+    { id: 'guitar', done: 150, goal: 180 },
+    { id: 'running', done: 60, goal: 120 },
+    { id: 'coding', done: 210, goal: 210 },
   ];
+  // Only the goals: the first slide already shows a day's logging, and together they did not fit the screen.
   return (
     <Box gap="sm">
-      <Card gap="s">
-        <Text variant="label" color="muted">
-          {t('today.label')}
-        </Text>
-        <Duration minutes={105} size={32} />
-        {(['guitar', 'running'] as const).map((id) => (
-          <Box key={id} flexDirection="row" alignItems="center" gap="sm">
-            <AssetIcon icon={DEMO[id].icon} color={DEMO[id].color} size={28} />
-            <Text variant="label" numberOfLines={1} style={{ flex: 1 }}>
-              {name(id)}
-            </Text>
-            <Duration minutes={id === 'guitar' ? 45 : 60} size={14} prefix="+" highlight={palette[DEMO[id].color].main} />
-          </Box>
-        ))}
-      </Card>
       <Card gap="sm">
-        {goals.map(({ id, done, goal, scene }) => {
+        {goals.map(({ id, done, goal }) => {
           const p = palette[DEMO[id].color];
+          const met = done >= goal;
           return (
-            <Box key={id} gap="xs">
-              <Box flexDirection="row" alignItems="center" gap="s">
-                <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
-                  {name(id)}
-                </Text>
-                <Duration minutes={done} size={13} highlight={p.main} />
-                <Text variant="small">/</Text>
-                <Duration minutes={goal} size={13} quiet />
+            <Box key={id} gap="s" paddingVertical="xs">
+              <Box flexDirection="row" alignItems="center" gap="sm">
+                <AssetIcon icon={DEMO[id].icon} color={DEMO[id].color} size={36} />
+                <Box flex={1} gap="xs">
+                  <Text variant="label" numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
+                    {name(id)}
+                  </Text>
+                  <Box flexDirection="row" alignItems="baseline" gap="xs">
+                    <Duration minutes={done} size={13} highlight={p.main} />
+                    <Text variant="small">/</Text>
+                    <Duration minutes={goal} size={13} quiet />
+                  </Box>
+                </Box>
+                {met ? (
+                  <Box flexDirection="row" alignItems="center" gap="xs" backgroundColor="daysSoft" borderRadius="pill" paddingHorizontal="s" style={{ paddingVertical: 3 }}>
+                    <Glyph d={UI_PATHS.check} size={12} color={colors.days} strokeWidth={3} />
+                    <Text variant="tiny" color="days" style={{ fontFamily: 'Inter_600SemiBold' }}>
+                      {t('goals.met')}
+                    </Text>
+                  </Box>
+                ) : null}
               </Box>
-              <GoalScene scene={scene} progress={done / goal} color={done >= goal ? colors.days : p.main} tint={done >= goal ? colors.daysSoft : p.tint} season={null} height={36} />
+              <PaceBar progress={done / goal} color={met ? colors.days : p.main} tint={met ? colors.daysSoft : p.tint} today={today} />
             </Box>
           );
         })}
+        <PaceDays today={today} />
       </Card>
     </Box>
   );
 }
 
-/** Slide 3: capital and the next milestone for each hobby. */
+/** Capital over the last twelve weeks, in hours: it only ever climbs. The last point is the total on the card. */
+const CAPITAL_CURVE = [60, 84, 106, 128, 150, 172, 194, 216, 236, 256, 275, 292.5];
+
+/** Slide 3: the capital built up, as a rising line and as a share per hobby. */
 export function InvestmentPreview() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { palette } = useAppTheme();
+  const { width } = useWindowDimensions();
   const name = useDemoName();
-  const rows: { id: DemoId; capital: number; next: number; weeks: number; before?: number }[] = [
-    { id: 'guitar', capital: 62 * 60 + 30, next: 100, weeks: 9, before: 40 },
-    { id: 'coding', capital: 212 * 60, next: 250, weeks: 5 },
-    { id: 'running', capital: 18 * 60, next: 25, weeks: 3 },
+  const today = new Date();
+  const rows: { id: DemoId; capital: number }[] = [
+    { id: 'coding', capital: 212 * 60 },
+    { id: 'guitar', capital: 62 * 60 + 30 },
+    { id: 'running', capital: 18 * 60 },
   ];
+  const total = rows.reduce((sum, r) => sum + r.capital, 0);
+  const weeks = CAPITAL_CURVE.length;
+  const labels: [string, string, string] = [shortDate(i18n.language, addDays(today, -7 * (weeks - 1))), shortDate(i18n.language, addDays(today, -7 * Math.floor((weeks - 1) / 2))), t('portfolio.today')];
+  // One card, so the whole slide fits above the page dots: the total, its climb, then each hobby's share.
   return (
-    <Box gap="sm">
-      <Card gap="xs">
+    <Card gap="sm">
+      <Box gap="xs">
         <Text variant="label" color="muted">
           {t('tour.capital')}
         </Text>
-        <Hours minutes={rows.reduce((s, r) => s + r.capital, 0)} variant="display" />
-      </Card>
-      {rows.map((r) => {
-        const p = palette[DEMO[r.id].color];
-        const prev = r.next === 100 ? 50 : r.next === 250 ? 200 : 10;
-        const progress = (r.capital / 60 - prev) / (r.next - prev);
-        return (
-          <Box key={r.id} backgroundColor="card" borderRadius="xl" padding="m" gap="s">
-            <Box flexDirection="row" alignItems="center" gap="sm">
-              <AssetIcon icon={DEMO[r.id].icon} color={DEMO[r.id].color} size={36} />
-              <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
-                {name(r.id)}
-              </Text>
-              <Duration minutes={r.capital} size={15} highlight={p.main} />
-              <Text variant="small">/</Text>
-              <Hours minutes={r.next * 60} variant="bodyStrong" />
+        <Hours minutes={total} variant="display" />
+      </Box>
+      <CumulativeChart width={width - 48 - 40} height={150} current={CAPITAL_CURVE} previous={null} totalDays={weeks} labels={labels} accessibilityLabel={t('tour.capital')} />
+      <Box gap="s">
+        {rows.map((r) => {
+          const p = palette[DEMO[r.id].color];
+          return (
+            <Box key={r.id} gap="s">
+              <Box flexDirection="row" alignItems="center" gap="sm">
+                <AssetIcon icon={DEMO[r.id].icon} color={DEMO[r.id].color} size={36} />
+                <Text variant="label" numberOfLines={1} style={{ flex: 1, fontFamily: 'Inter_600SemiBold' }}>
+                  {name(r.id)}
+                </Text>
+                <Duration minutes={r.capital} size={15} highlight={p.main} />
+              </Box>
+              <Box height={8} borderRadius="pill" style={{ backgroundColor: p.tint }}>
+                <Box height={8} borderRadius="pill" style={{ width: `${Math.round((r.capital / total) * 100)}%`, backgroundColor: p.main }} />
+              </Box>
             </Box>
-            <GoalScene scene="bar" progress={progress} color={p.main} tint={p.tint} season={null} />
-            <Box flexDirection="row" justifyContent="space-between" gap="s">
-              <Text variant="small" numberOfLines={1} style={{ flexShrink: 1 }}>
-                {r.before ? t('goals.milestoneBefore', { hours: r.before }) : ' '}
-              </Text>
-              <Text variant="small">{t('asset.milestoneEta', { count: r.weeks })}</Text>
-            </Box>
-          </Box>
-        );
-      })}
-    </Box>
+          );
+        })}
+      </Box>
+    </Card>
   );
 }

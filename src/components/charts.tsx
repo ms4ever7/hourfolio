@@ -21,6 +21,7 @@ export function CumulativeChart({
   totalDays,
   labels,
   accessibilityLabel,
+  height = 168,
 }: {
   width: number;
   current: number[];
@@ -29,10 +30,11 @@ export function CumulativeChart({
   totalDays: number;
   labels: [string, string, string];
   accessibilityLabel: string;
+  /** Total height; the plot is 28 shorter, leaving room for the date labels. */
+  height?: number;
 }) {
   const { colors } = useAppTheme();
-  const height = 168;
-  const plotH = 140;
+  const plotH = height - 28;
   const plotW = width - 8;
   const max = Math.max(1, ...current, ...(previous ?? []));
   const step = niceStep(max);
@@ -66,13 +68,13 @@ export function CumulativeChart({
         </>
       ) : null}
       <Circle cx={lastX} cy={lastY} r={5} fill={colors.hours} stroke={colors.ground} strokeWidth={2} />
-      <SvgText x={0} y={160} fontSize={11} fill={colors.faint} fontFamily={SANS}>
+      <SvgText x={0} y={height - 8} fontSize={11} fill={colors.faint} fontFamily={SANS}>
         {labels[0]}
       </SvgText>
-      <SvgText x={width / 2} y={160} fontSize={11} fill={colors.faint} fontFamily={SANS} textAnchor="middle">
+      <SvgText x={width / 2} y={height - 8} fontSize={11} fill={colors.faint} fontFamily={SANS} textAnchor="middle">
         {labels[1]}
       </SvgText>
-      <SvgText x={width} y={160} fontSize={11} fill={colors.faint} fontFamily={SANS} textAnchor="end">
+      <SvgText x={width} y={height - 8} fontSize={11} fill={colors.faint} fontFamily={SANS} textAnchor="end">
         {labels[2]}
       </SvgText>
     </Svg>
