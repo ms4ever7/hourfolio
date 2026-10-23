@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { OptionButton } from '@/components/ui';
+import { OptionButton, sheetPad } from '@/components/ui';
 import { APP_LANGUAGES, LANGUAGE_BADGE } from '@/i18n/resources';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
@@ -17,7 +17,7 @@ export default function LanguageSheet() {
   const setLanguage = useSettingsStore((s) => s.setLanguage);
 
   return (
-    <Box padding="l" gap="s" style={{ paddingTop: 28, paddingBottom: insets.bottom + 16 }} accessibilityRole="radiogroup" accessibilityLabel={t('profile.language')}>
+    <Box padding="l" gap="s" style={{ paddingTop: 28, paddingBottom: sheetPad(insets.bottom) }} accessibilityRole="radiogroup" accessibilityLabel={t('profile.language')}>
       <Text variant="heading" accessibilityRole="header" style={{ marginBottom: 4 }}>
         {t('profile.language')}
       </Text>

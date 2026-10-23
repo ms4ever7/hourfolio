@@ -18,6 +18,11 @@ import { Box, Text } from './primitives';
 // On Android the bottom inset is a real navigation bar (the 3-button bar is ~48 pt), so keep all of it.
 export const footerPad = (insetBottom: number) => (Platform.OS === 'ios' ? Math.max(insetBottom - 12, 8) : insetBottom + 12);
 
+/** Space under the last button of a form sheet (`presentation: 'formSheet'`, fit to contents). */
+// On iOS the sheet itself already keeps the home-indicator area below its content, so adding the inset again left
+// a large empty band under the button. Android has no such sheet inset, so the navigation bar is kept there.
+export const sheetPad = (insetBottom: number) => (Platform.OS === 'ios' ? 8 : insetBottom + 16);
+
 /** `scrollHint` fades the content out above the footer while there is more below the fold, and flashes the scroll bar once. */
 export function Screen({ children, footer, scroll = true, scrollHint }: { children: ReactNode; footer?: ReactNode; scroll?: boolean; scrollHint?: boolean }) {
   const { colors } = useAppTheme();
