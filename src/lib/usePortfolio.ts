@@ -43,6 +43,16 @@ export function useHoldings(assets: Asset[], logs: LogEntry[], current: Range, p
   }, [assets, logs, current, previous, today]);
 }
 
+/** The current hour, read again when the app comes back to the foreground, so a greeting left open since the morning updates. */
+export function useHour(): number {
+  const [hour, setHour] = useState(() => new Date().getHours());
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (state) => state === 'active' && setHour(new Date().getHours()));
+    return () => sub.remove();
+  }, []);
+  return hour;
+}
+
 /**
  * Today at local midnight; the same object until the date changes, so memos hold.
  * The date is re-read when the app comes back to the foreground and at midnight,

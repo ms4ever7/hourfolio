@@ -9,7 +9,7 @@ import { addDays, dayKey, startOfMonth, startOfWeek } from '@/domain/dates';
 import { formatHours, formatHoursDelta, percent } from '@/domain/format';
 import { energyBalance, monthHeatmap, sumMinutes } from '@/domain/stats';
 import { ENERGY_TYPES, RECOVERY_ID } from '@/domain/types';
-import { capitalize, monthYear, useAssetName } from '@/lib/labels';
+import { capitalize, monthYear, useAssetName, weekdayShort } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { energyColor, useAppTheme } from '@/theme/theme';
 
@@ -37,7 +37,7 @@ export default function Analytics() {
   // Localized Mon–Sun initials from a known Monday.
   const weekdays = useMemo(() => {
     const monday = startOfWeek(today);
-    return Array.from({ length: 7 }, (_, i) => capitalize(new Intl.DateTimeFormat(locale, { weekday: 'short' }).format(addDays(monday, i))).slice(0, 2));
+    return Array.from({ length: 7 }, (_, i) => weekdayShort(locale, addDays(monday, i)));
   }, [locale, today]);
 
   const order = [...ENERGY_TYPES].sort((a, b) => d.balance[b] - d.balance[a]);

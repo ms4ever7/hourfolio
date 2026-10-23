@@ -21,7 +21,7 @@ import type { Asset } from '@/domain/types';
 import { RECOVERY_ID } from '@/domain/types';
 import { capitalize, longDate, useAssetName } from '@/lib/labels';
 import { useSeason } from '@/lib/appearance';
-import { usePortfolio, useToday } from '@/lib/usePortfolio';
+import { useHour, usePortfolio, useToday } from '@/lib/usePortfolio';
 import { useSettingsStore } from '@/store/settings-store';
 import { useAppTheme } from '@/theme/theme';
 
@@ -55,6 +55,7 @@ export default function Today() {
   const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
   const today = useToday();
+  const hour = useHour();
   const { assets, logs } = usePortfolio();
   const avatar = useSettingsStore((s) => s.avatar);
   const name = useSettingsStore((s) => s.name.trim());
@@ -91,7 +92,7 @@ export default function Today() {
       .map((p) => `${p.value}${t(`units.${p.unit}`)}`)
       .join(' ');
   const recovery = byId.get(RECOVERY_ID);
-  const greeting = t(`greeting.${greetingKey(new Date().getHours())}`);
+  const greeting = t(`greeting.${greetingKey(hour)}`);
   const relDay = (day: string) => {
     const n = daysBetween(parseDay(day), today);
     return n === 0 ? t('meta.today') : n === 1 ? t('meta.yesterday') : t('meta.daysAgo', { count: n });

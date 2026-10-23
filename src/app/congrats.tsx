@@ -10,7 +10,7 @@ import { UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { GoalCard, shareView } from '@/components/share';
 import { PrimaryButton, TextButton } from '@/components/ui';
-import { addDays, parseDay } from '@/domain/dates';
+import { addDays, isDayKey, parseDay } from '@/domain/dates';
 import { formatHours } from '@/domain/format';
 import { allGoalsMet, weekRange } from '@/domain/goals';
 import { sumMinutes } from '@/domain/stats';
@@ -32,8 +32,11 @@ export default function Congrats() {
   const season = useSeason();
   const cardRef = useRef<View>(null);
   const asset = assets.find((a) => a.id === assetId);
+  // A full-screen modal with nothing to show would trap the user: a stray link or a goal that is gone closes it instead.
+  const valid = typeof week === 'string' && isDayKey(week) && Boolean(asset?.weeklyGoalMinutes);
 
   const data = useMemo(() => {
+    if (!valid) return null;
     const range = weekRange(parseDay(week));
     const from = parseDay(range.from);
     return {
@@ -41,17 +44,27 @@ export default function Congrats() {
       all: allGoalsMet(assets, logs, range),
       label: `${shortDate(i18n.language, from)} – ${shortDate(i18n.language, addDays(from, 6))}`,
     };
-  }, [asset, assets, logs, week, i18n.language]);
+  }, [valid, asset, assets, logs, week, i18n.language]);
 
   useEffect(() => {
+    if (!valid) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/');
+      return;
+    }
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, []);
+  }, [valid]);
 
-  if (!asset?.weeklyGoalMinutes) return null;
+  if (!valid || !asset?.weeklyGoalMinutes || !data) return null;
   const p = lightPalette[asset.color];
 
   const share = async () => {
-    if (!(await shareView(cardRef))) Alert.alert(t('share.unavailable'));
+    try {
+      if (!(await shareView(cardRef))) Alert.alert(t('share.title'), t('share.unavailable'));
+    } catch {
+      // Capturing or handing the image over failed: say so instead of doing nothing.
+      Alert.alert(t('share.title'), t('share.unavailable'));
+    }
   };
 
   return (

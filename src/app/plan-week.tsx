@@ -50,7 +50,8 @@ export default function PlanWeek() {
   const restFor = (w: When) => previousSetup(usePortfolioStore.getState().plans, dayKey(mondayOf(w))).rest ?? recoveryGoal;
   // On Sunday there is nothing left of this week to plan.
   const first: When = params.when === 'next' || (params.when !== 'this' && weekdayMonFirst(today) === 6) ? 'next' : 'this';
-  const hasGoals = assets.some((a) => a.id !== RECOVERY_ID && a.weeklyGoalMinutes);
+  // Recovery's goal counts too: it is planned through `rest`, which starts from that goal.
+  const hasGoals = assets.some((a) => a.weeklyGoalMinutes);
 
   /** Sessions the week already holds and are done: they stay, and use up their day. */
   const keptFor = (w: When) => {
@@ -70,10 +71,21 @@ export default function PlanWeek() {
     return { ...planWeek({ weekFrom, goals, free, fromDay, kept }), free: custom };
   };
 
+  /**
+   * A plan already saved for the week is what "Edit next week" opens, not a fresh proposal that would replace it on Save.
+   * Its done sessions are left out here because `save` adds `keptFor` back.
+   */
+  const savedFor = (w: When): (PlanResult & { free: number[]; custom: number[] | null; rest: number }) | null => {
+    const plan = usePortfolioStore.getState().plans.find((p) => p.weekFrom === dayKey(mondayOf(w)));
+    if (!plan || plan.sessions.length === 0) return null;
+    const kept = new Set(keptFor(w).map((s) => s.id));
+    return { sessions: plan.sessions.filter((s) => !kept.has(s.id)), shortBy: plan.short ?? [], free: plan.free ?? DEFAULT_FREE, custom: plan.free ?? null, rest: plan.rest ?? recoveryGoal };
+  };
+
   const [when, setWhen] = useState<When>(first);
-  const [rest, setRest] = useState(() => restFor(first));
-  const [custom, setCustom] = useState<number[] | null>(null);
-  const [result, setResult] = useState(() => (hasGoals ? propose(first, restFor(first), null) : null));
+  const [rest, setRest] = useState(() => savedFor(first)?.rest ?? restFor(first));
+  const [custom, setCustom] = useState<number[] | null>(() => savedFor(first)?.custom ?? null);
+  const [result, setResult] = useState<(PlanResult & { free: number[] }) | null>(() => (hasGoals ? (savedFor(first) ?? propose(first, restFor(first), null)) : null));
   const [options, setOptions] = useState(false);
   // The day whose "add a session" row is open.
   const [adding, setAdding] = useState<string | null>(null);
@@ -103,7 +115,17 @@ export default function PlanWeek() {
       { text: t('plan.discardGo'), onPress: go },
     ]);
   };
-  const chooseWhen = (w: When) => guard(() => regenerate(w, restFor(w), null));
+  const chooseWhen = (w: When) =>
+    guard(() => {
+      const saved = savedFor(w);
+      if (!saved) return regenerate(w, restFor(w), null);
+      setWhen(w);
+      setRest(saved.rest);
+      setCustom(saved.custom);
+      setEdited(false);
+      setAdding(null);
+      setResult(saved);
+    });
   const setDay = (i: number, minutes: number) => guard(() => regenerate(when, rest, free.map((m, j) => (j === i ? Math.min(MAX_FREE, Math.max(0, minutes)) : m))));
   const setWeekends = (on: boolean) => guard(() => regenerate(when, rest, free.map((m, i) => (i >= 5 ? (on ? WEEKEND_FREE : 0) : m))));
   const setRestMinutes = (minutes: number) => guard(() => regenerate(when, Math.min(MAX_REST, Math.max(0, minutes)), custom));
@@ -221,7 +243,7 @@ export default function PlanWeek() {
                   </Box>
                 );
               }}
-              footer={(d) => (adding === d.key ? <AddSession sessions={result.sessions} day={d.key} onAdd={add} /> : null)}
+              footer={(d) => (adding === d.key ? <AddSession sessions={[...keptFor(when), ...result.sessions]} day={d.key} onAdd={add} /> : null)}
             />
             <ShortNote short={result.shortBy} />
 

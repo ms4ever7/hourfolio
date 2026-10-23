@@ -7,6 +7,7 @@ import { PaceBar, PaceDays } from '@/components/pace-bar';
 import { GoalScene } from '@/components/scenes';
 import { Card, Duration, Hours } from '@/components/ui';
 import { addDays, startOfWeek } from '@/domain/dates';
+import { formatHours } from '@/domain/format';
 import type { IconKey, PaletteKey } from '@/domain/types';
 import { shortDate } from '@/lib/labels';
 import { useAppTheme } from '@/theme/theme';
@@ -96,7 +97,7 @@ export function PlanPreview() {
                 )}
               </Box>
               <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold' }}>
-                {minutes ? `${Math.round((minutes / 60) * 10) / 10}${t('units.h')}` : ' '}
+                {minutes ? `${formatHours(minutes, i18n.language)}${t('units.h')}` : ' '}
               </Text>
             </Box>
           );

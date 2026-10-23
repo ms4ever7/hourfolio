@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Pressable, ScrollView } from 'react-native';
+import { Alert, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AssetIcon } from '@/components/icons';
 import { SessionRow, useWeekPlan } from '@/components/plan-card';
@@ -36,6 +36,12 @@ export default function TodaySheet() {
   const total = entries.reduce((n, l) => n + l.minutes, 0);
   const { planned, done } = dayProgress(plan, key, logs);
   const left = sessionsOn(plan, key).filter((s) => !isSessionDone(s, logs));
+  // The × sits next to − and +: a slip must not erase an entry, so it asks first, as the hobby screen does.
+  const confirmRemove = (logId: string) =>
+    Alert.alert(t('settings.confirm'), undefined, [
+      { text: t('common.cancel'), style: 'cancel' },
+      { text: t('common.delete'), style: 'destructive', onPress: () => removeLog(logId) },
+    ]);
 
   return (
     <Box flex={1} backgroundColor="ground">
@@ -85,7 +91,7 @@ export default function TodaySheet() {
                   <RoundButton accessibilityLabel={`${t('common.more')}: ${name}`} onPress={() => updateLog(l.id, logResized(l.minutes, 1))} style={small}>
                     <Text variant="bodyStrong">+</Text>
                   </RoundButton>
-                  <Pressable accessibilityRole="button" accessibilityLabel={`${t('today.remove')}: ${name}`} onPress={() => removeLog(l.id)} hitSlop={8} style={{ width: 32, height: 44, alignItems: 'center', justifyContent: 'center' }}>
+                  <Pressable accessibilityRole="button" accessibilityLabel={`${t('today.remove')}: ${name}`} onPress={() => confirmRemove(l.id)} hitSlop={8} style={{ width: 32, height: 44, alignItems: 'center', justifyContent: 'center' }}>
                     <Text variant="heading">×</Text>
                   </Pressable>
                 </Box>

@@ -192,8 +192,9 @@ function DraggableRow({ enabled, label, earlierLabel, laterLabel, onLayout, onBe
       shift.value = e.translationY;
       scheduleOnRN(onOver, e.translationY);
     })
-    .onEnd((e) => {
-      scheduleOnRN(onDrop, e.translationY);
+    .onEnd((e, success) => {
+      // A cancelled pan (the shade pulled down, a call, the scroll view taking over) must not drop the session anywhere.
+      if (success) scheduleOnRN(onDrop, e.translationY);
     })
     .onFinalize((_e, success) => {
       shift.value = withSpring(0, { damping: 18, stiffness: 220 });

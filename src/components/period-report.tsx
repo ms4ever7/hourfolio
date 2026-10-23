@@ -126,7 +126,12 @@ export function PeriodReport() {
               slices={slices.map((s) => ({ share: s.share, color: s.assetId === 'other' ? colors.previous : palette[byId.get(s.assetId)?.color ?? 'grey'].main }))}
               centerTop={formatHours(total, locale)}
               centerBottom={t('units.h')}
-              accessibilityLabel={slices.map((s) => `${s.assetId === 'other' ? t('portfolio.other') : assetName(byId.get(s.assetId)!)} ${percent(s.share)}`).join(', ')}
+              accessibilityLabel={slices
+                .map((s) => {
+                  const a = byId.get(s.assetId);
+                  return `${a ? assetName(a) : t('portfolio.other')} ${percent(s.share)}`;
+                })
+                .join(', ')}
             />
             <Box flex={1} gap="s">
               {slices.map((s) => {

@@ -1,6 +1,6 @@
 import * as Haptics from 'expo-haptics';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable, ScrollView, TextInput } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -52,24 +52,30 @@ export default function LogSheet() {
     .map((p) => `${p.value} ${t(`units.${p.unit}`)}`)
     .join(' ');
 
+  // A second tap while the sheet is already closing must not log the time twice.
+  const saving = useRef(false);
   const save = () => {
+    if (saving.current) return;
+    saving.current = true;
     const entry = { assetId, minutes, day: picked ?? dayKey(new Date()), note: note.trim() || undefined };
     const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
     logTime(entry);
     if (met) {
       const week = weekRange(parseDay(entry.day)).from;
       const key = celebrationKey(met.id, week);
+      const weekKey = weekCelebrationKey(week);
       const { celebrated, markCelebrated } = useSettingsStore.getState();
+      const after = usePortfolioStore.getState();
+      // The last goal of the week gets the whole-week moment, even when this goal's own congrats was shown before
+      // (a log was deleted and added again): the week is complete only once.
+      if (allGoalsMet(after.assets, after.logs, weekRange(parseDay(week))) && !celebrated.includes(weekKey)) {
+        markCelebrated(weekKey);
+        if (!celebrated.includes(key)) markCelebrated(key);
+        router.replace({ pathname: '/week', params: { week, celebrate: '1' } });
+        return;
+      }
       if (!celebrated.includes(key)) {
         markCelebrated(key);
-        // The last goal of the week gets the whole-week moment instead of one more goal congrats.
-        const after = usePortfolioStore.getState();
-        const weekKey = weekCelebrationKey(week);
-        if (allGoalsMet(after.assets, after.logs, weekRange(parseDay(week))) && !useSettingsStore.getState().celebrated.includes(weekKey)) {
-          markCelebrated(weekKey);
-          router.replace({ pathname: '/week', params: { week, celebrate: '1' } });
-          return;
-        }
         // The congrats screen has its own success haptic.
         router.replace({ pathname: '/congrats', params: { assetId: met.id, week } });
         return;

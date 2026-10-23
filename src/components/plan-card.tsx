@@ -11,7 +11,7 @@ import { DurationPicker } from '@/components/duration-picker';
 import { ActionButton, Card, Duration, PrimaryButton, RoundButton, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, parseDay, startOfWeek, weekdayMonFirst } from '@/domain/dates';
 import { defaultSessionRange, isSessionDone, loggedFor, minutesLeft, dropDays, overFree, plansAround, replanWeek, MAX_SESSION, MIN_SESSION, sessionsOn, type PlannedSession, type WeekPlan } from '@/domain/plan';
-import { durationParts } from '@/domain/format';
+import { durationParts, formatHours } from '@/domain/format';
 import type { LogEntry } from '@/domain/types';
 import { useAssetName, weekdayName } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
@@ -40,18 +40,21 @@ export function useNextWeek() {
 
 const planNext = () => router.push({ pathname: '/plan-week', params: { when: 'next' } });
 
-/** "45m", "2h" or "1.5h": short enough for a day column. */
-function shortDuration(minutes: number, t: TFunction): string {
+/** "45m", "2h" or "1.5h" (a comma where the language uses one): short enough for a day column. */
+function shortDuration(minutes: number, t: TFunction, locale: string): string {
   if (minutes < 60) return `${minutes}${t('units.m')}`;
-  const h = Math.round((minutes / 60) * 10) / 10;
-  return `${h}${t('units.h')}`;
+  return `${formatHours(minutes, locale)}${t('units.h')}`;
 }
+
+/** Time cannot be logged ahead: a session on a later day is shown, not offered to log (the sheet would quietly log it for today). */
+const useIsFuture = (session: PlannedSession): boolean => session.day > dayKey(useToday());
 
 /** One planned session as a tile in its asset's color: tap to log it, for its own day and what is left of it. */
 export function SessionRow({ session, logs }: { session: PlannedSession; logs: LogEntry[] }) {
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
+  const future = useIsFuture(session);
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === session.assetId));
   if (!asset) return null;
   const p = palette[asset.color];
@@ -62,6 +65,7 @@ export function SessionRow({ session, logs }: { session: PlannedSession; logs: L
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${assetName(asset)}${done ? `, ${t('plan.done')}` : ''}`}
+      disabled={future}
       onPress={() => router.push({ pathname: '/log', params: done ? { assetId: asset.id, day: session.day } : { assetId: asset.id, day: session.day, minutes: String(left) } })}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 12, padding: 10, borderRadius: 16, backgroundColor: done ? colors.track : p.tint, minHeight: 56, opacity: pressed ? 0.7 : 1 })}
     >
@@ -83,7 +87,7 @@ export function SessionRow({ session, logs }: { session: PlannedSession; logs: L
         <Box width={26} height={26} borderRadius="pill" backgroundColor="daysSoft" alignItems="center" justifyContent="center">
           <Glyph d={UI_PATHS.check} size={14} color={colors.days} strokeWidth={3} />
         </Box>
-      ) : (
+      ) : future ? null : (
         <Box backgroundColor="card" borderRadius="pill" paddingHorizontal="sm" style={{ paddingVertical: 7 }}>
           <Text variant="tiny" color="accentInk" style={{ fontFamily: 'Inter_600SemiBold' }}>
             {t('plan.log')}
@@ -128,6 +132,7 @@ function SessionLine({ session, logs }: { session: PlannedSession; logs: LogEntr
   const { t } = useTranslation();
   const { colors, palette } = useAppTheme();
   const assetName = useAssetName();
+  const future = useIsFuture(session);
   const asset = usePortfolioStore((s) => s.assets.find((a) => a.id === session.assetId));
   if (!asset) return null;
   const done = isSessionDone(session, logs);
@@ -137,6 +142,7 @@ function SessionLine({ session, logs }: { session: PlannedSession; logs: LogEntr
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={`${assetName(asset)}${done ? `, ${t('plan.done')}` : ''}`}
+      disabled={future}
       onPress={() => router.push({ pathname: '/log', params: done ? { assetId: asset.id, day: session.day } : { assetId: asset.id, day: session.day, minutes: String(left) } })}
       style={({ pressed }) => ({ flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 40, opacity: pressed ? 0.6 : done ? 0.7 : 1 })}
     >
@@ -260,7 +266,7 @@ function WeekStrip({ monday, plan, todayKey, selectedKey, logs, onSelect }: { mo
               )}
             </Box>
             <Text variant="tiny" color={isToday ? 'accentInk' : 'muted'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold', opacity: allDone ? 0.5 : 1 }}>
-              {sessions.length ? shortDuration(sessions.reduce((sum, s) => sum + s.minutes, 0), t) : ' '}
+              {sessions.length ? shortDuration(sessions.reduce((sum, s) => sum + s.minutes, 0), t, i18n.language) : ' '}
             </Text>
             <Box flexDirection="row" flexWrap="wrap" justifyContent="center" style={{ alignSelf: 'stretch', paddingHorizontal: 3, columnGap: 2, rowGap: 2, minHeight: 5 }}>
               {ids.slice(0, MAX_DOTS).map((id) => {
@@ -557,7 +563,7 @@ export function ShortNote({ short }: { short?: { assetId: string; minutes: numbe
   const assets = usePortfolioStore((s) => s.assets);
   const items = (short ?? []).flatMap((x) => {
     const a = assets.find((y) => y.id === x.assetId);
-    return a ? [{ name: assetName(a), minutes: x.minutes }] : [];
+    return a ? [{ id: a.id, name: assetName(a), minutes: x.minutes }] : [];
   });
   if (items.length === 0) return null;
   return (
@@ -566,7 +572,7 @@ export function ShortNote({ short }: { short?: { assetId: string; minutes: numbe
         {t('plan.shortTitle')}
       </Text>
       {items.map((x) => (
-        <Text key={x.name} variant="small">
+        <Text key={x.id} variant="small">
           {t('plan.short', { name: x.name, time: timeText(x.minutes, t) })}
         </Text>
       ))}
