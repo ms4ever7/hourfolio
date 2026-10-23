@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BadgeIcon } from '@/components/badge-icon';
 import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { Duration, PrimaryButton, TextButton } from '@/components/ui';
+import { Duration, PrimaryButton, sheetPad, TextButton } from '@/components/ui';
 import { loggedMinutes, parseBadge } from '@/domain/achievements';
 import { addDays, parseDay } from '@/domain/dates';
 import { weekSummary } from '@/domain/week';
@@ -46,7 +46,7 @@ export default function BadgeSheet() {
   const weekFrom = earned ? parseDay(earned.weekFrom) : null;
 
   return (
-    <Box padding="l" gap="m" style={{ paddingTop: 20, paddingBottom: insets.bottom + 16 }}>
+    <Box padding="l" gap="m" style={{ paddingTop: 20, paddingBottom: sheetPad(insets.bottom) }}>
       <Box alignItems="center" gap="s">
         <BadgeIcon def={def} size={84} quiet={!earned} />
         <Text variant="tiny" color="muted" style={{ fontFamily: 'Inter_600SemiBold', textTransform: 'uppercase', letterSpacing: 0.6, marginTop: 6 }}>
