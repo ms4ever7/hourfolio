@@ -17,30 +17,42 @@ import { GoalScene } from './scenes';
 /** Share cards are always drawn the same way, whatever the app theme, so they look right anywhere they are posted. */
 const CARD = { bg: '#15171A', ink: '#FFFFFF', muted: '#B9BCC2', faint: '#8A8F96', hours: '#9DB0FF', line: 'rgba(255,255,255,0.12)' };
 export const CARD_WIDTH = 320;
-const CARD_HEIGHT = 400;
+export const CARD_HEIGHT = 400;
 const OUTPUT_PX = 1080;
 
+/** Week rows: the first four get room to breathe; with more hobbies the rows tighten and the card grows. */
+const ROW = { icon: 30, gap: 12 };
+const ROW_COMPACT = { icon: 24, gap: 8 };
+const ROOMY_ROWS = 4;
+const rowsHeight = (count: number, r: { icon: number; gap: number }) => count * r.icon + Math.max(0, count - 1) * r.gap;
+
+/** Height of a week card with this many rows: 400 up to four, then taller by whatever the extra rows need. */
+export function weekCardHeight(rowCount: number): number {
+  if (rowCount <= ROOMY_ROWS) return CARD_HEIGHT;
+  return CARD_HEIGHT + Math.max(0, rowsHeight(rowCount, ROW_COMPACT) - rowsHeight(ROOMY_ROWS, ROW));
+}
+
 /** Renders the view to a PNG and opens the share sheet (Telegram, Threads, Instagram…). */
-export async function shareView(ref: RefObject<View | null>): Promise<boolean> {
+export async function shareView(ref: RefObject<View | null>, cardHeight = CARD_HEIGHT): Promise<boolean> {
   if (!ref.current || !(await Sharing.isAvailableAsync())) return false;
   const width = OUTPUT_PX / PixelRatio.get();
-  const uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile', width, height: (width * CARD_HEIGHT) / CARD_WIDTH });
+  const uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile', width, height: (width * cardHeight) / CARD_WIDTH });
   await Sharing.shareAsync(uri, { UTI: 'public.png', mimeType: 'image/png' });
   return true;
 }
 
-function CardFrame({ glow, children, cardRef }: { glow: string; children: ReactNode; cardRef: RefObject<View | null> }) {
+function CardFrame({ glow, children, cardRef, height = CARD_HEIGHT }: { glow: string; children: ReactNode; cardRef: RefObject<View | null>; height?: number }) {
   return (
-    <View ref={cardRef} collapsable={false} style={{ width: CARD_WIDTH, height: CARD_HEIGHT, borderRadius: 28, overflow: 'hidden', backgroundColor: CARD.bg }}>
-      <Svg width={CARD_WIDTH} height={CARD_HEIGHT} style={{ position: 'absolute' }}>
+    <View ref={cardRef} collapsable={false} style={{ width: CARD_WIDTH, height, borderRadius: 28, overflow: 'hidden', backgroundColor: CARD.bg }}>
+      <Svg width={CARD_WIDTH} height={height} style={{ position: 'absolute' }}>
         <Defs>
           <RadialGradient id="glow" cx="0.85" cy="0.1" r="0.9">
             <Stop offset="0" stopColor={glow} stopOpacity={0.55} />
             <Stop offset="1" stopColor={glow} stopOpacity={0} />
           </RadialGradient>
         </Defs>
-        <Rect width={CARD_WIDTH} height={CARD_HEIGHT} fill="url(#glow)" />
-        <Circle cx={CARD_WIDTH - 30} cy={CARD_HEIGHT - 20} r={90} fill={glow} fillOpacity={0.08} />
+        <Rect width={CARD_WIDTH} height={height} fill="url(#glow)" />
+        <Circle cx={CARD_WIDTH - 30} cy={height - 20} r={90} fill={glow} fillOpacity={0.08} />
       </Svg>
       <Box flex={1} padding="l" justifyContent="space-between">
         {children}
@@ -138,8 +150,10 @@ export function WeekCard({
   const { t, i18n } = useTranslation();
   const assetName = useAssetName();
   const max = Math.max(1, ...rows.map((r) => r.minutes));
+  const compact = rows.length > ROOMY_ROWS;
+  const row = compact ? ROW_COMPACT : ROW;
   return (
-    <CardFrame glow={accent} cardRef={cardRef}>
+    <CardFrame glow={accent} cardRef={cardRef} height={weekCardHeight(rows.length)}>
       <CardHeader right={weekLabel} />
       <Box gap="xs">
         <Text style={{ color: CARD.muted, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{t('share.invested')}</Text>
@@ -148,24 +162,24 @@ export function WeekCard({
           <Text style={{ color: CARD.muted, fontFamily: 'Inter_500Medium', fontSize: 13 }}>{t('share.goalsMet', { met: goalsMet, count: goalsTotal })}</Text>
         ) : null}
       </Box>
-      <Box gap="sm">
+      <Box style={{ gap: row.gap }}>
         {rows.map((r) => {
           const p = lightPalette[r.asset.color];
           return (
-            <Box key={r.asset.id} flexDirection="row" alignItems="center" gap="sm">
-              <AssetIcon icon={r.asset.icon} color={r.asset.color} face={r.asset.face} size={30} />
-              <Box flex={1} gap="xs">
+            <Box key={r.asset.id} flexDirection="row" alignItems="center" gap="sm" style={{ height: row.icon }}>
+              <AssetIcon icon={r.asset.icon} color={r.asset.color} face={r.asset.face} size={row.icon} />
+              <Box flex={1} style={{ gap: compact ? 3 : 4 }}>
                 <Box flexDirection="row" justifyContent="space-between">
-                  <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: 13, flex: 1 }} numberOfLines={1}>
+                  <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: compact ? 12 : 13, lineHeight: compact ? 14 : 16, flex: 1 }} numberOfLines={1}>
                     {assetName(r.asset)}
                   </Text>
-                  <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: 12 }}>
+                  <Text style={{ color: CARD.ink, fontFamily: 'Inter_600SemiBold', fontSize: compact ? 11 : 12, lineHeight: compact ? 14 : 16 }}>
                     {formatHours(r.minutes, i18n.language)}
-                    <Text style={{ color: CARD.hours, fontFamily: 'Inter_600SemiBold', fontSize: 11 }}> {t('units.h')}</Text>
+                    <Text style={{ color: CARD.hours, fontFamily: 'Inter_600SemiBold', fontSize: compact ? 10 : 11 }}> {t('units.h')}</Text>
                   </Text>
                 </Box>
-                <Box height={4} borderRadius="pill" style={{ backgroundColor: CARD.line }}>
-                  <Box height={4} borderRadius="pill" style={{ width: `${Math.max(4, (r.minutes / max) * 100)}%`, backgroundColor: p.main }} />
+                <Box height={compact ? 3 : 4} borderRadius="pill" style={{ backgroundColor: CARD.line }}>
+                  <Box height={compact ? 3 : 4} borderRadius="pill" style={{ width: `${Math.max(4, (r.minutes / max) * 100)}%`, backgroundColor: p.main }} />
                 </Box>
               </Box>
             </Box>

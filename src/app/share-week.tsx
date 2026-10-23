@@ -1,11 +1,11 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo, useRef } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
-import { shareView, WeekCard } from '@/components/share';
+import { CARD_WIDTH, shareView, WeekCard, weekCardHeight } from '@/components/share';
 import { PrimaryButton, TextButton } from '@/components/ui';
 import { addDays, parseDay } from '@/domain/dates';
 import { weekRange } from '@/domain/goals';
@@ -14,7 +14,7 @@ import { shortDate } from '@/lib/labels';
 import { usePortfolio, useToday } from '@/lib/usePortfolio';
 import { useAppTheme } from '@/theme/theme';
 
-/** This week as a card to post: total hours, top assets, goals met. */
+/** This week as a card to post: total hours, every hobby with time in it, goals met. */
 export default function ShareWeek() {
   const { t, i18n } = useTranslation();
   const { colors } = useAppTheme();
@@ -31,8 +31,7 @@ export default function ShareWeek() {
     const rows = assets
       .map((asset) => ({ asset, minutes: sumMinutes(logs, range, asset.id) }))
       .filter((r) => r.minutes > 0)
-      .sort((a, b) => b.minutes - a.minutes)
-      .slice(0, 4);
+      .sort((a, b) => b.minutes - a.minutes);
     const withGoals = assets.filter((a) => a.weeklyGoalMinutes);
     return {
       total: sumMinutes(logs, range),
@@ -43,8 +42,13 @@ export default function ShareWeek() {
     };
   }, [assets, logs, today, week, i18n.language]);
 
+  // With many hobbies the card grows; the preview shrinks to fit the screen, the PNG keeps full size.
+  const cardHeight = weekCardHeight(d.rows.length);
+  const [room, setRoom] = useState(0);
+  const scale = room ? Math.min(1, (room - 16) / cardHeight) : 1;
+
   const share = async () => {
-    if (!(await shareView(cardRef))) Alert.alert(t('share.unavailable'));
+    if (!(await shareView(cardRef, cardHeight))) Alert.alert(t('share.unavailable'));
   };
 
   return (
@@ -55,8 +59,12 @@ export default function ShareWeek() {
         </Text>
         <Text variant="body">{t('share.sub')}</Text>
       </Box>
-      <Box flex={1} alignItems="center" justifyContent="center">
-        <WeekCard cardRef={cardRef} total={d.total} rows={d.rows} weekLabel={d.label} goalsMet={d.goalsMet} goalsTotal={d.goalsTotal} accent={colors.accent} />
+      <Box flex={1} alignItems="center" justifyContent="center" onLayout={(e) => setRoom(e.nativeEvent.layout.height)}>
+        <View style={{ width: CARD_WIDTH * scale, height: cardHeight * scale }}>
+          <View style={{ transform: [{ scale }], transformOrigin: 'top left' }}>
+            <WeekCard cardRef={cardRef} total={d.total} rows={d.rows} weekLabel={d.label} goalsMet={d.goalsMet} goalsTotal={d.goalsTotal} accent={colors.accent} />
+          </View>
+        </View>
       </Box>
       <Box paddingHorizontal="l" gap="xs">
         <PrimaryButton icon={UI_PATHS.share} label={t('share.button')} onPress={() => void share()} />
