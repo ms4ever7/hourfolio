@@ -52,3 +52,6 @@ mise.local.toml
 
 # Maestro screenshots (curated ones for the README live in docs/screenshots)
 e2e/screenshots/
+
+# Google Play service account key for eas submit, never committed
+play-service-account.json

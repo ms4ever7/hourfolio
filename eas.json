@@ -34,7 +34,21 @@
     }
   },
   "submit": {
-    "staging": { "ios": { "ascAppId": "6819194688" } },
-    "production": { "ios": { "ascAppId": "6819192771" } }
+    "staging": {
+      "ios": { "ascAppId": "6819194688" },
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "completed"
+      }
+    },
+    "production": {
+      "ios": { "ascAppId": "6819192771" },
+      "android": {
+        "serviceAccountKeyPath": "./play-service-account.json",
+        "track": "internal",
+        "releaseStatus": "completed"
+      }
+    }
   }
 }
