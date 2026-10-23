@@ -1,4 +1,4 @@
-import { checkInTimes, formatClock, restingAsset } from './day';
+import { checkIns, checkInTimes, formatClock, restingAsset } from './day';
 import type { Asset, LogEntry } from './types';
 
 const log = (assetId: string, day: string, minutes = 30): LogEntry => ({ id: assetId + day, assetId, day, minutes, createdAt: '2026-01-01T00:00:00Z' });
@@ -47,6 +47,12 @@ describe('evening check-in', () => {
     expect(checkInTimes(lateNight, 90, [log('g', '2026-09-29')])[0]).toEqual(new Date(2026, 9, 1, 0, 30));
     expect(checkInTimes(lateNight, 90, [])[0]).toEqual(new Date(2026, 8, 30, 0, 30));
   });
+
+  it('names the evening each note is about, so a log after midnight lands on the day before', () => {
+    const [first] = checkIns(morning, 90, []);
+    expect(first).toEqual({ when: new Date(2026, 8, 30, 0, 30), day: '2026-09-29' });
+    expect(checkIns(morning, 23 * 60, [])[1]).toEqual({ when: new Date(2026, 8, 30, 22, 0), day: '2026-09-30' });
+  });
 });
 
 describe('resting asset', () => {
@@ -60,6 +66,12 @@ describe('resting asset', () => {
 
   it('returns null when nothing qualifies', () => {
     expect(restingAsset([asset('recovery')], [], today)).toBeNull();
+  });
+
+  it('never calls a hobby that was never logged resting', () => {
+    const assets = [asset('new'), asset('run')];
+    expect(restingAsset(assets, [log('run', '2026-09-01', 60)], today)?.id).toBe('run');
+    expect(restingAsset([asset('new')], [], today)).toBeNull();
   });
 });
 

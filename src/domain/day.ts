@@ -24,7 +24,14 @@ export function atMinutes(day: Date, minutes: number): Date {
  * evening before, so it lands on the next calendar day; and between midnight and
  * that time, "today" for logging is still yesterday.
  */
-export function checkInTimes(now: Date, bed: number, logs: LogEntry[]): Date[] {
+export interface CheckIn {
+  /** When the note goes out. */
+  when: Date;
+  /** The evening it is about, `YYYY-MM-DD`. After midnight that is still the day before, so a log from the note lands on it. */
+  day: string;
+}
+
+export function checkIns(now: Date, bed: number, logs: LogEntry[]): CheckIn[] {
   const at = (bed - CHECK_IN_BEFORE_BED + 24 * 60) % (24 * 60);
   const afterMidnight = at < 12 * 60;
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -32,15 +39,18 @@ export function checkInTimes(now: Date, bed: number, logs: LogEntry[]): Date[] {
   // The evening we are in: yesterday's, if it is past midnight but before its check-in.
   const tonight = afterMidnight && nowMinutes < at ? addDays(today, -1) : today;
   const loggedTonight = logs.some((l) => l.day === dayKey(tonight));
-  const out: Date[] = [];
+  const out: CheckIn[] = [];
   for (let i = 0; i < CHECK_IN_DAYS; i++) {
     const evening = addDays(tonight, i);
     const when = atMinutes(afterMidnight ? addDays(evening, 1) : evening, at);
     if (i === 0 && (loggedTonight || when <= now)) continue;
-    out.push(when);
+    out.push({ when, day: dayKey(evening) });
   }
   return out;
 }
+
+/** Only the times of the check-ins. */
+export const checkInTimes = (now: Date, bed: number, logs: LogEntry[]): Date[] => checkIns(now, bed, logs).map((c) => c.when);
 
 /**
  * Something worth suggesting in the evening: the asset whose momentum is lowest,
@@ -51,6 +61,8 @@ export function restingAsset(assets: Asset[], logs: LogEntry[], today: Date): As
   let best: { asset: Asset; m: number } | null = null;
   for (const asset of assets) {
     if (asset.id === RECOVERY_ID || asset.rhythm === 'whenever') continue;
+    // A hobby never logged is new, not resting; otherwise it would always win at the floor.
+    if (!logs.some((l) => l.assetId === asset.id)) continue;
     const m = momentum(asset, logs, today);
     if (!best || m < best.m) best = { asset, m };
   }
