@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Pressable } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -25,14 +25,24 @@ export default function BadgeSheet() {
   const { assets, logs } = usePortfolio();
   const plans = usePortfolioStore((s) => s.plans);
   const badges = usePortfolioStore((s) => s.badges);
+  const weekGoals = usePortfolioStore((s) => s.weekGoals);
   const badgeName = useBadgeName();
   const assetName = useAssetName();
   const time = useDurationText();
 
-  const def = parseBadge(id ?? '');
+  const def = parseBadge(typeof id === 'string' ? id : '');
   const earned = badges.find((b) => b.id === id) ?? null;
   const asset = def?.kind === 'asset' ? assets.find((a) => a.id === def.assetId) : undefined;
-  const week = useMemo(() => (earned ? weekSummary(assets, logs, plans.find((p) => p.weekFrom === earned.weekFrom), earned.weekFrom) : null), [assets, logs, plans, earned]);
+  const week = useMemo(() => (earned ? weekSummary(assets, logs, plans.find((p) => p.weekFrom === earned.weekFrom), earned.weekFrom, weekGoals) : null), [assets, logs, plans, earned, weekGoals]);
+  const known = def !== null && (def.kind !== 'asset' || asset !== undefined);
+
+  // An unknown badge (a stray link, a hobby deleted meanwhile) has no sheet to show.
+  useEffect(() => {
+    if (!known) {
+      if (router.canGoBack()) router.back();
+      else router.replace('/');
+    }
+  }, [known]);
 
   if (!def || (def.kind === 'asset' && !asset)) return null;
 

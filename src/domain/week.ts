@@ -1,4 +1,5 @@
 import { addDays, dayKey, parseDay } from './dates';
+import { goalsForWeek, type WeekGoals } from './goal-history';
 import { weekRange } from './goals';
 import { isSessionDone, type WeekPlan } from './plan';
 import { sumMinutes } from './stats';
@@ -31,16 +32,14 @@ export interface WeekSummary {
   light: boolean;
 }
 
-/** One week in numbers, for the recap sheet. `weekFrom` is its Monday. */
-export function weekSummary(assets: Asset[], logs: LogEntry[], plan: WeekPlan | undefined, weekFrom: string): WeekSummary {
+/** One week in numbers, for the recap sheet. `weekFrom` is its Monday; `history` holds the goals each week had. */
+export function weekSummary(assets: Asset[], logs: LogEntry[], plan: WeekPlan | undefined, weekFrom: string, history: WeekGoals[] = []): WeekSummary {
   const range = weekRange(parseDay(weekFrom));
   const previous = weekRange(addDays(parseDay(weekFrom), -7));
-  const goals = assets
-    .filter((a) => a.weeklyGoalMinutes)
-    .map((asset) => {
-      const done = sumMinutes(logs, range, asset.id);
-      return { asset, done, goal: asset.weeklyGoalMinutes!, met: done >= asset.weeklyGoalMinutes! };
-    });
+  const goals = goalsForWeek(history, assets, weekFrom).map(({ asset, minutes }) => {
+    const done = sumMinutes(logs, range, asset.id);
+    return { asset, done, goal: minutes, met: done >= minutes };
+  });
   const goalsMet = goals.filter((g) => g.met).length;
   const sessions = plan && plan.weekFrom === weekFrom ? plan.sessions : [];
   const top = assets

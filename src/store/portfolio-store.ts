@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { EarnedBadge } from '@/domain/achievements';
 import { buildDemo } from '@/domain/demo';
+import { sameSnapshot, withoutAsset, withWeekGoals, type GoalSnapshot, type WeekGoals } from '@/domain/goal-history';
 import { applyGoalPatch } from '@/domain/goals';
 import { dayKey } from '@/domain/dates';
 import { newId } from '@/domain/ids';
@@ -33,7 +34,9 @@ interface PortfolioState {
   plans: WeekPlan[];
   /** Badges earned so far. Once here, a badge stays whatever happens to the logs behind it. */
   badges: EarnedBadge[];
-  /** Replaces the portfolio with the onboarding picks. Recovery is always added. */
+  /** The goals each week had, oldest first, so changing a goal never rewrites past weeks. `useGoalHistorySync` keeps it. */
+  weekGoals: WeekGoals[];
+  /** The first portfolio, from the onboarding picks; Recovery is always added. Does nothing once there are hobbies. */
   setUpPortfolio: (assets: NewAsset[]) => void;
   addAsset: (asset: NewAsset) => string;
   updateAsset: (id: string, patch: Partial<NewAsset>) => void;
@@ -52,6 +55,8 @@ interface PortfolioState {
   addPlannedSession: (weekFrom: string, session: Omit<PlannedSession, 'id'>) => void;
   /** Keeps the badges the data newly supports; ones already kept are left as they were. */
   recordBadges: (found: EarnedBadge[]) => void;
+  /** Saves the goals a week is judged by; a snapshot that has not changed is left alone. */
+  recordWeekGoals: (weekFrom: string, snapshot: GoalSnapshot) => void;
   loadDemo: () => void;
   reset: () => void;
 }
@@ -63,11 +68,11 @@ export const usePortfolioStore = create<PortfolioState>()(
       logs: [],
       plans: [],
       badges: [],
+      weekGoals: [],
       setUpPortfolio: (picks) => {
         const now = new Date().toISOString();
-        set({
-          assets: [...picks.map((a) => ({ ...a, id: newId('a'), createdAt: now })), recoveryAsset(now)],
-        });
+        // Only ever a first setup: onboarding reached again (a deep link) must not replace hobbies that have history.
+        set((s) => (s.assets.length > 0 ? s : { assets: [...picks.map((a) => ({ ...a, id: newId('a'), createdAt: now })), recoveryAsset(now)] }));
       },
       addAsset: (asset) => {
         const id = newId('a');
@@ -85,6 +90,7 @@ export const usePortfolioStore = create<PortfolioState>()(
                 logs: s.logs.filter((l) => l.assetId !== id),
                 plans: s.plans.map((p) => ({ ...p, sessions: p.sessions.filter((x) => x.assetId !== id), short: p.short?.filter((x) => x.assetId !== id) })),
                 badges: s.badges.filter((b) => !b.id.startsWith(`hours:${id}:`)),
+                weekGoals: withoutAsset(s.weekGoals, id),
               },
         ),
       logTime: (entry) =>
@@ -113,13 +119,26 @@ export const usePortfolioStore = create<PortfolioState>()(
           const fresh = found.filter((b) => !s.badges.some((x) => x.id === b.id));
           return fresh.length ? { badges: [...s.badges, ...fresh] } : s;
         }),
+      recordWeekGoals: (weekFrom, snapshot) =>
+        set((s) => {
+          const current = s.weekGoals.find((w) => w.weekFrom === weekFrom);
+          return current && sameSnapshot(current, snapshot) ? s : { weekGoals: withWeekGoals(s.weekGoals, weekFrom, snapshot) };
+        }),
       loadDemo: () => {
         const today = new Date();
         const demo = buildDemo(today);
-        set({ assets: [...demo.assets, recoveryAsset(today.toISOString())], logs: demo.logs, plans: [demo.plan], badges: [] });
+        set({ assets: [...demo.assets, recoveryAsset(today.toISOString())], logs: demo.logs, plans: [demo.plan], badges: [], weekGoals: [] });
       },
-      reset: () => set({ assets: [], logs: [], plans: [], badges: [] }),
+      reset: () => set({ assets: [], logs: [], plans: [], badges: [], weekGoals: [] }),
     }),
-    { name: 'hourfolio.portfolio', storage: mmkvZustandStorage, version: 1 },
+    {
+      name: 'hourfolio.portfolio',
+      storage: mmkvZustandStorage,
+      // Without `migrate`, zustand throws saved data of any other version away and starts empty. The pass-through keeps
+      // the data when an older build reads a newer version (an OTA rollback) and when someone bumps the version without
+      // writing a migration. Bump `version` only together with a real migration here; the store test checks it is 1.
+      version: 1,
+      migrate: (persisted) => persisted as PortfolioState,
+    },
   ),
 );

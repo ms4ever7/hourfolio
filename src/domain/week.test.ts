@@ -55,6 +55,14 @@ describe('weekSummary', () => {
     expect(weekSummary(assets, [], plan, dayKey(addDays(monday, 7))).sessionsPlanned).toBe(0);
   });
 
+  it('judges a week by the goals it had then', () => {
+    const then = [{ weekFrom: from, goals: [{ assetId: 'a', minutes: 60 }], hobbies: ['a', 'b', 'c'] }];
+    const s = weekSummary(assets, [log('a', 0, 60)], undefined, from, then);
+    expect(s.goals.map((g) => g.asset.id)).toEqual(['a']);
+    expect(s.allMet).toBe(true);
+    expect(weekSummary(assets, [log('a', 0, 60)], undefined, from).allMet).toBe(false);
+  });
+
   it('names last week and keys a celebration', () => {
     expect(lastWeekFrom(addDays(monday, 2))).toBe(dayKey(addDays(monday, -7)));
     expect(weekCelebrationKey(from)).toBe(`week@${from}`);

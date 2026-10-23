@@ -13,11 +13,12 @@ export function useBadgeSync() {
   const assets = usePortfolioStore((s) => s.assets);
   const logs = usePortfolioStore((s) => s.logs);
   const plans = usePortfolioStore((s) => s.plans);
+  const weekGoals = usePortfolioStore((s) => s.weekGoals);
   const recordBadges = usePortfolioStore((s) => s.recordBadges);
   useEffect(() => {
-    const found = detectBadges(assets, logs, plans);
+    const found = detectBadges(assets, logs, plans, weekGoals);
     if (found.length > 0) recordBadges(found);
-  }, [assets, logs, plans, recordBadges]);
+  }, [assets, logs, plans, weekGoals, recordBadges]);
 }
 
 /** Earned badges newest first, and the ones still ahead in shelf order. */

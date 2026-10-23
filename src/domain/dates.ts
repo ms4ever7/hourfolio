@@ -6,6 +6,9 @@ export function dayKey(date: Date): string {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 }
 
+/** Whether a string is a `YYYY-MM-DD` key, for values that arrive from outside (route params, links). */
+export const isDayKey = (value: string): boolean => /^\d{4}-\d{2}-\d{2}$/.test(value) && dayKey(parseDay(value)) === value;
+
 export function parseDay(day: string): Date {
   const [y, m, d] = day.split('-').map(Number);
   return new Date(y, m - 1, d);
