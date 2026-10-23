@@ -5,6 +5,7 @@ import { Platform, Pressable, ScrollView, Switch, type PressableProps, type Styl
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScrollLockContext } from '@/components/scroll-lock';
 import { useTranslation } from 'react-i18next';
+import { withAlpha } from '@/domain/color';
 import { durationParts, formatHours } from '@/domain/format';
 import type { Trend } from '@/domain/growth';
 import { APP_LANGUAGES, LANGUAGE_BADGE } from '@/i18n/resources';
@@ -391,7 +392,7 @@ export function Segmented<T extends string>({
   onChange: (v: T) => void;
   label: string;
 }) {
-  const { colors } = useAppTheme();
+  const { colors, mode } = useAppTheme();
   return (
     <Box flexDirection="row" backgroundColor="track" padding="xs" gap="xs" style={{ borderRadius: 14 }} accessibilityLabel={label} accessibilityRole="radiogroup">
       {options.map((o) => {
@@ -409,7 +410,7 @@ export function Segmented<T extends string>({
               alignItems: 'center',
               justifyContent: 'center',
               backgroundColor: on ? colors.card : 'transparent',
-              boxShadow: on ? '0 1px 3px rgba(22,21,28,0.10)' : undefined,
+              boxShadow: on ? `0 1px 3px ${withAlpha(colors.shadow, mode === 'dark' ? 0.5 : 0.1)}` : undefined,
             }}
           >
             <Text variant="label" color={on ? 'ink' : 'body'} numberOfLines={1} style={{ fontFamily: 'Inter_600SemiBold', fontSize: 13 }}>

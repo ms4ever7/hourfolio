@@ -8,6 +8,7 @@ import { DayPicker } from '@/components/day-picker';
 import { AssetIcon, Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { footerPad, modalTop, PrimaryButton, RoundButton } from '@/components/ui';
+import { contrast } from '@/domain/color';
 import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
 import { allGoalsMet, celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
@@ -33,6 +34,7 @@ export default function LogSheet() {
   const days = Array.from({ length: 7 }, (_, i) => dayKey(addDays(today, -i)));
   const plannedMinutes = Number(params.minutes);
   const assets = usePortfolioStore((s) => s.assets);
+  const logs = usePortfolioStore((s) => s.logs);
   const logTime = usePortfolioStore((s) => s.logTime);
   /** Four tiles per row: measured, because percentages plus the gaps overflow on narrow phones. */
   const [gridWidth, setGridWidth] = useState(0);
@@ -48,6 +50,11 @@ export default function LogSheet() {
 
   const others = assets.filter((a) => a.id !== RECOVERY_ID);
   const restOn = assetId === RECOVERY_ID;
+  // Text on the selected sky-blue tile: white falls short of 4.5:1 in light mode, so it takes whichever reads.
+  const restText = contrast('#FFFFFF', palette.sky.main) >= 4.5 ? '#FFFFFF' : colors.ink;
+  // A day has 24 hours: this entry can be at most what the chosen day has left.
+  const loggedOnDay = logs.filter((l) => l.day === when).reduce((n, l) => n + l.minutes, 0);
+  const maxMinutes = Math.max(5, 24 * 60 - loggedOnDay);
   const durationLabel = durationParts(minutes)
     .map((p) => `${p.value} ${t(`units.${p.unit}`)}`)
     .join(' ');
@@ -57,7 +64,7 @@ export default function LogSheet() {
   const save = () => {
     if (saving.current) return;
     saving.current = true;
-    const entry = { assetId, minutes, day: picked ?? dayKey(new Date()), note: note.trim() || undefined };
+    const entry = { assetId, minutes: Math.min(minutes, maxMinutes), day: picked ?? dayKey(new Date()), note: note.trim() || undefined };
     const met = goalMetBy(entry, assets, usePortfolioStore.getState().logs);
     logTime(entry);
     if (met) {
@@ -109,14 +116,14 @@ export default function LogSheet() {
             <AssetIcon icon="moon" color="sky" size={48} />
           </Box>
           <Box flex={1}>
-            <Text variant="heading" style={{ color: restOn ? colors.card : colors.restInk }}>
+            <Text variant="heading" style={{ color: restOn ? restText : colors.restInk }}>
               {t('log.rest')}
             </Text>
-            <Text variant="small" style={{ color: restOn ? colors.card : colors.restSub, opacity: restOn ? 0.85 : 1 }}>
+            <Text variant="small" style={{ color: restOn ? restText : colors.restSub, opacity: restOn ? 0.85 : 1 }}>
               {t('log.restSub')}
             </Text>
           </Box>
-          {restOn ? <Glyph d={UI_PATHS.check} size={22} color={colors.card} strokeWidth={2.6} /> : null}
+          {restOn ? <Glyph d={UI_PATHS.check} size={22} color={restText} strokeWidth={2.6} /> : null}
         </Pressable>
 
         <Box gap="s">
@@ -178,7 +185,7 @@ export default function LogSheet() {
             <Text variant="mono" style={{ fontSize: 18, flex: 1, textAlign: 'center' }}>
               {durationLabel}
             </Text>
-            <RoundButton accessibilityLabel={t('common.more')} onPress={() => setMinutes((m) => Math.min(24 * 60, m + 5))} style={{ paddingHorizontal: 0 }}>
+            <RoundButton accessibilityLabel={t('common.more')} onPress={() => setMinutes((m) => Math.min(maxMinutes, m + 5))} style={{ paddingHorizontal: 0 }}>
               <Text variant="heading">+</Text>
             </RoundButton>
           </Box>

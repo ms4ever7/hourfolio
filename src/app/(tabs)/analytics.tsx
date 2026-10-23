@@ -6,7 +6,7 @@ import { Box, Text } from '@/components/primitives';
 import { PeriodReport } from '@/components/period-report';
 import { Card, Hours, Screen, SectionHeader } from '@/components/ui';
 import { addDays, dayKey, startOfMonth, startOfWeek } from '@/domain/dates';
-import { formatHours, formatHoursDelta, percent } from '@/domain/format';
+import { formatHours, formatHoursDelta, wholePercents } from '@/domain/format';
 import { energyBalance, monthHeatmap, sumMinutes } from '@/domain/stats';
 import { ENERGY_TYPES, RECOVERY_ID } from '@/domain/types';
 import { capitalize, monthYear, useAssetName, weekdayShort } from '@/lib/labels';
@@ -69,7 +69,9 @@ export default function Analytics() {
         ) : (
           <StackedBar
             parts={order.map((e) => ({ share: d.balance[e] / d.total, color: palette[energyColor[e]].main }))}
-            accessibilityLabel={ENERGY_TYPES.map((e) => `${t(`energy.${e}`)} ${percent(d.balance[e] / d.total)}`).join(', ')}
+            accessibilityLabel={wholePercents(ENERGY_TYPES.map((e) => d.balance[e] / d.total))
+              .map((p, i) => `${t(`energy.${ENERGY_TYPES[i]}`)} ${p}%`)
+              .join(', ')}
           />
         )}
         <Box>

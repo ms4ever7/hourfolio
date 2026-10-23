@@ -9,6 +9,7 @@ import { Group, ListRow, RowIcon, Screen, SwitchRow } from '@/components/ui';
 import { formatClock } from '@/domain/day';
 import { formatHours } from '@/domain/format';
 import { capitalMinutes } from '@/domain/growth';
+import { RECOVERY_ID } from '@/domain/types';
 import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
 import { alertNotificationsOff, allowNotifications } from '@/lib/notifications';
 import { deletePhoto } from '@/lib/photos';
@@ -71,7 +72,7 @@ export default function Profile() {
             <Glyph d={UI_PATHS.pencil} size={16} color={colors.faint} strokeWidth={2.2} />
           </Pressable>
         </Box>
-        <Text variant="caption">{t('profile.summary', { hours: formatHours(capital, i18n.language), count: assets.length })}</Text>
+        <Text variant="caption">{t('profile.summary', { hours: formatHours(capital, i18n.language), count: assets.filter((a) => a.id !== RECOVERY_ID).length })}</Text>
       </Box>
 
       {season ? (

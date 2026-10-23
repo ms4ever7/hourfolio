@@ -8,7 +8,7 @@ import { AssetIcon } from './icons';
 import { Box, Text } from './primitives';
 import { Card, Hours, SectionHeader, Segmented, TrendChip } from './ui';
 import { addDays, daysBetween, daysInMonth, parseDay } from '@/domain/dates';
-import { formatHours, formatHoursDelta, percent } from '@/domain/format';
+import { formatHours, formatHoursDelta, wholePercents } from '@/domain/format';
 import { allocation, cumulativeHours, periodRanges, sumMinutes, type Period } from '@/domain/stats';
 import { capitalize, monthGenitive, monthName, shortDate, useAssetName } from '@/lib/labels';
 import { useHoldings, usePortfolio, useToday, type Holding } from '@/lib/usePortfolio';
@@ -52,6 +52,8 @@ export function PeriodReport() {
   }, [current, previous, logs, period, today, locale, t]);
 
   const slices = useMemo(() => allocation(logs, current), [logs, current]);
+  // Whole percents that add up to 100, so the legend never reads 102 %.
+  const percents = useMemo(() => wholePercents(slices.map((s) => s.share)), [slices]);
   const byId = new Map(assets.map((a) => [a.id, a]));
 
   const periodLabel = {
@@ -87,7 +89,7 @@ export function PeriodReport() {
               </Text>
             </Box>
             <Text variant="caption">
-              {t('portfolio.vsPrev', { pct: `${gain >= 0 ? '+' : '−'}${percent(Math.abs(gain) / prevTotal)}`, period: prevLabel })}
+              {t('portfolio.vsPrev', { pct: `${gain >= 0 ? '+' : '−'}${Math.round((Math.abs(gain) / prevTotal) * 100)}%`, period: prevLabel })}
             </Text>
           </Box>
         ) : null}
@@ -127,14 +129,14 @@ export function PeriodReport() {
               centerTop={formatHours(total, locale)}
               centerBottom={t('units.h')}
               accessibilityLabel={slices
-                .map((s) => {
+                .map((s, i) => {
                   const a = byId.get(s.assetId);
-                  return `${a ? assetName(a) : t('portfolio.other')} ${percent(s.share)}`;
+                  return `${a ? assetName(a) : t('portfolio.other')} ${percents[i]}%`;
                 })
                 .join(', ')}
             />
             <Box flex={1} gap="s">
-              {slices.map((s) => {
+              {slices.map((s, i) => {
                 const a = byId.get(s.assetId);
                 return (
                   <Box key={s.assetId} flexDirection="row" alignItems="center" gap="s">
@@ -142,7 +144,7 @@ export function PeriodReport() {
                     <Text variant="caption" color="ink" numberOfLines={1} style={{ flex: 1 }}>
                       {a ? assetName(a) : t('portfolio.other')}
                     </Text>
-                    <Text variant="monoSmall">{percent(s.share)}</Text>
+                    <Text variant="monoSmall">{`${percents[i]}%`}</Text>
                   </Box>
                 );
               })}

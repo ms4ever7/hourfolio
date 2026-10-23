@@ -92,14 +92,14 @@ export default function YouStep() {
       <Box gap="s">
         <Text variant="bodyStrong">{t('you.accent')}</Text>
         <Box flexDirection="row" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('you.accent')}>
-          {ACCENTS.map((c) => {
+          {ACCENTS.map((c, i) => {
             const on = s.accent.toUpperCase() === c;
             return (
               <Pressable
                 key={c}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: on }}
-                accessibilityLabel={c}
+                accessibilityLabel={t('appearance.colorN', { n: i + 1 })}
                 onPress={() => s.setAccent(c)}
                 style={{ width: 44, height: 44, borderRadius: 22, borderWidth: on ? 2 : 0, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}
               >

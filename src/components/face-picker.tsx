@@ -51,14 +51,14 @@ export function FacePicker({ icon, color, face, emojiParams, onIcon, onFace }: P
 
       {kind === 'icon' ? (
         <Box flexDirection="row" flexWrap="wrap" style={{ gap: 10 }} accessibilityRole="radiogroup" accessibilityLabel={t('assetEdit.icon')}>
-          {(Object.keys(ICON_PATHS) as IconKey[]).map((key) => {
+          {(Object.keys(ICON_PATHS) as IconKey[]).map((key, i) => {
             const on = !face && icon === key;
             return (
               <Pressable
                 key={key}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: on }}
-                accessibilityLabel={key}
+                accessibilityLabel={`${t('assetEdit.icon')} ${i + 1}`}
                 onPress={() => {
                   onFace(undefined);
                   onIcon(key);
