@@ -10,7 +10,8 @@ import { Box, Text } from '@/components/primitives';
 import { PrimaryButton, RoundButton, footerPad } from '@/components/ui';
 import { addDays, dayKey, parseDay } from '@/domain/dates';
 import { durationParts } from '@/domain/format';
-import { celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
+import { allGoalsMet, celebrationKey, goalMetBy, weekRange } from '@/domain/goals';
+import { weekCelebrationKey } from '@/domain/week';
 import { RECOVERY_ID } from '@/domain/types';
 import { useAssetName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
@@ -61,6 +62,14 @@ export default function LogSheet() {
       const { celebrated, markCelebrated } = useSettingsStore.getState();
       if (!celebrated.includes(key)) {
         markCelebrated(key);
+        // The last goal of the week gets the whole-week moment instead of one more goal congrats.
+        const after = usePortfolioStore.getState();
+        const weekKey = weekCelebrationKey(week);
+        if (allGoalsMet(after.assets, after.logs, weekRange(parseDay(week))) && !useSettingsStore.getState().celebrated.includes(weekKey)) {
+          markCelebrated(weekKey);
+          router.replace({ pathname: '/week', params: { week, celebrate: '1' } });
+          return;
+        }
         // The congrats screen has its own success haptic.
         router.replace({ pathname: '/congrats', params: { assetId: met.id, week } });
         return;

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import type { EarnedBadge } from '@/domain/achievements';
 import { buildDemo } from '@/domain/demo';
 import { applyGoalPatch } from '@/domain/goals';
 import { dayKey } from '@/domain/dates';
@@ -30,6 +31,8 @@ interface PortfolioState {
   logs: LogEntry[];
   /** One plan per week, newest last. */
   plans: WeekPlan[];
+  /** Badges earned so far. Once here, a badge stays whatever happens to the logs behind it. */
+  badges: EarnedBadge[];
   /** Replaces the portfolio with the onboarding picks. Recovery is always added. */
   setUpPortfolio: (assets: NewAsset[]) => void;
   addAsset: (asset: NewAsset) => string;
@@ -47,6 +50,8 @@ interface PortfolioState {
   resizePlannedSession: (weekFrom: string, id: string, minutes: number) => void;
   /** Adds a session to a week's plan, creating the plan if the week has none. */
   addPlannedSession: (weekFrom: string, session: Omit<PlannedSession, 'id'>) => void;
+  /** Keeps the badges the data newly supports; ones already kept are left as they were. */
+  recordBadges: (found: EarnedBadge[]) => void;
   loadDemo: () => void;
   reset: () => void;
 }
@@ -57,6 +62,7 @@ export const usePortfolioStore = create<PortfolioState>()(
       assets: [],
       logs: [],
       plans: [],
+      badges: [],
       setUpPortfolio: (picks) => {
         const now = new Date().toISOString();
         set({
@@ -78,6 +84,7 @@ export const usePortfolioStore = create<PortfolioState>()(
                 assets: s.assets.filter((a) => a.id !== id),
                 logs: s.logs.filter((l) => l.assetId !== id),
                 plans: s.plans.map((p) => ({ ...p, sessions: p.sessions.filter((x) => x.assetId !== id), short: p.short?.filter((x) => x.assetId !== id) })),
+                badges: s.badges.filter((b) => !b.id.startsWith(`hours:${id}:`)),
               },
         ),
       logTime: (entry) =>
@@ -101,12 +108,17 @@ export const usePortfolioStore = create<PortfolioState>()(
           const has = s.plans.some((p) => p.weekFrom === weekFrom);
           return { plans: has ? s.plans.map((p) => (p.weekFrom === weekFrom ? { ...p, sessions: [...p.sessions, added] } : p)) : [...s.plans, { weekFrom, sessions: [added] }].sort((a, b) => a.weekFrom.localeCompare(b.weekFrom)) };
         }),
+      recordBadges: (found) =>
+        set((s) => {
+          const fresh = found.filter((b) => !s.badges.some((x) => x.id === b.id));
+          return fresh.length ? { badges: [...s.badges, ...fresh] } : s;
+        }),
       loadDemo: () => {
         const today = new Date();
         const demo = buildDemo(today);
-        set({ assets: [...demo.assets, recoveryAsset(today.toISOString())], logs: demo.logs, plans: [demo.plan] });
+        set({ assets: [...demo.assets, recoveryAsset(today.toISOString())], logs: demo.logs, plans: [demo.plan], badges: [] });
       },
-      reset: () => set({ assets: [], logs: [], plans: [] }),
+      reset: () => set({ assets: [], logs: [], plans: [], badges: [] }),
     }),
     { name: 'hourfolio.portfolio', storage: mmkvZustandStorage, version: 1 },
   ),

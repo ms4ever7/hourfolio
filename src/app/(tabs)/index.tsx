@@ -9,6 +9,9 @@ import { Box, Text } from '@/components/primitives';
 import { TodayPlan, useWeekPlan } from '@/components/plan-card';
 import { Card, Duration, Hours, Screen, SectionHeader, TrendChip } from '@/components/ui';
 import { dayKey, daysBetween, parseDay } from '@/domain/dates';
+import { weekRange } from '@/domain/goals';
+import { lastWeekFrom } from '@/domain/week';
+import { sumMinutes } from '@/domain/stats';
 import { restingAsset } from '@/domain/day';
 import { durationParts } from '@/domain/format';
 import { capitalMinutes, lastLogDay, trend } from '@/domain/growth';
@@ -59,6 +62,11 @@ export default function Today() {
   const byId = useMemo(() => new Map(assets.map((a) => [a.id, a])), [assets]);
 
   const plan = useWeekPlan();
+  // A way into last week's recap, once there is a finished week with something in it.
+  const lastWeek = useMemo(() => {
+    const from = lastWeekFrom(today);
+    return sumMinutes(logs, weekRange(parseDay(from))) > 0 ? from : null;
+  }, [logs, today]);
   const d = useMemo(() => {
     const sessions = todaysSessions(logs, today);
     const progress = dayProgress(plan, dayKey(today), logs);
@@ -170,6 +178,18 @@ export default function Today() {
         </Box>
       </Card>
 
+      {lastWeek ? (
+        <Pressable
+          accessibilityRole="button"
+          onPress={() => router.push({ pathname: '/week', params: { week: lastWeek } })}
+          style={({ pressed }) => ({ height: 48, borderRadius: 16, backgroundColor: colors.accentSoft, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: pressed ? 0.8 : 1 })}
+        >
+          <Glyph d={UI_PATHS.sparkle} size={16} color={colors.accentInk} strokeWidth={2} />
+          <Text variant="bodyStrong" color="accentInk">
+            {t('week.seeLast')}
+          </Text>
+        </Pressable>
+      ) : null}
       <TodayPlan />
 
       {d.resting ? (

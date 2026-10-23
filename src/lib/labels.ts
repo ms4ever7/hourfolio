@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next';
+import { durationParts } from '@/domain/format';
 import type { Asset } from '@/domain/types';
 
 type Named = Pick<Asset, 'catalogId' | 'customName'>;
@@ -44,4 +45,13 @@ export function capitalize(s: string): string {
 
 export function weekdayName(locale: string, date: Date): string {
   return new Intl.DateTimeFormat(locale, { weekday: 'long' }).format(date);
+}
+
+/** "1h 35m" with the units in the app language, for running text. */
+export function useDurationText() {
+  const { t } = useTranslation();
+  return (minutes: number): string =>
+    durationParts(minutes)
+      .map((p) => `${p.value}${t(`units.${p.unit}`)}`)
+      .join(' ');
 }

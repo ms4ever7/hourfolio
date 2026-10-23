@@ -9,7 +9,7 @@ import { Box, Text } from '@/components/primitives';
 import { BackButton, Card, Duration, Hours, PrimaryButton, RoundButton, Screen, SectionHeader, footerPad } from '@/components/ui';
 import { addDays, dayKey, daysBetween, parseDay, startOfMonth, startOfWeek } from '@/domain/dates';
 import { formatHours, formatHoursDelta } from '@/domain/format';
-import { capitalMinutes, momentum, MOMENTUM_FLOOR, nextMilestone, trend, weeksTo } from '@/domain/growth';
+import { capitalMinutes, momentum, MOMENTUM_FLOOR, trend } from '@/domain/growth';
 import { sumMinutes, weeklyMinutes } from '@/domain/stats';
 import { capitalize, sessionDate, shortDate, useAssetName } from '@/lib/labels';
 import { useToday } from '@/lib/usePortfolio';
@@ -39,7 +39,6 @@ export default function AssetScreen() {
     const thisMonth = { from: dayKey(monthStart), to: dayKey(today) };
     const weekly = weeklyMinutes(logs, asset.id, WEEKS, today);
     const capital = capitalMinutes(asset, logs);
-    const milestone = nextMilestone(capital);
     const weeklyAvg = weekly.reduce((a, b) => a + b, 0) / WEEKS;
     const first = logs.reduce((min, l) => (l.day < min ? l.day : min), dayKey(new Date(asset.createdAt)));
     const last = logs.reduce<string | null>((max, l) => (max === null || l.day > max ? l.day : max), null);
@@ -57,10 +56,6 @@ export default function AssetScreen() {
       avgSession: logs.length ? logs.reduce((a, l) => a + l.minutes, 0) / logs.length : 0,
       longest: logs.reduce((a, l) => Math.max(a, l.minutes), 0),
       last,
-      nextMilestone: milestone.next,
-      progress: milestone.progress,
-      etaWeeks: weeksTo(milestone.toGoMinutes, weeklyAvg),
-      toGo: milestone.toGoMinutes,
       recent: [...logs].sort((a, b) => b.day.localeCompare(a.day) || b.createdAt.localeCompare(a.createdAt)).slice(0, 10),
     };
   }, [asset, allLogs, today]);
@@ -180,18 +175,6 @@ export default function AssetScreen() {
           </Box>
         ))}
       </Box>
-
-      <Card gap="sm">
-        <SectionHeader title={t('asset.milestone')} />
-        <Box flexDirection="row" justifyContent="space-between" alignItems="baseline">
-          <Hours minutes={data.nextMilestone * 60} variant="bodyStrong" />
-          {data.etaWeeks !== null ? <Text variant="caption">{t('asset.milestoneEta', { count: data.etaWeeks })}</Text> : null}
-        </Box>
-        <Box height={8} borderRadius="pill" style={{ backgroundColor: p.tint }}>
-          <Box height={8} borderRadius="pill" style={{ width: `${Math.max(2, Math.round(data.progress * 100))}%`, backgroundColor: p.main }} />
-        </Box>
-        <Text variant="small">{t('asset.toGo', { hours: formatHours(data.toGo, locale) })}</Text>
-      </Card>
 
       <Box gap="sm">
         <SectionHeader title={t('asset.recent')} />
