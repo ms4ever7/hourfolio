@@ -1,4 +1,4 @@
-import { addDays, dayKey, daysInMonth, startOfMonth, startOfWeek, weekdayMonFirst } from './dates';
+import { addDays, dayKey, daysBetween, daysInMonth, startOfMonth, startOfWeek, weekdayMonFirst } from './dates';
 import type { Asset, EnergyType, LogEntry } from './types';
 import { ENERGY_TYPES, RECOVERY_ID } from './types';
 
@@ -19,31 +19,38 @@ export function sumMinutes(logs: LogEntry[], range: Range, assetId?: string): nu
 }
 
 /**
- * The period so far, plus the whole previous period to compare against.
- * Week = Monday to today; month = the 1st to today; year = Jan 1 to today.
+ * The period so far, plus the same number of days of the previous period to compare
+ * against: on the 3rd of a month, the first three days of the month before, so the
+ * start of a period never reads as a loss against a whole month. Week = Monday to
+ * today; month = the 1st to today; year = Jan 1 to today.
  */
 export function periodRanges(period: Period, today: Date, logs: LogEntry[]): { current: Range; previous: Range | null } {
   const to = dayKey(today);
   if (period === 'week') {
     const start = startOfWeek(today);
+    const elapsed = daysBetween(start, today);
     return {
       current: { from: dayKey(start), to },
-      previous: { from: dayKey(addDays(start, -7)), to: dayKey(addDays(start, -1)) },
+      previous: { from: dayKey(addDays(start, -7)), to: dayKey(addDays(start, -7 + elapsed)) },
     };
   }
   if (period === 'month') {
     const start = startOfMonth(today);
     const prevStart = new Date(start.getFullYear(), start.getMonth() - 1, 1);
+    const prevEnd = addDays(start, -1);
+    const same = addDays(prevStart, daysBetween(start, today));
     return {
       current: { from: dayKey(start), to },
-      previous: { from: dayKey(prevStart), to: dayKey(addDays(start, -1)) },
+      previous: { from: dayKey(prevStart), to: dayKey(same < prevEnd ? same : prevEnd) },
     };
   }
   if (period === 'year') {
     const y = today.getFullYear();
+    const same = addDays(new Date(y - 1, 0, 1), daysBetween(new Date(y, 0, 1), today));
+    const prevEnd = new Date(y - 1, 11, 31);
     return {
       current: { from: `${y}-01-01`, to },
-      previous: { from: `${y - 1}-01-01`, to: `${y - 1}-12-31` },
+      previous: { from: `${y - 1}-01-01`, to: dayKey(same < prevEnd ? same : prevEnd) },
     };
   }
   const first = logs.reduce((min, l) => (l.day < min ? l.day : min), to);

@@ -31,3 +31,21 @@ export function durationParts(minutes: number): DurationPart[] {
 export function percent(share: number): string {
   return `${Math.round(share * 100)}%`;
 }
+
+/**
+ * Whole percents that add up to 100 (largest remainder): rounding each share on its own
+ * gives six equal slices "17%" each, 102 in all. Shares are expected to sum to 1.
+ */
+export function wholePercents(shares: number[]): number[] {
+  const raw = shares.map((s) => s * 100);
+  const floors = raw.map(Math.floor);
+  let left = 100 - floors.reduce((a, b) => a + b, 0);
+  if (shares.length === 0 || left >= 100) return floors;
+  const order = raw.map((v, i) => ({ i, rest: v - floors[i] })).sort((a, b) => b.rest - a.rest || a.i - b.i);
+  for (const { i } of order) {
+    if (left <= 0) break;
+    floors[i] += 1;
+    left -= 1;
+  }
+  return floors;
+}

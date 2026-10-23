@@ -1,5 +1,5 @@
 import { allocation, cumulativeHours, energyBalance, heatLevel, monthHeatmap, periodRanges, sumMinutes, weeklyMinutes } from './stats';
-import { durationParts, formatHours, formatHoursDelta } from './format';
+import { durationParts, formatHours, formatHoursDelta, wholePercents } from './format';
 import type { Asset, LogEntry } from './types';
 
 const today = new Date(2026, 8, 28); // Monday, Sep 28 2026
@@ -9,15 +9,21 @@ const l = (assetId: string, day: string, minutes: number): LogEntry => ({ id: `$
 const a = (id: string, energy: Asset['energy']): Asset => ({ id, energy, icon: 'star', color: 'grey', rhythm: 'weekly', startingMinutes: 0, createdAt: '' });
 
 describe('periodRanges', () => {
-  it('month runs from the 1st to today and compares with the whole previous month', () => {
+  it('month runs from the 1st to today and compares with the same days of the previous month', () => {
     const r = periodRanges('month', today, []);
     expect(r.current).toEqual({ from: '2026-09-01', to: '2026-09-28' });
-    expect(r.previous).toEqual({ from: '2026-08-01', to: '2026-08-31' });
+    expect(r.previous).toEqual({ from: '2026-08-01', to: '2026-08-28' });
+    // The 1st against the 1st, never against a whole month; a 31st has no twin in a shorter month.
+    expect(periodRanges('month', new Date(2026, 9, 1), []).previous).toEqual({ from: '2026-09-01', to: '2026-09-01' });
+    expect(periodRanges('month', new Date(2026, 2, 31), []).previous).toEqual({ from: '2026-02-01', to: '2026-02-28' });
   });
 
-  it('week starts on Monday', () => {
+  it('week starts on Monday and compares with the same weekdays of last week', () => {
     expect(periodRanges('week', today, []).current.from).toBe('2026-09-28');
+    expect(periodRanges('week', today, []).previous).toEqual({ from: '2026-09-21', to: '2026-09-21' });
     expect(periodRanges('week', new Date(2026, 8, 27), []).current.from).toBe('2026-09-21');
+    expect(periodRanges('week', new Date(2026, 8, 27), []).previous).toEqual({ from: '2026-09-14', to: '2026-09-20' });
+    expect(periodRanges('year', new Date(2026, 1, 10), []).previous).toEqual({ from: '2025-01-01', to: '2025-02-10' });
   });
 
   it('all time starts at the first log and has nothing to compare with', () => {
@@ -90,6 +96,13 @@ describe('format', () => {
     expect(formatHoursDelta(90, 'en')).toBe('+1.5');
     expect(formatHoursDelta(-90, 'en')).toBe('−1.5');
     expect(formatHoursDelta(0, 'en')).toBe('0');
+  });
+
+  it('rounds shares to whole percents that add up to 100', () => {
+    expect(wholePercents([1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6, 1 / 6]).reduce((a, b) => a + b, 0)).toBe(100);
+    expect(wholePercents([1 / 3, 1 / 3, 1 / 3])).toEqual([34, 33, 33]);
+    expect(wholePercents([0.5, 0.5])).toEqual([50, 50]);
+    expect(wholePercents([])).toEqual([]);
   });
 
   it('splits durations into hours and minutes', () => {

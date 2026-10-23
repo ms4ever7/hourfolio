@@ -95,7 +95,8 @@ export function mergeMove(sessions: PlannedSession[], id: string, toDay: string)
   if (!moved || moved.day === toDay) return sessions;
   const twin = sessions.find((s) => s.id !== id && s.assetId === moved.assetId && s.day === toDay);
   if (!twin) return sessions.map((s) => (s.id === id ? { ...s, day: toDay } : s));
-  return sessions.filter((s) => s.id !== id).map((s) => (s.id === twin.id ? { ...s, minutes: s.minutes + moved.minutes } : s));
+  // Never longer than a session can be edited to (the picker stops at four hours).
+  return sessions.filter((s) => s.id !== id).map((s) => (s.id === twin.id ? { ...s, minutes: Math.min(MAX_SESSION, s.minutes + moved.minutes) } : s));
 }
 
 /** The days a session can be dropped on: from `editFrom` to the end of the week. */
@@ -225,7 +226,7 @@ export function planWeek({ weekFrom, goals, free, fromDay, kept = [] }: PlanInpu
     }
     // The maximum is what a session usually is. A goal too big for that (6 hours
     // of coding in 40-minute sessions) stretches them rather than leaving time unplanned.
-    const max = Math.max(goal.session.max, Math.ceil(goal.minutes / n / STEP) * STEP);
+    const max = Math.min(MAX_SESSION, Math.max(goal.session.max, Math.ceil(goal.minutes / n / STEP) * STEP));
 
     const chosen: number[] = [];
     while (chosen.length < n) {
@@ -289,14 +290,21 @@ export function autoPlan({ weekFrom, goals, fromDay, kept = [] }: Omit<PlanInput
   }
 }
 
-/** The weekly goals of the portfolio as planner input, minus what is already logged this week. A per-day goal plans one session of that length on each day. */
+/**
+ * The weekly goals of the portfolio as planner input, minus what is already logged this
+ * week. A per-day goal ("20 minutes of reading") plans that length on each of its days
+ * still ahead, never more: a missed day is not caught up on the days left.
+ */
 export function goalsFromAssets(assets: Asset[], logs: LogEntry[], today: Date): PlanGoal[] {
   const week = weekRange(today);
+  const weekday = weekdayMonFirst(today);
   const goals: PlanGoal[] = [];
   for (const a of assets) {
     if (!a.weeklyGoalMinutes) continue;
-    const minutes = a.weeklyGoalMinutes - sumMinutes(logs, week, a.id);
-    if (minutes > 0) goals.push({ assetId: a.id, minutes, session: a.dailyGoalMinutes ? { min: a.dailyGoalMinutes, max: a.dailyGoalMinutes } : (a.sessionMinutes ?? defaultSessionRange(a)), days: a.planDays ?? ALL_DAYS });
+    const days = a.planDays ?? ALL_DAYS;
+    let minutes = a.weeklyGoalMinutes - sumMinutes(logs, week, a.id);
+    if (a.dailyGoalMinutes) minutes = Math.min(minutes, a.dailyGoalMinutes * days.filter((d) => d >= weekday).length);
+    if (minutes > 0) goals.push({ assetId: a.id, minutes, session: a.dailyGoalMinutes ? { min: a.dailyGoalMinutes, max: a.dailyGoalMinutes } : (a.sessionMinutes ?? defaultSessionRange(a)), days });
   }
   return goals;
 }
