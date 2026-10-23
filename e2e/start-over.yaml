@@ -1,0 +1,15 @@
+appId: com.ms4ever7.hourfolio
+---
+# Profile → Start over, so onboarding.yaml can run on an app that is already set up.
+# Restart the app afterwards (picks from an earlier onboarding are kept in memory).
+- runFlow: connect.yaml
+- tapOn:
+    id: tab-profile
+# The row's label is its title and subtitle together, hence the wildcard.
+- scrollUntilVisible:
+    element: 'Start over.*'
+    direction: DOWN
+    centerElement: true
+- tapOn: 'Start over.*'
+- tapOn: 'Continue'
+- assertVisible: 'Every hour you spend on yourself is an investment.'

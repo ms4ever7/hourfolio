@@ -12,6 +12,7 @@ Run through mise so Node 22 and bun 1.3.14 are used:
 - Real iPhone: `mise exec -- bunx expo run:ios --device <udid>` (UDID from `xcrun devicectl list devices`), then launch it pointed at Metro. Signed with the free personal team, so installs expire after 7 days.
 - Cloud builds (EAS, paid Apple team): `mise exec -- bunx eas-cli build -p ios --profile staging` (bundle id `.stg`, installs next to production) or `--profile production`, then `eas-cli submit -p ios --profile <same>` to TestFlight. `app.config.ts` reads `APP_VARIANT` from `eas.json`; local builds are the plain app signed by the free team.
 - Add Expo packages with `mise exec -- bunx expo install <pkg>`
+- README screenshots and GIF: `scripts/readme-shots.sh <simulator udid>` runs the Maestro flows in `e2e/` on a simulator that shows the welcome screen in English (fresh install, or `e2e/start-over.yaml`) and copies the shots into `docs/screenshots/`.
 
 ## CI
 `.github/workflows/ci.yml` runs typecheck, lint and test on every pull request and on pushes to main (Node and bun versions come from `mise.toml`). It builds nothing; cloud builds are the EAS commands above.
@@ -29,11 +30,11 @@ Builds listen on a channel (`staging` or `production`, set per profile in `eas.j
 - `.claude/skills/create-pr`: checks, commit style and PR description for a PR to main.
 
 ## Layout
-- `src/domain/`: pure logic, fully unit-tested. `growth.ts` (capital never decreases; momentum decays toward a floor of 20, half-life set by the asset's rhythm), `stats.ts` (periods, allocation, energy balance, heatmap), `catalog.ts` (onboarding presets), `plan.ts` (the weekly planner: spreads weekly goals over free days; `planWeek`, `autoPlan` (no free time asked), `replanWeek`, `mergeMove` (same hobby on one day adds up), `dayProgress`, `planReminders`).
+- `src/domain/`: pure logic, fully unit-tested. `growth.ts` (capital never decreases; momentum decays toward a floor of 20, half-life set by the asset's rhythm), `stats.ts` (periods, allocation, energy balance, heatmap), `catalog.ts` (onboarding presets), `plan.ts` (the weekly planner: spreads weekly goals over free days; `planWeek`, `autoPlan` (no free time asked), `replanWeek`, `mergeMove` (same hobby on one day adds up), `dayProgress`, `planReminders`), `week.ts` (one week in numbers for the recap sheet), `achievements.ts` (finished weeks with goals met, badge rules and the hour marks per hobby; earned badges are kept in the portfolio store so they are never lost).
 - `src/store/`: zustand persisted to MMKV (`portfolio-store`, `settings-store`); `onboarding-store` is in-memory.
 - `src/i18n/`: EN/UK/PL as typed TS objects. `en.ts` is the source; other locales must have every key plus the plural forms their language needs (`i18n.test.ts` enforces both).
 - `src/theme/theme.ts`: `buildTheme({ mode, accent, page })` builds the Restyle theme at runtime (`src/lib/appearance.ts` feeds it from settings and the holiday season). Use tokens, never hex: `accent`/`onAccent`/`accentInk`/`accentSoft` for UI chrome, `palette` for asset colors. The `hours` tokens are the accent itself (charts, deltas, heatmap follow the user's pick). `Duration` shows hours in ink and highlights the minutes (accent, or the asset's color); the `days` token (teal) is for rest and met goals. Font is Inter.
-- `src/app/`: expo-router screens: `onboarding/*`, `(tabs)/*` (portfolio, analytics, goals, profile), `asset/[id]`, and the modals `log`, `today`, `plan-week`, `goals-edit`, `asset-edit`, `avatar`, `language` (sheet), `congrats`, `share-week`, plus the pushed `appearance` screen.
+- `src/app/`: expo-router screens: `onboarding/*`, `(tabs)/*` (portfolio, analytics, goals, profile), `asset/[id]`, and the modals `log`, `today`, `plan-week`, `goals-edit`, `asset-edit`, `avatar`, `language` (sheet), `congrats`, `share-week`, `week` (a week's recap), `badge` (sheet), plus the pushed `appearance` and `achievements` screens.
 
 ## Rules
 - No guilt: never show a loss in red, no streaks. Declines are grey; paused assets say "paused".

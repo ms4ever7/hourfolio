@@ -1,6 +1,6 @@
 appId: com.ms4ever7.hourfolio
 ---
-# Onboarding from the welcome screen (the app follows the system language, English here): pick assets, set a goal and its scene,
+# Onboarding from the welcome screen (the app follows the system language, English here): pick hobbies, set a weekly goal,
 # the day step, then "Make it yours". Start from a fresh install or Profile → Start over.
 # No launchApp: a dev build would stop at the dev-client launcher. Picks are kept in memory,
 # so restart the app before a second run.
@@ -24,35 +24,46 @@ appId: com.ms4ever7.hourfolio
 - tapOn: 'DJing'
 - takeScreenshot: e2e/screenshots/02-pick
 - tapOn: 'Continue'
-- assertVisible: 'Step 2 of 2 · asset 1 of 3'
+- assertVisible: 'Step 2 of 2 · hobby 1 of 3'
 - takeScreenshot: e2e/screenshots/03-setup
 - scrollUntilVisible:
     element: '.*A few times a week.*'
     direction: DOWN
 - tapOn: '.*A few times a week.*'
 - scrollUntilVisible:
-    element: 'More'
-    direction: DOWN
-- tapOn: 'More'
-- tapOn: 'More'
-- tapOn: 'More'
-- scrollUntilVisible:
-    element: 'Tree'
-    direction: DOWN
-- tapOn: 'Tree'
+    element:
+      id: goal-time
+    direction: UP
+- tapOn:
+    id: goal-time
+# Only the picked row and the two below it are on screen, and a tap outside the sheet closes it, so walk the minutes wheel.
+- tapOn: '1 h'
+- tapOn: '10 m'
+- tapOn: '20 m'
+- tapOn: '30 m'
 - waitForAnimationToEnd
 - takeScreenshot: e2e/screenshots/03-setup-goal
+- tapOn: 'Done'
+- waitForAnimationToEnd
+- scrollUntilVisible:
+    element: 'Step 2 of 2.*'
+    direction: UP
 - tapOn: 'Set up the rest later'
 - assertVisible: 'Your day'
 - takeScreenshot: e2e/screenshots/04-day
 - tapOn: 'Continue'
 - assertVisible: 'Make it yours'
 - tapOn: 'Your name'
+- eraseText
 - inputText: 'Roman'
-- tapOn: '🦊'
+# Return closes the keyboard; with it open the picture grid shifts and the last button is covered.
+- pressKey: Enter
 - hideKeyboard:
     optional: true
+- waitForAnimationToEnd
+- tapOn: '🦊'
 - takeScreenshot: e2e/screenshots/05-you
-- tapOn: 'Open my portfolio'
-- assertVisible: 'What are you investing in today\?'
+- tapOn: 'Let’s go'
+# The Today card is one button, so its text is not visible to Maestro; the tiles below it are.
+- assertVisible: 'Log in one tap'
 - takeScreenshot: e2e/screenshots/06-today-empty

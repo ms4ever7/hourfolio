@@ -1,7 +1,8 @@
 appId: com.ms4ever7.hourfolio
 ---
-# Logs a session that completes the Guitar weekly goal and waits on the congrats screen.
-# Used for the README animation. Needs the sample data from tour.yaml.
+# Logs a session that completes the CrossFit weekly goal and waits on the congrats screen.
+# Used for the README animation. Needs the sample data from tour.yaml, and CrossFit short of its goal
+# by 1 h 30 m at most: check Goals first and log the difference before recording.
 - runFlow: connect.yaml
 - tapOn:
     id: tab-index
@@ -10,7 +11,7 @@ appId: com.ms4ever7.hourfolio
     direction: UP
 - tapOn:
     id: tab-invest
-- tapOn: 'Guitar'
+- tapOn: 'CrossFit'
 - tapOn: '1h 30m'
 - tapOn: 'Invest 1 h 30 m'
 - assertVisible: 'Goal met!'
