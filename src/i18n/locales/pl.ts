@@ -281,6 +281,10 @@ export const pl: Translations = {
     discardTitle: 'Ułożyć plan od nowa?',
     discardSub: 'Twoje przesunięcia i zmiany w tym planie zostaną utracone.',
     discardGo: 'Ułóż',
+    leaveTitle: 'Wyjść bez zapisywania?',
+    leaveSub: 'Twoje przesunięcia i zmiany w tym planie zostaną utracone.',
+    leaveStay: 'Zostań',
+    leaveGo: 'Wyjdź',
     shortTitle: 'Jeszcze się nie zmieściło',
     dragHint: 'Przeciągnij na inny dzień',
     options: 'Dostosuj wolny czas',
@@ -352,6 +356,7 @@ export const pl: Translations = {
     autoIcon: 'Świąteczna ikona automatycznie',
     autoIconSub: 'Ikona zmienia się na święta i z powrotem. iOS za każdym razem pokazuje komunikat.',
     iconUnsupported: 'Na tym urządzeniu nie można zmienić ikony.',
+    colorN: 'Kolor {{n}}',
   },
   avatar: {
     title: 'Zdjęcie profilowe',
@@ -525,4 +530,5 @@ export const pl: Translations = {
     },
   },
   tabs: { goals: 'Cele', today: 'Dziś', analytics: 'Analityka', profile: 'Profil', invest: 'Zainwestuj czas' },
+  notifications: { channel: 'Przypomnienia' },
 };

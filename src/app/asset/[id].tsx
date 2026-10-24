@@ -39,8 +39,10 @@ export default function AssetScreen() {
     const thisMonth = { from: dayKey(monthStart), to: dayKey(today) };
     const weekly = weeklyMinutes(logs, asset.id, WEEKS, today);
     const capital = capitalMinutes(asset, logs);
-    const weeklyAvg = weekly.reduce((a, b) => a + b, 0) / WEEKS;
     const first = logs.reduce((min, l) => (l.day < min ? l.day : min), dayKey(new Date(asset.createdAt)));
+    // Over the weeks the hobby has been around, not always twelve: a hobby two weeks old is not a quarter as busy as it looks.
+    const weeksActive = Math.min(WEEKS, Math.max(1, Math.ceil((daysBetween(parseDay(first), today) + 1) / 7)));
+    const weeklyAvg = weekly.slice(WEEKS - weeksActive).reduce((a, b) => a + b, 0) / weeksActive;
     const last = logs.reduce<string | null>((max, l) => (max === null || l.day > max ? l.day : max), null);
     return {
       logs,

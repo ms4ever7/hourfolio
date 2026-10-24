@@ -3,7 +3,7 @@ import { router } from 'expo-router';
 import type { TFunction } from 'i18next';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Alert, Linking } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import { checkIns, restingAsset } from '@/domain/day';
 import { trend } from '@/domain/growth';
 import { planReminders } from '@/domain/plan';
@@ -15,6 +15,14 @@ import { useAssetName } from './labels';
 import { usePortfolio } from './usePortfolio';
 
 const NUDGE_ID = 'week-nudge';
+
+/** Android shows reminders under a channel the user can mute; without one they land in the library's "Miscellaneous". */
+const CHANNEL_ID = 'reminders';
+const channel = async (name: string): Promise<{ channelId?: string }> => {
+  if (Platform.OS !== 'android') return {};
+  await Notifications.setNotificationChannelAsync(CHANNEL_ID, { name, importance: Notifications.AndroidImportance.DEFAULT }).catch(() => undefined);
+  return { channelId: CHANNEL_ID };
+};
 
 /**
  * Reminder syncs run one after another. A sync that started for older data
@@ -71,7 +79,7 @@ export function useWeekNudge() {
       await Notifications.scheduleNotificationAsync({
         identifier: NUDGE_ID,
         content: { title: t('nudge.title', { name: assetName(nudge.asset) }), body: t('nudge.body', { remaining }), data: { url: '/(tabs)/goals' } },
-        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: nudge.at },
+        trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: nudge.at, ...(await channel(t('notifications.channel'))) },
       });
     };
     enqueue(sync);
@@ -107,6 +115,7 @@ export function useEveningCheckIn() {
       // Only a hobby that is really paused is worth naming, the same rule as the card on Home; a quiet one is left alone.
       const rested = restingAsset(assets, logs, now);
       const resting = rested && trend(rested, logs, now) === 'paused' ? rested : null;
+      const onChannel = await channel(t('notifications.channel'));
       for (const [i, { when, day }] of checkIns(now, bed, logs).entries()) {
         if (cancelled) return;
         const suggest = resting !== null && i % 2 === 1;
@@ -118,7 +127,7 @@ export function useEveningCheckIn() {
             // The note is about that evening: tapped after midnight, the sheet opens on the day before.
             data: { url: `/log?day=${day}` },
           },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: when, ...onChannel },
         });
       }
     };
@@ -152,13 +161,14 @@ export function usePlanReminders() {
       const scheduled = await Notifications.getAllScheduledNotificationsAsync().catch(() => []);
       await Promise.all(scheduled.filter((n) => n.identifier.startsWith(PLAN_PREFIX)).map((n) => Notifications.cancelScheduledNotificationAsync(n.identifier)));
       if (!on || cancelled) return;
+      const onChannel = await channel(t('notifications.channel'));
       for (const r of planReminders(plans, logs, new Date(), wake, bed)) {
         if (cancelled) return;
         const names = [...new Set(r.sessions.map((s) => assets.find((a) => a.id === s.assetId)).filter((a) => a !== undefined).map(assetName))];
         await Notifications.scheduleNotificationAsync({
           identifier: `${PLAN_PREFIX}${r.day}`,
           content: { title: t('plan.reminderTitle'), body: names.join(', '), data: { url: '/log' } },
-          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at },
+          trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: r.at, ...onChannel },
         });
       }
     };

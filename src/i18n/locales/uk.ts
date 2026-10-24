@@ -281,6 +281,10 @@ export const uk: Translations = {
     discardTitle: 'Скласти план заново?',
     discardSub: 'Усі твої переміщення та зміни в цьому плані буде втрачено.',
     discardGo: 'Скласти',
+    leaveTitle: 'Вийти без збереження?',
+    leaveSub: 'Усі твої переміщення та зміни в цьому плані буде втрачено.',
+    leaveStay: 'Лишитися',
+    leaveGo: 'Вийти',
     shortTitle: 'Поки не вмістилося',
     dragHint: 'Перетягни на інший день',
     options: 'Налаштувати вільний час',
@@ -352,6 +356,7 @@ export const uk: Translations = {
     autoIcon: 'Святкова іконка автоматично',
     autoIconSub: 'Іконка змінюється на свята й назад. iOS щоразу показує повідомлення.',
     iconUnsupported: 'На цьому пристрої іконку змінити не можна.',
+    colorN: 'Колір {{n}}',
   },
   avatar: {
     title: 'Фото профілю',
@@ -525,4 +530,5 @@ export const uk: Translations = {
     },
   },
   tabs: { goals: 'Цілі', today: 'Сьогодні', analytics: 'Аналітика', profile: 'Профіль', invest: 'Інвестувати час' },
+  notifications: { channel: 'Нагадування' },
 };

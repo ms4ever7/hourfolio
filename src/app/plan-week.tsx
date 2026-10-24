@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from 'expo-router';
-import { useState } from 'react';
+import { router, useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Alert, Pressable, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -108,6 +108,28 @@ export default function PlanWeek() {
   // Rebuilding the proposal throws away what was moved, resized or removed, so ask first.
   const [edited, setEdited] = useState(false);
   const [dragging, setDragging] = useState(false);
+  // A swipe down or Back with moved, resized or removed sessions asks first, like Rebuild does; Save sets `leaving` so it does not.
+  const navigation = useNavigation();
+  const leaving = useRef(false);
+  useEffect(
+    () =>
+      navigation.addListener('beforeRemove', (e) => {
+        if (!edited || leaving.current) return;
+        e.preventDefault();
+        Alert.alert(t('plan.leaveTitle'), t('plan.leaveSub'), [
+          { text: t('plan.leaveStay'), style: 'cancel' },
+          {
+            text: t('plan.leaveGo'),
+            style: 'destructive',
+            onPress: () => {
+              leaving.current = true;
+              navigation.dispatch(e.data.action);
+            },
+          },
+        ]);
+      }),
+    [navigation, edited, t],
+  );
   const guard = (go: () => void) => {
     if (!edited) return go();
     Alert.alert(t('plan.discardTitle'), t('plan.discardSub'), [
@@ -152,6 +174,7 @@ export default function PlanWeek() {
   const save = () => {
     if (!result) return;
     setPlan({ weekFrom, sessions: [...keptFor(when), ...result.sessions], free: custom ?? undefined, rest, short: result.shortBy });
+    leaving.current = true;
     router.back();
   };
 

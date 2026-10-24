@@ -9,7 +9,7 @@ import { Glyph, UI_PATHS } from '@/components/icons';
 import { Box, Text } from '@/components/primitives';
 import { BackButton, Card, Group, Hours, Screen, Segmented, SwitchRow, TrendChip } from '@/components/ui';
 import { BACKGROUNDS } from '@/domain/backgrounds';
-import { parseHex, toHex } from '@/domain/color';
+import { contrast, parseHex, toHex } from '@/domain/color';
 import type { AppIconName } from '@/domain/seasons';
 import { canChangeIcon, useAppIcon, useSeason } from '@/lib/appearance';
 import { useSettingsStore, type ThemeMode } from '@/store/settings-store';
@@ -19,6 +19,9 @@ const PRESETS = [DEFAULT_ACCENT, '#2747D6', '#C2388A', '#E4572E', '#E8741C', '#C
 const MODES: ThemeMode[] = ['system', 'light', 'dark'];
 /** Page colors from soft pastels to deep darks; any other one comes from the picker. */
 const PAGES = ['#FFFFFF', '#FFF8E7', '#FFEFE5', '#FDEBF3', '#F1ECFF', '#EAF2FF', '#E8F6EF', '#F2F5DC', '#1B2233', '#231B33', '#10231C', '#000000'];
+
+/** The check mark on a swatch: white where it reads, ink on light colours such as the mustard preset. */
+const checkOn = (swatch: string) => (contrast('#FFFFFF', swatch) >= 3 ? '#FFFFFF' : '#15171A');
 
 const ICONS: { name: AppIconName | null; key: string; image: number }[] = [
   { name: null, key: 'default', image: require('../../assets/images/app-icons/default.png') },
@@ -104,14 +107,14 @@ export default function Appearance() {
               {t('appearance.pageDefault')}
             </Text>
           </Pressable>
-          {PAGES.map((c) => {
+          {PAGES.map((c, i) => {
             const on = s.pageColor === c;
             return (
               <Pressable
                 key={c}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: on }}
-                accessibilityLabel={c}
+                accessibilityLabel={t('appearance.colorN', { n: i + 1 })}
                 onPress={() => s.setPageColor(c)}
                 style={{ width: 44, height: 44, borderRadius: 22, borderWidth: on ? 2 : 1, borderColor: on ? colors.ink : colors.border, alignItems: 'center', justifyContent: 'center', backgroundColor: c }}
               >
@@ -134,19 +137,19 @@ export default function Appearance() {
       <Box gap="sm">
         <Text variant="bodyStrong">{t('appearance.accent')}</Text>
         <Box flexDirection="row" flexWrap="wrap" gap="s" accessibilityRole="radiogroup" accessibilityLabel={t('appearance.accent')}>
-          {PRESETS.map((c) => {
+          {PRESETS.map((c, i) => {
             const on = c === accent;
             return (
               <Pressable
                 key={c}
                 accessibilityRole="radio"
                 accessibilityState={{ checked: on }}
-                accessibilityLabel={c}
+                accessibilityLabel={t('appearance.colorN', { n: i + 1 })}
                 onPress={() => s.setAccent(c)}
                 style={{ width: 44, height: 44, borderRadius: 22, borderWidth: on ? 2 : 0, borderColor: colors.ink, alignItems: 'center', justifyContent: 'center' }}
               >
                 <Box width={34} height={34} borderRadius="pill" alignItems="center" justifyContent="center" style={{ backgroundColor: c }}>
-                  {on ? <Glyph d={UI_PATHS.check} size={16} color="#FFFFFF" strokeWidth={3} /> : null}
+                  {on ? <Glyph d={UI_PATHS.check} size={16} color={checkOn(c)} strokeWidth={3} /> : null}
                 </Box>
               </Pressable>
             );

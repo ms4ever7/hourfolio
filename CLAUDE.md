@@ -41,5 +41,5 @@ Builds listen on a channel (`staging` or `production`, set per profile in `eas.j
 - Recovery (`RECOVERY_ID`) is in every portfolio and counts as an investment.
 - All user-facing copy goes through i18n in all three languages. Avoid gendered forms in Ukrainian and Polish copy.
 - `plugins/with-scene-lifecycle.js` makes the app adopt UIScene; without it, builds from the iOS 27 SDK crash at launch. Keep it until the Expo template does this itself.
-- `plugins/without-push-entitlement.js` strips the push entitlement expo-notifications adds; the free team can't sign it and local reminders don't need it. Remove it only when server push (and a paid account) arrives.
+- `plugins/without-push-entitlement.js` strips the push entitlement expo-notifications adds; the free team can't sign it and local reminders don't need it. Remove it only when server push (and a paid account) arrives. It must stay **before** the `expo-notifications` plugin in `app.json`: config-plugin mods run last-added-first, so only then does the strip run after the entitlement is added (checked with a throwaway prebuild; the other order leaves `aps-environment` in). The notifications plugin is there for the Android notification icon and colour.
 - Test on an iOS 27 simulator (e.g. iPhone 18 Pro). Xcode 27's DeviceHub doesn't pass mouse clicks to old runtimes such as iOS 17.5.

@@ -117,12 +117,20 @@ describe('plans over a week', () => {
     ]);
   });
 
-  it('plans a per-day goal as one session of that length per day', () => {
+  it('plans a per-day goal as one session of that length per day still ahead, without catching up', () => {
     const a = asset('d', 0, { weeklyGoalMinutes: 140, dailyGoalMinutes: 20 });
-    const [goal] = goalsFromAssets([a], [], parseDay('2026-09-30'));
-    expect(goal.session).toEqual({ min: 20, max: 20 });
-    const { sessions } = planWeek({ weekFrom: '2026-09-28', goals: [goal], free });
+    // Monday: the whole week. Thursday with nothing logged: four days, not 140 minutes squeezed into them.
+    const [whole] = goalsFromAssets([a], [], parseDay('2026-09-28'));
+    expect(whole).toMatchObject({ minutes: 140, session: { min: 20, max: 20 } });
+    const { sessions } = planWeek({ weekFrom: '2026-09-28', goals: [whole], free });
     expect(sessions.map((x) => x.minutes)).toEqual([20, 20, 20, 20, 20, 20, 20]);
+    const [left] = goalsFromAssets([a], [], parseDay('2026-10-01'));
+    expect(left.minutes).toBe(80);
+    const later = planWeek({ weekFrom: '2026-09-28', goals: [left], free, fromDay: '2026-10-01' });
+    expect(later.sessions.map((x) => x.minutes)).toEqual([20, 20, 20, 20]);
+    // A per-day goal on three weekdays, planned on Wednesday: Wednesday and Friday are left.
+    const b = asset('e', 0, { weeklyGoalMinutes: 90, dailyGoalMinutes: 30, planDays: [0, 2, 4] });
+    expect(goalsFromAssets([b], [], parseDay('2026-09-30'))[0].minutes).toBe(60);
   });
 
   it('drops goals that are already met', () => {
@@ -464,6 +472,11 @@ describe('mergeMove', () => {
     expect(out).toHaveLength(2);
     expect(out.find((x) => x.id === 'b')?.minutes).toBe(60);
     expect(out.find((x) => x.id === 'c')?.minutes).toBe(20);
+  });
+
+  it('caps a merged session at four hours, the most the picker can set', () => {
+    const out = mergeMove([s('a', 'guitar', '2026-09-28', 180), s('b', 'guitar', '2026-09-29', 120)], 'a', '2026-09-29');
+    expect(out).toEqual([s('b', 'guitar', '2026-09-29', 240)]);
   });
 
   it('leaves everything alone when dropped on its own day', () => {

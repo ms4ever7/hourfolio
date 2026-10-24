@@ -1,4 +1,5 @@
 import Svg, { Circle, G, Line, Path, Polyline, Rect, Text as SvgText } from 'react-native-svg';
+import { contrast } from '@/domain/color';
 import type { HeatDay } from '@/domain/stats';
 import { heatLevel } from '@/domain/stats';
 import { useAppTheme } from '@/theme/theme';
@@ -252,7 +253,8 @@ export function Heatmap({ cells, weekdays }: { cells: (HeatDay | null)[]; weekda
             if (!c) return <Box key={i} style={{ flex: 1, height: 38 }} />;
             const level = heatLevel(c.minutes, max);
             const bg = c.future ? 'transparent' : c.restOnly ? colors.daysSoft : level === 0 ? colors.track : heatSteps[level - 1];
-            const fg = c.restOnly ? colors.daysInk : level >= 3 ? colors.card : c.future ? colors.faint : colors.ink;
+            // Strong cells take the card colour for the number only when it reads on them (a mustard or Halloween accent is light).
+            const fg = c.restOnly ? colors.daysInk : level >= 3 ? (contrast(colors.card, bg) >= 3 ? colors.card : colors.ink) : c.future ? colors.faint : colors.ink;
             return (
               <Box
                 key={i}
