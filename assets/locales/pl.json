@@ -1,3 +1,5 @@
 {
-  "NSPhotoLibraryUsageDescription": "Hourfolio używa zdjęć tylko jako obrazków, które wybierasz dla profilu i hobby. Zostają na tym urządzeniu."
+  "ios": {
+    "NSPhotoLibraryUsageDescription": "Hourfolio używa zdjęć tylko jako obrazków, które wybierasz dla profilu i hobby. Zostają na tym urządzeniu."
+  }
 }
